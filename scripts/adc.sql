@@ -131,3 +131,35 @@ WITH (
 ALTER TABLE "Dim_Time"
   OWNER TO postgres;
 
+
+
+--AD Facts Table
+-- Table: "AD_Facts_By_Hour"
+
+-- DROP TABLE "AD_Facts_By_Hour";
+
+CREATE TABLE "AD_Facts_By_Hour"
+(
+  date_id integer NOT NULL,
+  time_id integer NOT NULL,
+  ad_id integer,
+  area_id integer,
+  video_id integer,
+  os_id integer,
+  reqs_total bigint,
+  impressions_start_total bigint,
+  impressions_finish_total bigint,
+  click bigint,
+  respons_total bigint,
+  ad_unit_id integer,
+  ad_exec_id integer,
+  ad_idea_id integer,
+  ad_order_id integer,
+  CONSTRAINT "AD_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "AD_Facts_By_Hour"
+  OWNER TO postgres;
+
