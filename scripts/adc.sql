@@ -111,3 +111,23 @@ FROM (
 	GROUP BY SEQUENCE.DAY
      ) DQ
 ORDER BY 1
+
+
+
+---Dim_Time
+-- Table: "Dim_Time"
+
+-- DROP TABLE "Dim_Time";
+
+CREATE TABLE "Dim_Time"
+(
+  id serial NOT NULL,
+  hour integer,
+  CONSTRAINT "Dim_Time_pkey" PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "Dim_Time"
+  OWNER TO postgres;
+
