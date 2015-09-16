@@ -1,4 +1,4 @@
-# 简介
+# 一、简介
 
 ## Amazon S3
 Amazon Simple Storage Service (Amazon S3) 为开发人员和 IT 团队提供安全、耐久且扩展性高的对象存储。Amazon S3 易于使用，具有简单的 Web 服务接口，用于在 Web 上的任何位置存储和检索任意数量的数据。使用 Amazon S3，您只需按您实际使用的存储量付费。没有最低费用和准备成本。
@@ -24,23 +24,23 @@ Amazon EMR 能够安全可靠地处理大数据使用案例，包括日志分析
 
 > 更多关于Amazon EMR的[开发人员指南](http://docs.aws.amazon.com/zh_cn/ElasticMapReduce/latest/DeveloperGuide/emr-what-is-emr.html)、[API参考](http://docs.aws.amazon.com/ElasticMapReduce/latest/API/)、[快速参考卡片](http://s3.amazonaws.com/awsdocs/ElasticMapReduce/latest/emr-qrc.pdf)的信息，可在[Amazon Elastic MapReduce](http://aws.amazon.com/cn/documentation/elasticmapreduce/ "Amazon Elastic MapReduce 文档")文档中获取
 
-# 准备工作
+# 二、准备工作
 ## 获取适用于 Python 的 AWS 开发工具包 (Boto3)
 
 通过适用于 Python 的 AWS 开发工具包 boto3 快速开始使用 AWS。Boto3 可以支持您轻松将 Python 应用程序、库或脚本与 AWS 服务进行集成，包括 Amazon S3、Amazon EC2 和 Amazon DynamoDB 等。
-
-详情参见：[http://aws.amazon.com/cn/sdk-for-python/](http://aws.amazon.com/cn/sdk-for-python/ "Amazon Web Services SDK for Python")
 
 Boto3安装： pip install boto3
 > 附： pip安装：下载 [get-pip.py](https://bootstrap.pypa.io/get-pip.py "get-pip.py").
 > 
 > 运行`python get-pip.py`， 更多信息参见[https://pip.pypa.io/en/stable/installing/](https://pip.pypa.io/en/stable/installing/ "pip安装官方说明")
 
+更多关于Python的AWS开发包的[入门](https://boto3.readthedocs.org/en/latest/guide/quickstart.html)、[API 参考](https://boto3.readthedocs.org/en/latest/reference/services/index.html)、[社区论坛](https://forums.aws.amazon.com/forum.jspa?forumID=132)信息参见：[http://aws.amazon.com/cn/sdk-for-python/](http://aws.amazon.com/cn/sdk-for-python/ "Amazon Web Services SDK for Python")
+
 
 ## 获取适用于 Java 的 AWS 开发工具包
 
 通过适用于 Java 的 AWS 开发工具包迅速开始使用 AWS。该开发工具包提供 Java API 给许多 AWS 服务，如 Amazon S3、Amazon EC2、DynamoDB 等，以避免进行复杂的编码。这个可下载的软件包含有 AWS Java 库、代码示例和文档。 
-详情参见：[http://aws.amazon.com/cn/sdk-for-java/](http://aws.amazon.com/cn/sdk-for-java/ "Amazon Web Services SDK for Java")
+
 
 ### AWS Toolkit for Eclipse
 在Eclipse中在线安装地址[http://aws.amazon.com/cn/eclipse](http://aws.amazon.com/cn/eclipse "eclipse aws 插件")插件
@@ -53,6 +53,7 @@ Boto3安装： pip install boto3
 > 
 > 请注意：该工具包需要 Eclipse 3.6 或更高的版本。
 
+更多关于适用于Java的AWS开发工具包的[入门](http://aws.amazon.com/developers/getting-started/java/)、[开发人员指南](http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/welcome.html)、[API文档](http://docs.amazonwebservices.com/AWSJavaSDK/latest/javadoc/index.html)、[开发人员博客](http://java.awsblog.com/)信息可在这里找到：[http://aws.amazon.com/cn/sdk-for-java/](http://aws.amazon.com/cn/sdk-for-java/ "Amazon Web Services SDK for Java")
 
 ## 配置Access Key
 使用AWS开发工具包，需要先配置连接AWS的Access Key ID和Secret Access Key
@@ -72,3 +73,14 @@ Boto3安装： pip install boto3
 	aws configure
 
 > * 更多关于Python配置Access Key的信息参见[https://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration](https://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration)
+
+**Notice:** *开发工具包提供在程序代码中配置credentials的方法，详细点击本文提供的API文档或开发人员指获取*
+
+配置完成Access Key后，即可使用AWS开发工具包提供的API访问AWS许多服务
+
+# 三、文件上传到S3 API
+
+功能说明：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS)。
+
+存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
+
