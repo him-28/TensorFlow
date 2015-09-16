@@ -80,9 +80,9 @@ Boto3安装： pip install boto3
 
 # 三、功能规划
 
-	┌────────────────┐        ┌───────────────────┐        ┌───────────────────────┐
-	│上传数据文件到S3  │  --->  │spark定时处理数据    │  --->  │输出数据文件到S3 Output  │  
-	└────────────────┘        └───────────────────┘        └───────────────────────┘
+	┌─────────────────────┐        ┌───────────────────┐        ┌───────────────────────┐
+	│上传数据文件到S3 Input│  --->  │spark定时处理数据   │  --->  │输出数据文件到S3 Output  │  
+	└─────────────────────┘        └───────────────────┘        └───────────────────────┘
 
 # 四、文件上传到S3 API
 
@@ -90,6 +90,6 @@ Boto3安装： pip install boto3
 
 存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
 
-# 五、spark定时处理数据
+# 五、spark处理数据
 
 功能说明：处理S3 Input的数据；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
