@@ -1,5 +1,7 @@
 import boto3
 
+''' 上传文件到Amazon S3 '''
+
 class awss3:
 	default_bucket_name = 'cn-north-region-java'
 	def __init__(self):

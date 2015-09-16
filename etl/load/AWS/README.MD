@@ -78,9 +78,18 @@ Boto3安装： pip install boto3
 
 配置完成Access Key后，即可使用AWS开发工具包提供的API访问AWS许多服务
 
-# 三、文件上传到S3 API
+# 三、功能规划
 
-功能说明：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS)。
+	┌────────────────┐        ┌───────────────────┐        ┌───────────────────────┐
+	│上传数据文件到S3  │  --->  │spark定时处理数据    │  --->  │输出数据文件到S3 Output  │  
+	└────────────────┘        └───────────────────┘        └───────────────────────┘
+
+# 四、文件上传到S3 API
+
+功能说明：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py)。
 
 存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
 
+# 五、spark定时处理数据
+
+功能说明：处理S3 Input的数据；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
