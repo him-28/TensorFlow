@@ -13,7 +13,7 @@ sys.path.append(os.path.join(DIR_PATH,'..'))
 import settings
 
 def get_resultFromDb(str_sql):
-    conn = psycopg2.connect(database=settings.db, user=settings.user, password=settings.password, host=settings.host, port=settings.port)
+    conn = psycopg2.connect(database=settings.db, user=settings.user, password=settings.password, host=settings.host, port=settings.db_port)
     cur = conn.cursor()
     if not str_sql:
         return 
