@@ -48,30 +48,30 @@ def load(coll, bid, day, hour, count):
 	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_demand = db[coll_name]
 	cnts = db_demand.count() / count + 1
+	if cnts == 1:
+	    print 'must reduce count value!'
 	
 	# fix decode error 
-	query_filter = {'p.v.title':0,'p.v.keyword':0,'p.v.rname':0,'p.c.ua':0, 'p.v.hname':0, 'p.v.sub_type':0,'p.v.name':0}
+	#query_filter = {'p.v.rname':0, 'p.c.ua':0, 'p.v.hname':0, 'p.v.name':0}
 	str_format = u'{slotid}\t{cardid}\t{creativeid}\t{deviceid}\t{type}\t{intime}\t{ip}\t{boardid}\t{_sid}\t{voideoid}\t{second}'
-	defuat_dict = dict(map(lambda x:(x,'null'),re.findall('{(\S*?)}',str_format),))
+	default_dict = dict(map(lambda x:(x,'null'),re.findall('{(\S*?)}',str_format),))
 	
 	for cnt in range(0, cnts):
 	    curr = cnt * count
-	    print cnt
-	    print cnts
-	    print curr
+	    
 	    # local file path
-	    db_demand_save_path = "/home/wn/amble/etl/load/demand/{0}/{1}/{2}.{3}.{4}.demand.csv".format(bid, day[:6], day[:8], hour, curr)
+	    db_demand_save_path = "./demand/{0}/{1}/{2}.{3}.{4}.demand.csv".format(bid, day[:6], day[:8], hour, curr)
 	    dir = os.path.split(db_demand_save_path)[0]
 	    os.path.isdir(dir) and 1 or os.makedirs(dir)
 	    print db_demand_save_path
 	    
 	    # store by count
-	    rows = db_demand.find().skip(curr).limit(count)
+	    rows = db_demand.find().limit(count).skip(curr)
 	    cnt += 1
 	    with open(db_demand_save_path, 'wb') as fw:
 		for row in rows:
 		    new_obj = {}
-		    new_obj.update(defuat_dict)
+		    new_obj.update(default_dict)
 		    new_obj['sid'] = str(uuid.uuid4())
 		    for k_1, v_1 in row.items():
 			if type(v_1) == dict:
@@ -94,22 +94,19 @@ def load(coll, bid, day, hour, count):
 	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_supply = db[coll_name]
 	cnts = db_supply.count() / count + 1
+	if cnts == 1:
+	    print 'must reduce count value!'
 	
 	# fix decode error 
-	query_filter = {'p.v.title':0,'p.v.keyword':0,'p.v.rname':0,'p.c.ua':0, 'p.v.hname':0, 'p.v.sub_type':0,'p.v.name':0}
-	str_format = u"""
-    {type}\t{sid}\t{boardid}\t{deviceid}\t{videoid}\t{slotid}\t{cardid}\t{creativeid}\t{intime}\t{p_v}\t{p_m_p}\t{p_m_pu}\t{p_u_id}\t{p_u_acid}\t{p_u_vip}\t{p_c_os}\t{p_c_version}\t{p_c_brand}\t{p_c_mn}\t{p_c_type}\t{p_c_mac}\t{p_c_idfa}\t{p_c_ua}\t{p_v_id}\t{p_v_hid}\t{p_v_on_date}\t{p_v_rid}
-    """
-	defuat_dict = dict(map(lambda x:(x,'null'),re.findall('{(\S*?)}',str_format),))#{u'p_c_brand': 'null', u'p_v_sub_type': 'null',...}
-	
+	#query_filter = {'p.v.rname':0,'p.c.ua':0, 'p.v.hname':0, 'p.v.name':0}
+	str_format = u'{sid}\t{boardid}\t{deviceid}\t{voideoid}\t{slotid}\t{cardid}\t{creativeid}\t{intime}\t{p_c_os}\t{p_c_type}\t{p_v_hid}\t{p_v_rid}\t{p_v_rname}'
+	default_dict = dict(map(lambda x:(x,'null'),re.findall('{(\S*?)}',str_format),))
+
 	for cnt in range(0, cnts):
-	    curr = cnt * count    
-	    print cnt
-	    print cnts
-	    print curr
+	    curr = cnt * count
 	    
 	    # local file path
-	    db_supply_save_path = "/home/wn/amble/etl/load/supply/{0}/{1}/{2}.{3}.{4}.supply.csv".format(bid, day[:6],day[:8], hour, curr)
+	    db_supply_save_path = "./supply/{0}/{1}/{2}.{3}.{4}.supply.csv".format(bid, day[:6],day[:8], hour, curr)
 	    dir = os.path.split(db_supply_save_path)[0]
 	    os.path.isdir(dir) and 1 or os.makedirs(dir) #what the 1 meaning?  means if isdir  do noting
 	    
@@ -126,7 +123,7 @@ def load(coll, bid, day, hour, count):
 		n = 0
 		for row in rows:
 		    new_obj = {}
-		    new_obj.update(defuat_dict)
+		    new_obj.update(default_dict)
 		    new_obj['sid'] = str(uuid.uuid4())
 		    for k_1, v_1 in row.items():
 			if type(v_1) == dict:
