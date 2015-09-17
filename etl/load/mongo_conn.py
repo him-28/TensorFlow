@@ -45,7 +45,7 @@ def load(coll, bid, day, hour, count):
 
     db = conn_db('emap')
     if coll == 'demand':
-        coll_name = coll + '_' + bid + '_' + day + '_' + hour
+	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_demand = db[coll_name]
 	cnts = db_demand.count() / count + 1
 	
@@ -63,7 +63,7 @@ def load(coll, bid, day, hour, count):
 	    db_demand_save_path = "/home/wn/amble/etl/load/demand/{0}/{1}/{2}.{3}.{4}.demand.csv".format(bid, day[:6], day[:8], hour, curr)
 	    dir = os.path.split(db_demand_save_path)[0]
 	    os.path.isdir(dir) and 1 or os.makedirs(dir)
-	    print  db_demand_save_path
+	    print db_demand_save_path
 	    
 	    # store by count
 	    rows = db_demand.find().skip(curr).limit(count)
@@ -91,7 +91,7 @@ def load(coll, bid, day, hour, count):
 		    wline = str_format.format(**new_obj).strip() + "\n"
 		    fw.write(wline.encode('utf8','ignore'))
     else:
-        coll_name = coll + '_' + bid + '_' + day + '_' + hour
+	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_supply = db[coll_name]
 	cnts = db_supply.count() / count + 1
 	
