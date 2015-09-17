@@ -48,8 +48,6 @@ def load(coll, bid, day, hour, count):
 	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_demand = db[coll_name]
 	cnts = db_demand.count() / count + 1
-	if cnts == 1:
-	    print 'must reduce count value!'
 	
 	# fix decode error 
 	#query_filter = {'p.v.rname':0, 'p.c.ua':0, 'p.v.hname':0, 'p.v.name':0}
@@ -94,12 +92,10 @@ def load(coll, bid, day, hour, count):
 	coll_name = coll + '_' + bid + '_' + day + '_' + hour
 	db_supply = db[coll_name]
 	cnts = db_supply.count() / count + 1
-	if cnts == 1:
-	    print 'must reduce count value!'
 	
 	# fix decode error 
 	#query_filter = {'p.v.rname':0,'p.c.ua':0, 'p.v.hname':0, 'p.v.name':0}
-	str_format = u'{sid}\t{boardid}\t{deviceid}\t{voideoid}\t{slotid}\t{cardid}\t{creativeid}\t{intime}\t{p_c_os}\t{p_c_type}\t{p_v_hid}\t{p_v_rid}\t{p_v_rname}'
+	str_format = u'{sid}\t{boardid}\t{deviceid}\t{voideoid}\t{slotid}\t{cardid}\t{creativeid}\t{intime}\t{p_c_os}\t{p_c_type}\t{p_c_ip}\t{p_v_hid}\t{p_v_rid}\t{p_v_rname}'
 	default_dict = dict(map(lambda x:(x,'null'),re.findall('{(\S*?)}',str_format),))
 
 	for cnt in range(0, cnts):
