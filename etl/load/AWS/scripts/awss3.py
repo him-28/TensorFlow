@@ -1,21 +1,23 @@
+
+
 import boto3
 
 ''' 上传文件到Amazon S3 '''
 
-class awss3:
+class AwsS3:
 	default_bucket_name = 'cn-north-region-java'
 	def __init__(self):
 		self.s3 = boto3.resource('s3')
 		self.bucketsCached = False
 		self.bucketsCache = []
-	def listBuckets(self,useCache):
+	def list_buckets(self,useCache):
 		if useCache and self.bucketsCached:
 			return self.bucketsCache
 		else:
 			self.bucketsCached = True
 			self.bucketsCache = self.s3.buckets.all()
 			return self.bucketsCache
-	def listObject(self,bucketName):
+	def list_objects(self,bucketName):
 		buckets = self.listBuckets(True)
 		bucketNames = []
 		isCacheValue = self.bucketsCached
@@ -29,7 +31,7 @@ class awss3:
 				return bucket.objects.all()
 		
 		return None
-	def listObjectKey(self,bucketName):
+	def list_object_key(self,bucketName):
 		objects = self.listObject(bucketName)
 		keys = []
 		if objects != None:
@@ -38,7 +40,7 @@ class awss3:
 			return keys
 		else:
 			return None
-	def deleteObject(self,bucketName,key):
+	def delete_object(self,bucketName,key):
 		objects = self.listObject(bucketName)
 		if objects != None:
 			for obj in objects:

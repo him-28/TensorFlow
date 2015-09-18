@@ -80,16 +80,32 @@ Boto3安装： pip install boto3
 
 # 三、功能规划
 
-	┌─────────────────────┐        ┌───────────────────┐        ┌───────────────────────┐
-	│上传数据文件到S3 Input│  --->  │spark定时处理数据   │  --->  │输出数据文件到S3 Output  │  
-	└─────────────────────┘        └───────────────────┘        └───────────────────────┘
+	┌─────────────────────┐        ┌───────────────────┐        ┌─────────────────────────────┐        ┌────────────────────┐
+	│上传数据文件到S3 Data │  --->  │spark定时处理数据   │  --->  │输出数据本地/home/hadoop/data  │  --->  │上传数据到S3 Output  │  
+	└─────────────────────┘        └───────────────────┘        └─────────────────────────────┘        └────────────────────┘
 
-# 四、文件上传到S3 API
+## Amazon S3 API 功能封装
+> Python：上传文件到Amazon S3，目前上传API不够完善，没有断点续传测试，建议暂时使用Java代替；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.ppipy](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py)
+> 
+> Java：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java)
 
-功能说明：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py)。
+## spark 数据处理功能封装
+> /usr/bin/pyspark
+
+功能说明：处理CSV数据，输出需要的格式到本地目录；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
+
+
+# 四、文件上传到S3 Data
+
+功能说明：定期上传数据文件到Amazon S3；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py)。
 
 存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
+文件抓取目录：`/home/wn/amble/etl/load/demand/`
 
-# 五、spark处理数据
+# 五、spark定时处理数据
 
-功能说明：处理S3 Input的数据；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
+功能说明：spark定时处理S3 Input的数据，输出数据到本地目录`/home/hadoop/data`；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark_schedule.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark_schedule.py)。
+
+# 六、上传数据到S3 Output
+
+功能说明：定时上传处理过的数据到S3 Output，上传成功后删除本地在`/home/hadoop/data`上的数据
