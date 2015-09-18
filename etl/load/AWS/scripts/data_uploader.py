@@ -1,4 +1,4 @@
-#from awss3 import AwsS3
+from awss3 import AwsS3
 import datetime
 import os
 import os.path
