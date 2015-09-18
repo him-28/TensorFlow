@@ -11,15 +11,20 @@ def get_property(options,items):
     cf = ConfigParser.ConfigParser()
     cf.read(config_file_path)
     s = cf.sections()
-    print 'section:', s
-    o = cf.options("dim_check")
-    print 'options:', o
-    v = cf.items("dim_check")
-    print 'property:', v
-    date_limit = cf.get("dim_check", "pri_date_4")
-    print date_limit
-    if "os1" in date_limit:
-        print "true"
+#    print 'section:', s
+#    o = cf.options("dim_check")
+#    print 'options:', o
+#    v = cf.items("dim_check")
+#    print 'property:', v
+#    date_limit = cf.get("dim_check", "pri_date_4")
+#    print date_limit
+#    if "os1" in date_limit:
+#        print "true"
+    if options in s:
+		if items in cf.options(options):
+			return cf.get(options, items)
+		else: return "false"
+	else: return "false"
         
 if __name__ == "__main__":
     get_property("", "")
