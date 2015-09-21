@@ -23,7 +23,7 @@ def get_property(options,items):
 #        print "true"
     try:
         if options in s and  items in cf.options(options):
-    			return cf.get(options, items)
+            return cf.get(options, items)
         else: return "false"
     except:
         return "not found item:"+items
