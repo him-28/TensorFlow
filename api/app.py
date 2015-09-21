@@ -68,7 +68,7 @@ class VersionHandler(tornado.web.RequestHandler):
 	def get(self):
 		version=get_property("version","version")
 		if version:
-			json.dumps({"version":version})
+			json.dumps({"version":version}) 
 		
 if __name__ == "__main__":
 	application = tornado.web.Application([
