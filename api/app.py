@@ -10,6 +10,7 @@ from tornado.escape import json_decode, json_encode
 import settings
 from base_handler import Handler
 import os
+import json
 DIR_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 import sys
 sys.path.append(DIR_PATH)
@@ -63,11 +64,11 @@ class OrderReportHandler(Handler,tornado.web.RequestHandler):
 		res=self.get_response(rows)
 		self.write(res)
 
-class HelloHandler(tornado.web.RequestHandler):
+class VersionHandler(tornado.web.RequestHandler):
 	def get(self):
-		version=get_property("version","VERSION")
+		version=get_property("version","version")
 		if version:
-			self.write("{\"version\":\""+version+"\"")
+			json.dumps({"version":version})
 		
 if __name__ == "__main__":
 	application = tornado.web.Application([

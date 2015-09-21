@@ -5,6 +5,7 @@ Created on 2015年9月10日
 @author: Administrator
 '''
 import ConfigParser
+import json
 
 config_file_path="../api_config.ini"
 def get_property(options,items):
@@ -20,11 +21,12 @@ def get_property(options,items):
 #    print date_limit
 #    if "os1" in date_limit:
 #        print "true"
-    if options in s:
-		if items in cf.options(options):
-			return cf.get(options, items)
-		else: return "false"
-	else: return "false"
+    try:
+        if options in s and  items in cf.options(options):
+    			return cf.get(options, items)
+        else: return "false"
+    except:
+        return "not found item:"+items
         
 if __name__ == "__main__":
     get_property("", "")
