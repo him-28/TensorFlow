@@ -63,10 +63,17 @@ class OrderReportHandler(Handler,tornado.web.RequestHandler):
 		res=self.get_response(rows)
 		self.write(res)
 
+class HelloHandler(tornado.web.RequestHandler):
+	def get(self):
+		version=get_property("version","VERSION")
+		if version:
+			self.write("{\"version\":\""+version+"\"")
+		
 if __name__ == "__main__":
 	application = tornado.web.Application([
 		(r'/', HelloHandler),
 		(r'/orderReport', OrderReportHandler)
+		(r'/version', VersionHandler),
 	])
    	application.listen(settings.port)
    	tornado.ioloop.IOLoop.instance().start()
