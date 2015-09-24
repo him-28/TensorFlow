@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
@@ -27,6 +30,8 @@ import com.hunantv.aws.util.CredentialsFileUtil;
 
 public class Awss3 {
 
+	public static Logger LOG = LoggerFactory.getLogger(Awss3.class);
+	
 	public static final String BUCKET_NAME = "cn-north-region-java";
 
 	private ProfileCredentialsProvider provider;

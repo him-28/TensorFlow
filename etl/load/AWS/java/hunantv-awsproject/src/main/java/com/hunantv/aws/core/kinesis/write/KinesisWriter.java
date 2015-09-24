@@ -1,5 +1,9 @@
 package com.hunantv.aws.core.kinesis.write;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.UUID;
@@ -87,6 +91,7 @@ public class KinesisWriter {
 		PutRecordRequest putRecord = new PutRecordRequest();
 		putRecord.setStreamName(streamName);
 		putRecord.setData(ByteBuffer.wrap(bytes));
+		putRecord.setPartitionKey(dataLine.split("\t")[0]);
 		try {
 			kinesisClient.putRecord(putRecord);
 		} catch (AmazonClientException ex) {
@@ -95,19 +100,14 @@ public class KinesisWriter {
 	}
 
 	public static void main(String[] args) throws Exception {
-		checkUsage(args);
 
-		String streamName = args[0];
-		String regionName = args[1];
-		Region region = RegionUtils.getRegion(regionName);
-		if (region == null) {
-			System.err.println(regionName + " is not a valid AWS region.");
-			System.exit(1);
-		}
+		String streamName = "StockTradeStream";
+		String regionName = "ap-northeast-1";
 
 		AWSCredentials credentials = CredentialUtils.getCredentialsProvider()
 				.getCredentials();
 
+		Region region = RegionUtils.getRegion(regionName);
 		AmazonKinesis kinesisClient = new AmazonKinesisClient(credentials,
 				ConfigurationUtils.getClientConfigWithUserAgent());
 		kinesisClient.setRegion(region);
@@ -115,10 +115,42 @@ public class KinesisWriter {
 		validateStream(kinesisClient, streamName);
 
 		while (true) {
-			String dataLine = UUID.randomUUID().toString() + "\t"
-					+ new Random().nextDouble();
-			sendDataLine(dataLine, kinesisClient, streamName);
-			Thread.sleep(100);
+			FileReader fr = new FileReader(
+					"F:\\git\\amble\\etl\\load\\demand\\4389\\201509\\20150907.17.0.demand.csv");
+			BufferedReader br = new BufferedReader(fr);
+			String str = null;
+			while ((str = br.readLine()) != null) {
+				sendDataLine(str, kinesisClient, streamName);
+			}
+			br.close();
+			fr.close();
+			Thread.sleep(1000);
 		}
+
+		// checkUsage(args);
+		//
+		// String streamName = args[0];
+		// String regionName = args[1];
+		// Region region = RegionUtils.getRegion(regionName);
+		// if (region == null) {
+		// System.err.println(regionName + " is not a valid AWS region.");
+		// System.exit(1);
+		// }
+		//
+		// AWSCredentials credentials = CredentialUtils.getCredentialsProvider()
+		// .getCredentials();
+		//
+		// AmazonKinesis kinesisClient = new AmazonKinesisClient(credentials,
+		// ConfigurationUtils.getClientConfigWithUserAgent());
+		// kinesisClient.setRegion(region);
+		//
+		// validateStream(kinesisClient, streamName);
+		//
+		// while (true) {
+		// String dataLine = UUID.randomUUID().toString() + "\t"
+		// + new Random().nextDouble();
+		// sendDataLine(dataLine, kinesisClient, streamName);
+		// Thread.sleep(100);
+		// }
 	}
 }
