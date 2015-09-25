@@ -23,6 +23,16 @@ CREATE DATABASE adc
        CONNECTION LIMIT=-1;
 
 
+CREATE TABLE public."Dim_Area"
+(
+    id serial,
+    province_id integer NOT NULL,
+    province_name character varying NOT NULL,
+    city_id integer NOT NULL,
+    city_name character varying NOT NULL
+)
+
+
 insert into "Dim_Date" SELECT
 	datum AS date_str,
 	EXTRACT(YEAR FROM datum) AS YEAR,
@@ -142,8 +152,6 @@ CREATE TABLE "AD_Facts_By_Hour"
 (
   date_id integer NOT NULL,
   time_id integer NOT NULL,
-  area_id integer,
-  video_id integer,
   os_id integer,
   reqs_total bigint,
   impressions_start_total bigint,
@@ -161,4 +169,97 @@ WITH (
 );
 ALTER TABLE "AD_Facts_By_Hour"
   OWNER TO postgres;
+
+CREATE TABLE "Dim_AD"
+(
+    id serial,
+    ad_campaign_id integer NOT NULL,
+    ad_slot_id integer NOT NULL,
+    ad_card_id integer NOT NULL,
+    ad_creative_id integer NOT NULL,
+    CONSTRAINT "Dim_AD_pkey" PRIMARY KEY(id)
+)
+
+CREATE TABLE "AD_Facts_By_Day"
+(
+  date_id integer NOT NULL,
+  area_id integer,
+  video_id integer,
+  os_id integer,
+  reqs_total bigint,
+  impressions_start_total bigint,
+  impressions_finish_total bigint,
+  click bigint,
+  hit_total bigint, //展示数，即命中数
+  ad_slot_id integer,
+  ad_card_id integer,
+  ad_creative_id integer,
+  ad_campaign_id integer, //订单ID
+  CONSTRAINT "AD_Facts_By_Day_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "AD_Facts_By_Day"
+  OWNER TO postgres;
+
+CREATE TABLE "AD_Facts_By_Video"
+(
+  date_id integer NOT NULL,
+  area_id integer,
+  video_id integer,
+  os_id integer,
+  reqs_total bigint,
+  impressions_start_total bigint,
+  impressions_finish_total bigint,
+  click bigint,
+  hit_total bigint, //展示数，即命中数
+  ad_slot_id integer,
+  ad_card_id integer,
+  ad_creative_id integer,
+  ad_campaign_id integer, //订单ID
+  CONSTRAINT "AD_Facts_By_Day_pkey" PRIMARY KEY (date_id, time_id)
+)
+
+CREATE TABLE "Reach_Curve_By_Impressions"
+(
+    ad_campaign_id integer NOT NULL,
+    impression_total integer NOT NULL,
+    total integer NOT NULL
+)
+
+CREATE TABLE "Reach_Curve_By_Day"
+(
+    date_id integer NOT NULL,
+    ad_campaign_id integer NOT NULL,
+    total integer NOT NULL
+)
+
+CREATE TABLE public."Dim_Area"
+(
+    id serial,
+    province_id integer NOT NULL,
+    province_name character varying NOT NULL,
+    city_id integer NOT NULL,
+    city_name character varying NOT NULL
+)
+
+CREATE TABLE public."Data_Audit_Statistics"
+(
+    file_name character varying NOT NULL,
+    check_date date NOT NULL,
+    check_total integer NOT NULL,
+    rf float NOT NULL, -- all rows/errors
+)
+
+CREATE TABLE public."Data_Audit_Details"
+(
+    date_id integer NOT NULL,
+    time_id integer NOT NULL,
+    name character varying NOT NULL,
+    row integer NOT NULL,
+    field character varying NOT NULL,
+    value character varying NOT NULL,
+    error character varying NOT NULL
+)
 
