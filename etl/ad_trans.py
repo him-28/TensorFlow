@@ -24,7 +24,9 @@ def demand_extract(filename):
 
 def supply_transform(df):
     for chunk in df:
-        chunk.groupby(agg_header1).count()
+        chunk.describe().to_csv("describe.csv")
+        tmp = chunk[agg_header1].groupby(agg_header1).size()
+        tmp.to_csv('test.csv', mode="a", index=False, header=None)
 
 def demand_transform(table):
     pass
