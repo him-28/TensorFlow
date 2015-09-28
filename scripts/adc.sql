@@ -263,3 +263,13 @@ CREATE TABLE public."Data_Audit_Details"
     error character varying NOT NULL
 )
 
+CREATE TABLE public."Data_SLA"
+(
+    id serial,
+    name character varying,
+    filename character varying,
+    exec_success integer,
+    exec_error integer,
+    create_time date
+)
+
