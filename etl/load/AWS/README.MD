@@ -87,22 +87,22 @@ Boto3安装： pip install boto3
 
 > * 更多关于Python配置Access Key的信息参见[https://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration](https://boto3.readthedocs.org/en/latest/guide/configuration.html#guide-configuration)
 
-**Notice:** *开发工具包提供在程序代码中配置credentials的方法，详细点击本文提供的API文档或开发人员指获取*
+**Notice:** *开发工具包提供在程序代码中配置credentials的方法，详细点击本文提供的API文档或开发人员指南*
 
 配置完成Access Key后，即可使用AWS开发工具包提供的API访问AWS许多服务
 
 # 三、功能规划
 
 	1.
-	┌────────────────────────┐        ┌─────────────────────┐       ┌─────────────┐       ┌───────────┐
-	│上传数据流到Knesis(实时) │  --->  │Spark Streaming处理  │  --->  │输出数据到本地 │  ---> │到云谷、S3 │  
-	└────────────────────────┘        └─────────────────────┘       └─────────────┘       └───────────┘
+	┌────────────┐      ┌────────────────────┐      ┌────────────────┐      
+	│扫描本地文件 │  ---> │缓存文件索引到数据库 │  ---> │上传数据文件到S3 │ 
+	└────────────┘      └────────────────────┘      └────────────────┘      
 
 
 	2.
-	┌────────────────┐      
-	│上传数据文件到S3 │  --->  ？
-	└────────────────┘      
+	┌────────────────────────┐        ┌─────────────────────┐       ┌─────────────┐       ┌───────────┐
+	│上传数据流到Knesis(实时) │  --->  │Spark Streaming处理  │  --->  │输出数据到本地 │  ---> │到云谷、S3 │  
+	└────────────────────────┘        └─────────────────────┘       └─────────────┘       └───────────┘
 
 
 	
@@ -122,12 +122,52 @@ Boto3安装： pip install boto3
 功能说明：处理CSV数据，输出需要的格式到本地目录；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
 
 
-# 四、文件上传到S3 Data
+# 四、文件上传到S3
 
-功能说明：定期上传数据文件到Amazon S3；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py)。
+**功能说明：**定期上传数据文件到Amazon S3；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/upload](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/upload)。
 
-存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
-文件抓取目录：`/home/wn/amble/etl/load/demand/`
+**存储桶：**Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶，本地文件抓取目录和存储桶第一级目录从上传参数中指定，参见下文的**执行方法与参数**。
+
+**执行方法与参数：**主方法`com.hunantv.aws.upload.CSVScanner`，传入四个参数：(扫描的本地目录)(上传到S3的根目录)\[文件上传线程数\]\[扫描超时时间（秒、超时后不再执行队列里未上传的任务）\]，后两个参数不是必须的，有默认值。传参如`java com/hunantv/aws/upload/CSVSCanner /data/ad2/demand demand 10 120`，则程序会执行以下逻辑：扫描本地/data/ad2/demand文件夹下所有的文件，上传到存储桶中demand路径下，开启最多10个上传线程上传扫描到的文件，从程序执行开始120秒内扫描到的文件会提交上传，120秒后扫描到的文件不会处理。
+
+> **Notice：** 
+>
+> - *超时时间是对扫描超时，超时后未完成的上传不会中止或暂停；*
+> - *程序扫描到最后修改时间在超时时间内的文件不会提交到上传队列；*
+> - *文件上传过程中，程序会独占文件的读、写并加系统锁，加锁失败或无读取权限则跳过不做处理，日志系统对这种异常记录一个ERROR，日志展示细节参考 **配置项** 中的 `日志系统配置`；*
+> - *默认的上传线程为3个，默认扫描超时时间为300秒（5分钟）；*
+> - *上传到S3的存储路径和本地目录是一致的。*
+
+**配置项：**程序提供的配置文件有，日志系统配置：[log4j.properties](http://git.hunantv.com/dingzheng/amble/blob/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/log4j.properties)、数据库连接配置：[jdbc.properties](http://git.hunantv.com/dingzheng/amble/blob/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/config/jdbc.properties)、Access Key配置：[credentials](http://git.hunantv.com/dingzheng/amble/blob/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/config/credentials)
+
+**数据库：**
+
+		DROP TABLE IF EXISTS "public"."S3_Transfer_Index";
+		CREATE TABLE "public"."S3_Transfer_Index" (
+		"id" varchar(36) COLLATE "default" NOT NULL,
+		"pid" varchar(36) COLLATE "default" NOT NULL,
+		"index_name" varchar(36) COLLATE "default" NOT NULL,
+		"path_type" varchar(1) COLLATE "default" NOT NULL,
+		"path_name" varchar(256) COLLATE "default" NOT NULL,
+		"root_path" varchar(256) COLLATE "default" NOT NULL,
+		"upload_status" varchar(1) COLLATE "default",
+		"file_md5" varchar(32) COLLATE "default",
+		"queue_time" int8,
+		"upload_start_time" int8,
+		"upload_end_time" int8
+		) WITH (OIDS=FALSE);
+
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."id" IS 'ID';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."pid" IS '父级目录ID，第一级写‘-’';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."index_name" IS '索引名称';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."path_type" IS '2:文件，1：目录';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."path_name" IS '相对rootPath的路径';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."root_path" IS '根目录';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."upload_status" IS '文件上传状态0，1，2分别是未上传，已存入上传队列，上传完成。目录上传状态0，2分别是未完成上传，已完成上传';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."file_md5" IS '文件的MD5值，目录不填';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."queue_time" IS '放入上传队列时间（毫秒），目录不填';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."upload_start_time" IS '文件开始上传时间（毫秒），目录不填';
+		COMMENT ON COLUMN "public"."S3_Transfer_Index"."upload_end_time" IS '文件上传绷带时间（毫秒），目录不填';
 
 # 五、spark定时处理数据
 
