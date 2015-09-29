@@ -153,7 +153,6 @@ CREATE TABLE "AD_Facts_By_Hour"
   date_id integer NOT NULL,
   time_id integer NOT NULL,
   os_id integer,
-  reqs_total bigint,
   impressions_start_total bigint,
   impressions_finish_total bigint,
   click bigint,
@@ -273,3 +272,15 @@ CREATE TABLE public."Data_SLA"
     create_time date
 )
 
+CREATE TABLE "Reqs_Facts_By_Hour"
+(
+      date_id integer NOT NULL,
+      time_id integer NOT NULL,
+      ad_card_id integer,
+      ad_campaign_id integer, 
+      total integer,
+      CONSTRAINT "Reqs_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+      OIDS=FALSE
+);
