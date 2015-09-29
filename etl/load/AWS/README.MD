@@ -24,6 +24,19 @@ Amazon EMR 能够安全可靠地处理大数据使用案例，包括日志分析
 
 > 更多关于Amazon EMR的[开发人员指南](http://docs.aws.amazon.com/zh_cn/ElasticMapReduce/latest/DeveloperGuide/emr-what-is-emr.html)、[API参考](http://docs.aws.amazon.com/ElasticMapReduce/latest/API/)、[快速参考卡片](http://s3.amazonaws.com/awsdocs/ElasticMapReduce/latest/emr-qrc.pdf)的信息，可在[Amazon Elastic MapReduce](http://aws.amazon.com/cn/documentation/elasticmapreduce/ "Amazon Elastic MapReduce 文档")文档中获取
 
+##Amazon Kinesis
+Amazon Kinesis 是一种完全托管的云服务，用于对大型分布式数据流进行实时数据处理。Amazon Kinesis 每小时可从数十万种来源中连续捕获和存储数 TB 数据，如网站点击流、财务交易、社交媒体源、IT 日志和定位追踪事件。通过 Amazon Kinesis Client Library (KCL)，您可以构建 Amazon Kinesis 应用程序并使用流媒体数据来带动实时控制面板、生成警报、实施动态定价和广告等等。您还可以将数据从 Amazon Kinesis 发送到 AWS 服务中，如 Amazon Simple Storage Service (Amazon S3)、Amazon Redshift、Amazon Elastic Map Reduce (Amazon EMR) 和 AWS Lambda。
+
+> 更多关于Amazon Kinesis的[开发人员指南](http://docs.aws.amazon.com/kinesis/latest/dev/introduction.html)、[API参考](http://docs.aws.amazon.com/kinesis/latest/APIReference/Welcome.html)、Amazon Kinesis 客户端库（[python](https://github.com/awslabs/amazon-kinesis-client-python)|[java](https://github.com/awslabs/amazon-kinesis-client)）、[Amazon Kinesis 创建器库](https://github.com/awslabs/amazon-kinesis-producer)、[Amazon Kinesis 连接件库](https://github.com/awslabs/amazon-kinesis-connectors)、[Amazon Kinesis Storm Spout](https://github.com/awslabs/kinesis-storm-spout) 参见[Amazon Kinesis开发人员资源](https://aws.amazon.com/cn/kinesis/developer-resources/)
+
+##Spark Streaming
+官网首页：[https://spark.apache.org/streaming/](https://spark.apache.org/streaming/)
+
+Spark Examples：[https://spark.apache.org/examples.html](https://spark.apache.org/examples.html)
+
+API Docs: [python](https://spark.apache.org/docs/latest/api/python/index.html)|[java](https://spark.apache.org/docs/latest/api/java/index.html)
+
+Spark Streaming开发人员指南：[https://spark.apache.org/docs/latest/streaming-programming-guide.html](https://spark.apache.org/docs/latest/streaming-programming-guide.html)
 # 二、准备工作
 ## 获取适用于 Python 的 AWS 开发工具包 (Boto3)
 
@@ -80,16 +93,46 @@ Boto3安装： pip install boto3
 
 # 三、功能规划
 
-	┌────────────────┐        ┌───────────────────┐        ┌───────────────────────┐
-	│上传数据文件到S3  │  --->  │spark定时处理数据    │  --->  │输出数据文件到S3 Output  │  
-	└────────────────┘        └───────────────────┘        └───────────────────────┘
+	1.
+	┌────────────────────────┐        ┌─────────────────────┐       ┌─────────────┐       ┌───────────┐
+	│上传数据流到Knesis(实时) │  --->  │Spark Streaming处理  │  --->  │输出数据到本地 │  ---> │到云谷、S3 │  
+	└────────────────────────┘        └─────────────────────┘       └─────────────┘       └───────────┘
 
-# 四、文件上传到S3 API
 
-功能说明：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py)。
+	2.
+	┌────────────────┐      
+	│上传数据文件到S3 │  --->  ？
+	└────────────────┘      
+
+
+	
+
+## Amazon S3 API 功能封装
+> Python：上传文件到Amazon S3，目前上传API不够完善，没有断点续传测试，建议暂时使用Java代替；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/awss3.py)
+> 
+> Java：上传文件到Amazon S3，测试上传速度约160KB/s,有断点上传功能；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/core/s3](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/core/s3)
+
+## Amazon Knesis功能封装
+
+> 写入、读取数据流到Amazon Knesis；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/core/knesis](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/java/hunantv-awsproject/src/main/java/com/hunantv/aws/core/knesis)
+
+## spark 数据处理功能封装
+> /usr/bin/pyspark
+
+功能说明：处理CSV数据，输出需要的格式到本地目录；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
+
+
+# 四、文件上传到S3 Data
+
+功能说明：定期上传数据文件到Amazon S3；Git地址：[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/data_uploader.py)。
 
 存储桶：Amazon S3每个用户只能使用自己的Access Key操作自己创建的存储桶，现阶段暂定名称为`cn-north-region-java`的存储桶
+文件抓取目录：`/home/wn/amble/etl/load/demand/`
 
 # 五、spark定时处理数据
 
-功能说明：处理S3 Input的数据；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark.py)。
+功能说明：spark定时处理S3 Input的数据，输出数据到本地目录`/home/hadoop/data`；Git地址[http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark_schedule.py](http://git.hunantv.com/dingzheng/amble/tree/dev/etl/load/AWS/scripts/spark_schedule.py)。
+
+# 六、上传数据到S3 Output
+
+功能说明：定时上传处理过的数据到S3 Output，上传成功后删除本地在`/home/hadoop/data`上的数据
