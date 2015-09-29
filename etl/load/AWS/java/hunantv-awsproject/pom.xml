@@ -71,16 +71,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.derby</groupId>
-			<artifactId>derby</artifactId>
-			<version>10.10.2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.derby</groupId>
-			<artifactId>derbyLocale_zh_CN</artifactId>
-			<version>10.10.2.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.12</version>
@@ -90,26 +80,11 @@
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.spark</groupId> -->
-		<!-- <artifactId>spark-core_2.10</artifactId> -->
-		<!-- <version>1.5.0</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.spark</groupId> -->
-		<!-- <artifactId>spark-mllib_2.10</artifactId> -->
-		<!-- <version>1.5.0</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.spark</groupId> -->
-		<!-- <artifactId>spark-streaming-kafka_2.10</artifactId> -->
-		<!-- <version>1.5.0</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.spark</groupId> -->
-		<!-- <artifactId>spark-streaming-flume_2.10</artifactId> -->
-		<!-- <version>1.5.0</version> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1100-jdbc3</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<pluginManagement>

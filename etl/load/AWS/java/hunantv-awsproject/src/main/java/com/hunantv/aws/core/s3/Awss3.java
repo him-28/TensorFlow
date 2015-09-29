@@ -1,14 +1,15 @@
 package com.hunantv.aws.core.s3;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
@@ -26,12 +27,14 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
+import com.amazonaws.util.Md5Utils;
+import com.google.common.collect.ImmutableMap;
 import com.hunantv.aws.util.CredentialsFileUtil;
 
 public class Awss3 {
 
-	public static Logger LOG = LoggerFactory.getLogger(Awss3.class);
-	
+	public static Logger LOG = Logger.getLogger(Awss3.class);
+
 	public static final String BUCKET_NAME = "cn-north-region-java";
 
 	private ProfileCredentialsProvider provider;
@@ -75,7 +78,7 @@ public class Awss3 {
 	}
 
 	public void deleteKey(String key) {
-		System.out.println("删除：" + key);
+		LOG.info("delete key:" + key);
 		List<String> allKey = listAllKey();
 		if (!allKey.contains(key)) {
 			throw new IllegalArgumentException("Not Found:the key " + key
@@ -84,7 +87,13 @@ public class Awss3 {
 		s3.deleteObject(BUCKET_NAME, key);
 	}
 
-	public boolean addKey(String key, String filePath, boolean isOverride) {
+	public boolean addKey(final String key, String filePath, boolean isOverride) {
+		return addKey(key, filePath, isOverride, null, null);
+	}
+
+	public boolean addKey(final String key, String filePath,
+			boolean isOverride, final Awss3Callback callback,
+			final String dataId) {
 		final List<Boolean> result = new ArrayList<>(1);
 		result.add(false);
 		final long start = System.currentTimeMillis();
@@ -96,8 +105,7 @@ public class Awss3 {
 			}
 		}
 
-		System.out.println("开始上传：" + filePath);
-		System.out.println("key:" + key);
+		LOG.info("upload file:" + filePath + " to :" + key);
 
 		File file = new File(filePath);
 		if (file.exists() && file.isFile()) {
@@ -117,24 +125,33 @@ public class Awss3 {
 						return;
 					int percentTransferrred = (int) upload.getProgress()
 							.getPercentTransferred();
-					System.out.println(percentTransferrred + "% completed");
+					LOG.debug("upload to :" + key + " " + percentTransferrred
+							+ "% completed");
 					ProgressEventType type = progressEvent.getEventType();
 					switch (type) {
 					case TRANSFER_COMPLETED_EVENT:
 						percentTransferrred = 100;
 						long end = System.currentTimeMillis();
-						System.out.println("文件大小：" + fileLength + "(bt),共耗时："
-								+ (end - start) + "(millis)");
+						LOG.info("upload to '" + key
+								+ "' completed,total size：" + fileLength
+								+ "(bit),time used：" + (end - start)
+								+ "(millis)");
 						result.set(0, true);
+						Map<String, Object> infor = ImmutableMap.of("status",
+								"success", "id", (Object) dataId);
+						callback.notify(infor);
 						break;
 					case TRANSFER_FAILED_EVENT:
 						try {
 							AmazonClientException e = upload.waitForException();
-							System.out
-									.println("Unable to upload file to Amazon S3: "
-											+ e.getMessage());
+							LOG.error("Unable to upload file to Amazon S3: "
+									+ e.getMessage());
 						} catch (InterruptedException e) {
+							LOG.error(e.getMessage(), e);
 						}
+						infor = ImmutableMap.of("status", "error", "id",
+								(Object) dataId);
+						callback.notify(infor);
 						break;
 					default:
 						break;
@@ -142,31 +159,44 @@ public class Awss3 {
 				}
 			};
 			upload.addProgressListener(progressListener);
-			try {
-				upload.waitForCompletion();
-			} catch (AmazonClientException | InterruptedException e) {
-				e.printStackTrace();
-			}
+//			try {
+//				upload.waitForCompletion();
+//			} catch (AmazonClientException | InterruptedException e) {
+//				e.printStackTrace();
+//			}
 			if (isRunnableJar) {
 				tx.shutdownNow();
 			}
 		} else {
 			throw new IllegalArgumentException(
-					"Not Fount: the file did not exists.");
+					"Not Found: the file did not exists : " + filePath);
+		}
+		return result.get(0);
+	}
+
+	public ObjectMetadata getObjectMetaData(String bucketName, String key) {
+		LOG.info("get file meta datas:" + key);
+		GetObjectRequest rangeObjectRequest = new GetObjectRequest(bucketName,
+				key);
+
+		S3Object objectPortion = s3.getObject(rangeObjectRequest);
+		if (objectPortion == null) {
+			return null;
 		}
 
-		return result.get(0);
+		ObjectMetadata obj = objectPortion.getObjectMetadata();
+		return obj;
 	}
 
 	public void download(String bucketName, String key, String outputFilePath,
 			boolean isOverride) {
-		System.out.println("download:" + key);
+		LOG.info("download file:" + key);
 		GetObjectRequest rangeObjectRequest = new GetObjectRequest(bucketName,
 				key);
 
 		File of = new File(outputFilePath);
 		if (of.exists() && !isOverride) {
-			System.err.println("file already exits,use -f option to override");
+			LOG.warn("local file already exits,use -f option to override");
 			return;
 		}
 
@@ -176,7 +206,7 @@ public class Awss3 {
 		}
 
 		long l = objectPortion.getObjectMetadata().getContentLength();
-		System.out.println("文件大小：" + l);
+		LOG.info("total size(bit):" + l);
 
 		InputStream objectData = objectPortion.getObjectContent();
 		if (objectData == null) {
@@ -192,8 +222,8 @@ public class Awss3 {
 			int len = -1;
 			while ((len = objectData.read(b)) != -1) {
 				total = total + len;
-				System.out.println("已下载：" + total + "/" + l + ","
-						+ (total * 100 / l) + '%');
+				LOG.info(total + "/" + l + "," + (total * 100 / l)
+						+ "% completed");
 				fos.write(b);
 			}
 		} catch (IOException e) {
@@ -208,7 +238,23 @@ public class Awss3 {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("download complete");
+		LOG.info("download complete");
+	}
+	
+	public static String getMd5String(String filePath) throws FileNotFoundException, IOException{
+		return bytesToHexString(Md5Utils.computeMD5Hash(new File(filePath)));
+	}
+	
+	public static String bytesToHexString(byte[] bytes) {
+		StringBuffer sb = new StringBuffer(bytes.length * 2);
+		String sTemp;
+		for (int i = 0; i < bytes.length; i++) {
+			sTemp = Integer.toHexString(0xFF & bytes[i]);
+			if (sTemp.length() < 2)
+				sb.append(0);
+			sb.append(sTemp);
+		}
+		return sb.toString();
 	}
 
 	public static void main(String[] args) throws IOException {

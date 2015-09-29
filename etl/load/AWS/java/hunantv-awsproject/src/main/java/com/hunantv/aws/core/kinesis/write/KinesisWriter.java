@@ -1,12 +1,8 @@
 package com.hunantv.aws.core.kinesis.write;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.nio.ByteBuffer;
-import java.util.Random;
-import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
