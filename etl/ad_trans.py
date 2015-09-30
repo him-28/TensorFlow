@@ -24,7 +24,9 @@ def demand_extract(filename):
 
 def supply_transform(df):
     for chunk in df:
-        chunk.groupby(agg_header1).count()
+        chunk.describe().to_csv("describe.csv")
+        tmp = chunk[agg_header1].groupby(agg_header1).size()
+        tmp.to_csv('test.csv', mode="a", index=False, header=None)
 
 def demand_transform(table):
     pass
@@ -43,7 +45,10 @@ def load_to_pg_facts_day(table):
 
 
 if __name__ == '__main__':
-    filename = '/Users/martin/Documents/03-raw data/20150923.04.product.demand.csv'
+    # localfile 
+    # filename = '/Users/martin/Documents/03-raw data/20150923.04.product.demand.csv'
+    # 10.100.5.82 file
+    # filename = '/tmp/20150923.10.product.supply.csv'
     supply_extract(filename)
 
             
