@@ -299,3 +299,18 @@ CREATE TABLE "Hit_Facts_By_Hour"
 WITH (
       OIDS=FALSE
 );
+
+CREATE TABLE "Hit_Facts_By_Hour2"
+(
+      date_id integer NOT NULL,
+      time_id integer NOT NULL,
+      ad_card_id integer,
+      ad_slot_id integer,
+      ad_create_id integer,
+      ad_campaign_id integer,
+      total integer,
+      CONSTRAINT "Hit_Facts_By_Hour2_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+      OIDS=FALSE
+);
