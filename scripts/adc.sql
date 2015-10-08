@@ -288,7 +288,7 @@ CREATE TABLE "Hit_Facts_By_Hour"
 (
       date_id integer NOT NULL,
       time_id integer NOT NULL,
-      os character varying
+      os character varying,
       ad_card_id integer,
       ad_slot_id integer,
       ad_create_id integer,

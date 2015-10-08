@@ -58,8 +58,7 @@ class ETL_Transform:
                 
         self.etl_aggregate_supply()
         self.read_buffer = []
-        self.supply_merge_table = etl.rename(self.supply_merge_table,'value','reqs_total')
-        self.supply_merge_table = etl.addfield(self.supply_merge_table,'hit_total',lambda rec:rec['reqs_total'])
+        self.supply_merge_table = etl.rename(self.supply_merge_table,'value','total')
         self.supply_merge_table = etl.addfield(self.supply_merge_table,'date_id',self.pdate)
         self.supply_merge_table = etl.addfield(self.supply_merge_table,'time_id',self.hour)
         
@@ -78,9 +77,9 @@ class ETL_Transform:
         display_table = etl.aggregate(row_table,tuple(self.aggre_header),len)
         agg_header_.append('value')
         try:
-            tmp_table = self.supply_merge_table.list()[:]
+            tmp_table = self.supply_merge_table.list()
         except:
-            tmp_table = self.supply_merge_table[:]
+            tmp_table = self.supply_merge_table
         tmp_merge_table = etl.merge(tmp_table,display_table,key=tuple(agg_header_))
 #         tmp_2_merge_table=etl.convert(tmp_merge_table,"value",lambda x:int(x))
         table_t = etl.aggregate(tmp_merge_table,tuple(self.aggre_header),sum,'value')
@@ -129,9 +128,9 @@ class ETL_Transform:
         click_agg_table_t = etl.aggregate(click_table, tuple(self.aggre_header), len)
 #         click_agg_table = etl.rename(click_agg_table_t,'value','click') 
         try:
-            tmp_table = self.demand_merge_table_click.list()[:]
+            tmp_table = self.demand_merge_table_click.list()
         except:
-            tmp_table = self.demand_merge_table_click[:]
+            tmp_table = self.demand_merge_table_click
         tmp_merge_table = etl.merge(tmp_table,click_agg_table_t,key=tuple(agg_header_))
         self.demand_merge_table_click = etl.aggregate(tmp_merge_table,tuple(self.aggre_header),sum,'value')
         
@@ -139,9 +138,9 @@ class ETL_Transform:
         imp_start_agg_table_t = etl.aggregate(imp_start_table,tuple(self.aggre_header),len)
 #         imp_start_agg_table = etl.rename(imp_start_agg_table_t,'value','impressions_start_total')
         try:
-            tmp_table = self.demand_merge_table_start.list()[:]
+            tmp_table = self.demand_merge_table_start.list()
         except:
-            tmp_table = self.demand_merge_table_start[:]
+            tmp_table = self.demand_merge_table_start
         tmp_merge_table = etl.merge(tmp_table,imp_start_agg_table_t,key=tuple(agg_header_))
         self.demand_merge_table_start = etl.aggregate(tmp_merge_table,tuple(self.aggre_header),sum,'value')
         
@@ -149,9 +148,9 @@ class ETL_Transform:
         imp_end_agg_table_t = etl.aggregate(imp_end_table,tuple(self.aggre_header),len)
 #         imp_end_agg_table = etl.rename(imp_end_agg_table_t,'value','impressions_finish_total')
         try:
-            tmp_table = self.demand_merge_table_end.list()[:]
+            tmp_table = self.demand_merge_table_end.list()
         except:
-            tmp_table = self.demand_merge_table_end[:]
+            tmp_table = self.demand_merge_table_end
         tmp_merge_table = etl.merge(tmp_table,imp_end_agg_table_t,key=tuple(agg_header_))
         self.demand_merge_table_end = etl.aggregate(tmp_merge_table,tuple(self.aggre_header),sum,'value')
         
@@ -173,22 +172,37 @@ class ETL_Transform:
             print "read:",self.count*self.batch_read_size
             self.count =self.count + 1
             self.read_buffer=[]
+            
+            
     def transfrom(self):
         self.transform_supply()
         self.transfrom_demand()
-        hour_ad_fact_table_t = etl.merge(self.supply_merge_table,self.demand_merge_table,key=tuple(self.aggre_header))
-        hour_ad_fact_table = etl.convert(hour_ad_fact_table_t,{'click':lambda x:(0 if not x else x),
+        # table ad_facts_by_hour
+        hour_ad_fact_table = etl.convert(self.demand_merge_table,{'click':lambda x:(0 if not x else x),
                                                                 'impressions_start_total':lambda x:(0 if not x else x),
-                                                                'impressions_finish_total':lambda x:(0 if not x else x),
-                                                                'reqs_total':lambda x:(0 if not x else x),
-                                                                'hit_total':lambda x:(0 if not x else x)
+                                                                'impressions_finish_total':lambda x:(0 if not x else x)
                                                                 })
         d=datetime.datetime.strptime(self.pdate,"%Y-%m-%d")
         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
-        etl.tocsv(hour_ad_fact_table,"{0}_{1}_hour_ad_fact.csv".format(pdate_,self.hour),encoding="utf-8",write_header=True)
+        etl.tocsv(hour_ad_fact_table,"{0}_{1}_ad_facts_by_hour.csv".format(pdate_,self.hour),encoding="utf-8",write_header=True)
+        
+        #table hit_facts_by_hour
+        hout_hit_facts_table = etl.select(self.supply_merge_table,"{cardid} != '-1' and {creativeid} != '-1'")
+        etl.tocsv(hout_hit_facts_table, "{0}_{1}_hit_facts_by_hour.csv".format(pdate_,self.hour), encoding="utf-8",write_header=True)
+        
+        #table reqs_facts_by_hour
+        aggre_tmp = self.aggre_header[:]
+        aggre_tmp.remove("cardid")
+        aggre_tmp.remove("creativeid")
+        aggre_tmp.append("date_id")
+        aggre_tmp.append("time_id")
+        tmp_ = etl.aggregate(self.supply_merge_table,tuple(aggre_tmp),sum,'total')
+        hour_reqs_facts_table = etl.rename(tmp_,'value','total')
+        etl.tocsv(hour_reqs_facts_table, "{0}_{1}_reqs_facts_by_hour.csv".format(pdate_,self.hour), encoding="utf-8",write_header=True)
+        
 if __name__ == "__main__":
     etls=ETL_Transform(
-                       supply_header="boardid,deviceid,videoid,slotid,cardid,creativeid,p_v_hid,p_v_rid,p_v_rname,p_c_t ype,\
+                       supply_header="boardid,deviceid,videoid,slotid,cardid,creativeid,p_v_hid,p_v_rid,p_v_rname,p_c_type,\
                        p_c_ip,cityid,intime,p_c_idfa1,p_c_imei,p_c_ctmid,p_c_mac,p_c_anid,p_c_openudid,p_c_idfa,\
                        p_c_odin,p_c_aaid,p_c_duid,sid",
                        demand_header="slotid,cardid,creativeid,deviceid,type,intime,ip,boardid,_sid,voideoid,second",
