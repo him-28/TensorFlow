@@ -1,4 +1,4 @@
-CREATE TABLE public."Gene"
+﻿CREATE TABLE public."Gene"
 (
    id serial, 
    uid character varying, 
@@ -152,12 +152,9 @@ CREATE TABLE "AD_Facts_By_Hour"
 (
   date_id integer NOT NULL,
   time_id integer NOT NULL,
-  os_id integer,
-  reqs_total bigint,
   impressions_start_total bigint,
   impressions_finish_total bigint,
   click bigint,
-  hit_total bigint, //展示数，即命中数
   ad_slot_id integer,
   ad_card_id integer,
   ad_creative_id integer,
@@ -263,3 +260,30 @@ CREATE TABLE public."Data_Audit_Details"
     error character varying NOT NULL
 )
 
+DROP TABLE IF EXISTS "public"."Reqs_Facts_By_Hour";
+CREATE TABLE "public"."Reqs_Facts_By_Hour" (
+"date_id" int4 NOT NULL,
+"time_id" int4 NOT NULL,
+"ad_slot_id" int4,
+"ad_campaign_id" int4,
+"os_id" character varying,
+"total" int4
+)
+WITH (OIDS=FALSE)
+;
+
+ALTER TABLE "public"."Reqs_Facts_By_Hour" ADD PRIMARY KEY ("date_id", "time_id");
+
+DROP TABLE IF EXISTS "public"."Hit_Facts_By_Hour";
+CREATE TABLE "public"."Hit_Facts_By_Hour" (
+"date_id" int4 NOT NULL,
+"time_id" int4 NOT NULL,
+"ad_card_id" int4,
+"ad_slot_id" int4,
+"ad_create_id" int4,
+"ad_campaign_id" int4,
+"total" int4
+)
+WITH (OIDS=FALSE)
+;
+ALTER TABLE "public"."Hit_Facts_By_Hour" ADD PRIMARY KEY ("date_id", "time_id");
