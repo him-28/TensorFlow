@@ -152,11 +152,9 @@ CREATE TABLE "AD_Facts_By_Hour"
 (
   date_id integer NOT NULL,
   time_id integer NOT NULL,
-  os_id integer,
   impressions_start_total bigint,
   impressions_finish_total bigint,
   click bigint,
-  hit_total bigint, //展示数，即命中数
   ad_slot_id integer,
   ad_card_id integer,
   ad_creative_id integer,
@@ -277,7 +275,8 @@ CREATE TABLE "Reqs_Facts_By_Hour"
       date_id integer NOT NULL,
       time_id integer NOT NULL,
       os character varying,
-      ad_card_id integer,
+      ad_slot_id integer,
+      ad_campaign_id integer,
       total integer,
       CONSTRAINT "Reqs_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
 )
@@ -289,9 +288,11 @@ CREATE TABLE "Hit_Facts_By_Hour"
 (
       date_id integer NOT NULL,
       time_id integer NOT NULL,
+      os character varying
       ad_card_id integer,
       ad_slot_id integer,
       ad_create_id integer,
+      ad_campaign_id integer,
       total integer,
       CONSTRAINT "Hit_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
 )
