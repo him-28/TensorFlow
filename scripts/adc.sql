@@ -260,30 +260,42 @@ CREATE TABLE public."Data_Audit_Details"
     error character varying NOT NULL
 )
 
-DROP TABLE IF EXISTS "public"."Reqs_Facts_By_Hour";
-CREATE TABLE "public"."Reqs_Facts_By_Hour" (
-"date_id" int4 NOT NULL,
-"time_id" int4 NOT NULL,
-"ad_slot_id" int4,
-"ad_campaign_id" int4,
-"os_id" character varying,
-"total" int4
+CREATE TABLE public."Data_SLA"
+(
+    id serial,
+    name character varying,
+    filename character varying,
+    exec_success integer,
+    exec_error integer,
+    create_time date
 )
-WITH (OIDS=FALSE)
-;
 
-ALTER TABLE "public"."Reqs_Facts_By_Hour" ADD PRIMARY KEY ("date_id", "time_id");
-
-DROP TABLE IF EXISTS "public"."Hit_Facts_By_Hour";
-CREATE TABLE "public"."Hit_Facts_By_Hour" (
-"date_id" int4 NOT NULL,
-"time_id" int4 NOT NULL,
-"ad_card_id" int4,
-"ad_slot_id" int4,
-"ad_create_id" int4,
-"ad_campaign_id" int4,
-"total" int4
+CREATE TABLE "Reqs_Facts_By_Hour"
+(
+      date_id integer NOT NULL,
+      time_id integer NOT NULL,
+      os character varying,
+      ad_slot_id integer,
+      ad_campaign_id integer,
+      total integer,
+      CONSTRAINT "Reqs_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
 )
-WITH (OIDS=FALSE)
-;
-ALTER TABLE "public"."Hit_Facts_By_Hour" ADD PRIMARY KEY ("date_id", "time_id");
+WITH (
+      OIDS=FALSE
+);
+
+CREATE TABLE "Hit_Facts_By_Hour"
+(
+      date_id integer NOT NULL,
+      time_id integer NOT NULL,
+      os character varying
+      ad_card_id integer,
+      ad_slot_id integer,
+      ad_create_id integer,
+      ad_campaign_id integer,
+      total integer,
+      CONSTRAINT "Hit_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+      OIDS=FALSE
+);

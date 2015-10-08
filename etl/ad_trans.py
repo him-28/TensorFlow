@@ -3,18 +3,21 @@
 import pandas as pd
 import petl as etl
 import csv
+import yaml
 
-supply_header=['boardid','deviceid','videoid','slotid','cardid','creativeid','p_v_hid','p_v_rid','p_v_rname','p_c_type',
-                'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
-                'p_c_odin','p_c_aaid','p_c_duid','sid']
+config = yaml.load(open("config.yml"))
 
-demand_header=[]
+SUPPLY_HEADER = config.get('supply').get('raw_header')
 
-agg_header1 = ['slotid', 'cardid', 'creativeid']
+DEMAND_HEADER = config.get('demand').get('raw_header')
+
+SUPPLY_AGG_HEADER = config.get('supply').get('agg_header')
+
+DEMAND_AGG_HEADER = config.get('demand').get('agg_header')
 
 CHUNK = 500
 TMP_PATH = ""
-COLUMN_SEP = "\t"
+COLUMN_SEP = config.get('column_sep')
 
 def supply_extract(filename):
     supply_transform(read(filename, supply_header))
@@ -24,7 +27,9 @@ def demand_extract(filename):
 
 def supply_transform(df):
     for chunk in df:
-        chunk.groupby(agg_header1).count()
+        chunk.describe().to_csv("describe.csv")
+        tmp = chunk[SUPPLY_AGG_HEADER].groupby(SUPPLY_AGG_HEADER).size()
+        tmp.to_csv('test.csv', mode="a", index=False, header=None)
 
 def demand_transform(table):
     pass
@@ -43,7 +48,10 @@ def load_to_pg_facts_day(table):
 
 
 if __name__ == '__main__':
-    filename = '/Users/martin/Documents/03-raw data/20150923.04.product.demand.csv'
+    # localfile 
+    # filename = '/Users/martin/Documents/03-raw data/20150923.04.product.demand.csv'
+    # 10.100.5.82 file
+    # filename = '/tmp/20150923.10.product.supply.csv'
     supply_extract(filename)
 
             
