@@ -1,4 +1,4 @@
-﻿CREATE TABLE public."Gene"
+CREATE TABLE public."Gene"
 (
    id serial, 
    uid character varying, 
