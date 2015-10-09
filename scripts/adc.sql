@@ -260,6 +260,24 @@ CREATE TABLE public."Data_Audit_Details"
     error character varying NOT NULL
 )
 
+CREATE TABLE "Data_Result_Audit"
+(
+      date_id character varying NOT NULL,
+      time_id character varying NOT NULL,
+      reqs_errors double precision NOT NULL,
+      code_serves_errors double precision NOT NULL,
+      impressions_servers_errors double precision NOT NULL,
+      unfilled_impressions_errors double precision NOT NULL,
+      click_errors double precision NOT NULL,
+      serve_rate double precision NOT NULL,
+      reqs_e_errors double precision NOT NULL,
+      code_serve_e_errors double precision NOT NULL,
+      impressions_e_errors double precision NOT NULL
+)
+WITH (
+      OIDS=FALSE
+);
+
 CREATE TABLE public."Data_SLA"
 (
     id serial,
