@@ -5,8 +5,8 @@ supply:
                 'p_c_odin','p_c_aaid','p_c_duid','sid']
     agg_header: ['slotid', 'cardid', 'creativeid']
 demand:
-    raw_header: []
-    agg_header: []
+    raw_header: ['slotid','cardid','creativeid','deviceid','type','intime','ip','boardid','_sid','voideoid','second']
+    agg_header: ['slotid', 'cardid', 'creativeid']
 database:
     db_name: adc
     user: postgres
