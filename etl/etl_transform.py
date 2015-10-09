@@ -24,9 +24,9 @@ class ETL_Transform:
                  batch_read_size=20000,
                  pdate=None,
                  hour=None):
-        self.supply_header=[i.strip() for i in supply_header.strip().split(',')]
-        self.aggre_header=[i.strip() for i in aggre_header.strip().split(',')]
-        self.demand_header=[i.strip() for i in demand_header.strip().split(',')]
+        self.supply_header= supply_header
+        self.aggre_header=aggre_header
+        self.demand_header=demand_header
         self.supply_csv_filePath=supply_csv_filePath
         self.demand_csv_filePath=demand_csv_filePath
         self.batch_read_size=batch_read_size
