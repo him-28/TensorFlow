@@ -34,8 +34,8 @@ public class CSVScanner {
 	/**
 	 * 默认上传超时时间（秒）
 	 */
-	public static final long DEFAULT_THREAD_TIMEOUT = 10L;
-	// 上传超时，秒，默认为10分钟
+	public static final long DEFAULT_THREAD_TIMEOUT = 300L;
+	// 上传超时，秒，默认为0.5分钟
 	private long timeout = DEFAULT_THREAD_TIMEOUT;
 
 	/**
@@ -65,15 +65,20 @@ public class CSVScanner {
 	}
 
 	public void scan() {
-		scan(UploadIndexConstans.INDEX_CACHE_ROOT_PID, this.rootPath);
-		CSVUploader.getInstance().stop();// 执行完毕后关闭
+		CSVUploader.initInstance(threadNumber);
+		try {
+			scan(UploadIndexConstans.INDEX_CACHE_ROOT_PID, this.rootPath);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			CSVUploader.getInstance().stop();// 执行完毕后关闭
+		}
 	}
 
 	private void scan(String pid, String filePath) {
 		if (filePath == null) {
 			filePath = this.rootPath;
 		}
-		CSVUploader uploader = CSVUploader.initInstance(threadNumber, timeout);
 
 		File rootFile = new File(filePath);
 		File[] children = rootFile.listFiles();
@@ -97,13 +102,22 @@ public class CSVScanner {
 					}
 				}
 			} else { // 文件
+
+				// 最后修改时间
+				long lm = child.lastModified();
+				long now = System.currentTimeMillis();
+				if (now - lm < timeout * 1000L) {
+					continue;
+				}
+
+				boolean doAdd = false;
 				// TODO////////////////////// 事务2--------------------------Start
 				Map<String, Object> fileInfo = getFileInfo(s3PathName, pid);
 				if (fileInfo.isEmpty()) { // 文件在数据库中不存在
 					fileInfo = initFile(pid, s3PathName, child.getPath());
 					// TODO//////////////////////
 					// 事务2--------------------------End
-					uploader.add2Queue(fileInfo, this);
+					doAdd = true;
 				} else {
 					String status = (String) fileInfo.get("upload_status");
 					if (UploadIndexConstans.FILE_COMPLETED_STATUS
@@ -115,7 +129,19 @@ public class CSVScanner {
 						continue; // do nothing
 					} else if (UploadIndexConstans.FILE_NOT_START_STATUS
 							.equals(status)) { // 文件未传输
-						uploader.add2Queue(fileInfo, this);
+						doAdd = true;
+					}
+				}
+
+				if (doAdd) {
+					// lock the file
+					try {
+						// add to upload queue
+						CSVUploader.getInstance().add2Queue(fileInfo, this);
+					} catch (SecurityException e) {
+						log.warn(
+								"没有读写权限或文件被其它程序锁定，跳过:"
+										+ child.getAbsolutePath(), e);
 					}
 				}
 			}
@@ -212,7 +238,8 @@ public class CSVScanner {
 		log.info("file upload completed:" + fileId);
 		long now = System.currentTimeMillis();
 		String sql = "UPDATE " + UploadIndexConstans.INDEX_CACHE_TABLE_NAME
-				+ " SET upload_end_time="+now+", upload_status='" + UploadIndexConstans.FILE_COMPLETED_STATUS + "' where id='"
+				+ " SET upload_end_time=" + now + ", upload_status='"
+				+ UploadIndexConstans.FILE_COMPLETED_STATUS + "' where id='"
 				+ fileId + "' ";
 		try {
 			DBUtils.execute(sql);
@@ -326,7 +353,7 @@ public class CSVScanner {
 			}
 		}
 
-		long timeout = -1;
+		long timeout = -1; // keep default
 		if (args.length > 3) {
 			if (!Pattern.matches("\\d", args[3])) {
 				log.error("the 4th arg should be a number");

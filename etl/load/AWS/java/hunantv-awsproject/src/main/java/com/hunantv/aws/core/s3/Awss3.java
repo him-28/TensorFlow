@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -46,19 +45,16 @@ public class Awss3 {
 		init();
 	}
 
-	private static Awss3 instance = new Awss3();
+//	private static Awss3 instance = new Awss3();
 
-	public static Awss3 getInstance() {
-		return instance;
+	public static Awss3 newInstance() {
+		return new Awss3();
 	}
-
-	private boolean isRunnableJar = false;
 
 	private void init() {
 		provider = CredentialsFileUtil.getDefaultCredentialsProvider();
 		AWSCredentials credentials = provider.getCredentials();
 		s3 = new AmazonS3Client(credentials);
-		tx = new TransferManager(s3);
 	}
 
 	public List<String> listAllKey() {
@@ -96,80 +92,92 @@ public class Awss3 {
 			final String dataId) {
 		final List<Boolean> result = new ArrayList<>(1);
 		result.add(false);
-		final long start = System.currentTimeMillis();
-		if (!isOverride) {
-			List<String> allKey = listAllKey();
-			if (allKey.contains(key)) {
-				throw new IllegalArgumentException("The key " + key
-						+ " already exists in the bucket.");
-			}
-		}
-
-		LOG.info("upload file:" + filePath + " to :" + key);
-
-		File file = new File(filePath);
-		if (file.exists() && file.isFile()) {
-			final long fileLength = file.length();
-			ObjectMetadata metadata = new ObjectMetadata();
-			metadata.setContentLength(fileLength);
-
-			PutObjectRequest request = new PutObjectRequest(BUCKET_NAME, key,
-					file);
-			request.setMetadata(metadata);
-
-			final Upload upload = tx.upload(request);
-
-			ProgressListener progressListener = new ProgressListener() {
-				public void progressChanged(ProgressEvent progressEvent) {
-					if (upload == null)
-						return;
-					int percentTransferrred = (int) upload.getProgress()
-							.getPercentTransferred();
-					LOG.debug("upload to :" + key + " " + percentTransferrred
-							+ "% completed");
-					ProgressEventType type = progressEvent.getEventType();
-					switch (type) {
-					case TRANSFER_COMPLETED_EVENT:
-						percentTransferrred = 100;
-						long end = System.currentTimeMillis();
-						LOG.info("upload to '" + key
-								+ "' completed,total size：" + fileLength
-								+ "(bit),time used：" + (end - start)
-								+ "(millis)");
-						result.set(0, true);
-						Map<String, Object> infor = ImmutableMap.of("status",
-								"success", "id", (Object) dataId);
-						callback.notify(infor);
-						break;
-					case TRANSFER_FAILED_EVENT:
-						try {
-							AmazonClientException e = upload.waitForException();
-							LOG.error("Unable to upload file to Amazon S3: "
-									+ e.getMessage());
-						} catch (InterruptedException e) {
-							LOG.error(e.getMessage(), e);
-						}
-						infor = ImmutableMap.of("status", "error", "id",
-								(Object) dataId);
-						callback.notify(infor);
-						break;
-					default:
-						break;
-					}
+		tx = new TransferManager(s3);
+		try {
+			final long start = System.currentTimeMillis();
+			if (!isOverride) {
+				List<String> allKey = listAllKey();
+				if (allKey.contains(key)) {
+					throw new IllegalArgumentException("The key " + key
+							+ " already exists in the bucket.");
 				}
-			};
-			upload.addProgressListener(progressListener);
-//			try {
-//				upload.waitForCompletion();
-//			} catch (AmazonClientException | InterruptedException e) {
-//				e.printStackTrace();
-//			}
-			if (isRunnableJar) {
-				tx.shutdownNow();
 			}
-		} else {
-			throw new IllegalArgumentException(
-					"Not Found: the file did not exists : " + filePath);
+
+			LOG.info("upload file:" + filePath + " to :" + key);
+
+			File file = new File(filePath);
+			if (file.exists() && file.isFile()) {
+				final long fileLength = file.length();
+				ObjectMetadata metadata = new ObjectMetadata();
+				metadata.setContentLength(fileLength);
+
+				PutObjectRequest request = new PutObjectRequest(BUCKET_NAME,
+						key, file);
+				request.setMetadata(metadata);
+
+				final Upload upload = tx.upload(request);
+
+				ProgressListener progressListener = new ProgressListener() {
+					public void progressChanged(ProgressEvent progressEvent) {
+						if (upload == null)
+							return;
+						int percentTransferrred = (int) upload.getProgress()
+								.getPercentTransferred();
+						LOG.debug("upload to :" + key + " "
+								+ percentTransferrred + "% completed");
+						ProgressEventType type = progressEvent.getEventType();
+						switch (type) {
+						case TRANSFER_COMPLETED_EVENT:
+							percentTransferrred = 100;
+							long end = System.currentTimeMillis();
+							LOG.info("upload to '" + key
+									+ "' completed,total size：" + fileLength
+									+ "(bit),time used：" + (end - start)
+									+ "(millis)");
+							result.set(0, true);
+
+							if (callback != null) {
+								callback.notify(ImmutableMap.of("status",
+										"success", "id", (Object) dataId));
+							}
+							break;
+						case TRANSFER_FAILED_EVENT:
+							try {
+								AmazonClientException e = upload
+										.waitForException();
+								LOG.error("Unable to upload file to Amazon S3: "
+										+ e.getMessage());
+							} catch (InterruptedException e) {
+								LOG.error(e.getMessage(), e);
+							}
+							if (callback != null) {
+								callback.notify(ImmutableMap.of("status",
+										"error", "id", (Object) dataId));
+							}
+							break;
+						default:
+							break;
+						}
+					}
+				};
+				upload.addProgressListener(progressListener);
+				try {
+					upload.waitForCompletion();
+				} catch (AmazonClientException | InterruptedException e) {
+					e.printStackTrace();
+				}
+			} else {
+				throw new IllegalArgumentException(
+						"Not Found: the file did not exists : " + filePath);
+			}
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+			if (callback != null) {
+				callback.notify(ImmutableMap.of("status", "error", "id",
+						(Object) dataId));
+			}
+		} finally {
+			tx.shutdownNow();
 		}
 		return result.get(0);
 	}
@@ -240,11 +248,12 @@ public class Awss3 {
 		}
 		LOG.info("download complete");
 	}
-	
-	public static String getMd5String(String filePath) throws FileNotFoundException, IOException{
+
+	public static String getMd5String(String filePath)
+			throws FileNotFoundException, IOException {
 		return bytesToHexString(Md5Utils.computeMD5Hash(new File(filePath)));
 	}
-	
+
 	public static String bytesToHexString(byte[] bytes) {
 		StringBuffer sb = new StringBuffer(bytes.length * 2);
 		String sTemp;
@@ -271,7 +280,7 @@ public class Awss3 {
 								|| "-FORCE".equalsIgnoreCase(args[3]);
 					}
 
-					Awss3.getInstance().addKey(key, filePath, isOverride);
+					Awss3.newInstance().addKey(key, filePath, isOverride);
 				} else {
 					System.err
 							.println("Please add file with command like this : -a (key) (path) [-f]");
@@ -280,7 +289,7 @@ public class Awss3 {
 			case "-d": // delete
 				if (args.length > 1) {
 					String key = args[1];
-					Awss3.getInstance().deleteKey(key);
+					Awss3.newInstance().deleteKey(key);
 				} else {
 					System.err
 							.println("Please delete file with command like this : -d (key) (path)");
@@ -292,7 +301,7 @@ public class Awss3 {
 					String filePath = args[2];
 					boolean isOverride = args.length > 3
 							&& "-f".equals(args[3]);
-					Awss3.getInstance().download(Awss3.BUCKET_NAME, key,
+					Awss3.newInstance().download(Awss3.BUCKET_NAME, key,
 							filePath, isOverride);
 				} else {
 					System.err
@@ -300,7 +309,7 @@ public class Awss3 {
 				}
 				break;
 			case "-l": // list
-				List<String> list = Awss3.getInstance().listAllKey();
+				List<String> list = Awss3.newInstance().listAllKey();
 				for (String s : list) {
 					System.out.println(s);
 				}
