@@ -7,3 +7,16 @@ supply:
 demand:
     raw_header: []
     agg_header: []
+database:
+    db_name: adc
+    user: postgres
+    password: 
+    host: 10.100.5.80
+    port: 11921
+db_table:
+    ad_facts_by_hour:
+         cols: "ad_slot_id,ad_card_id,ad_campaign_id,ad_creative_id,click,impressions_start_total,impressions_finish_total,date_id,time_id"
+    hit_facts_by_hour:
+        cols: "ad_slot_id,ad_card_id,ad_creative_id,ad_campaign_id,os,total,date_id,time_id"
+    reqs_facts_by_hour:
+        cols: "ad_slot_id,ad_campaign_id,os,total,date_id,time_id"
