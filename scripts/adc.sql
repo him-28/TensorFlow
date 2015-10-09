@@ -152,11 +152,9 @@ CREATE TABLE "AD_Facts_By_Hour"
 (
   date_id integer NOT NULL,
   time_id integer NOT NULL,
-  os_id integer,
   impressions_start_total bigint,
   impressions_finish_total bigint,
   click bigint,
-  hit_total bigint, //展示数，即命中数
   ad_slot_id integer,
   ad_card_id integer,
   ad_creative_id integer,
@@ -179,28 +177,28 @@ CREATE TABLE "Dim_AD"
     CONSTRAINT "Dim_AD_pkey" PRIMARY KEY(id)
 )
 
-CREATE TABLE "AD_Facts_By_Day"
-(
-  date_id integer NOT NULL,
-  area_id integer,
-  video_id integer,
-  os_id integer,
-  reqs_total bigint,
-  impressions_start_total bigint,
-  impressions_finish_total bigint,
-  click bigint,
-  hit_total bigint, //展示数，即命中数
-  ad_slot_id integer,
-  ad_card_id integer,
-  ad_creative_id integer,
-  ad_campaign_id integer, //订单ID
-  CONSTRAINT "AD_Facts_By_Day_pkey" PRIMARY KEY (date_id, time_id)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE "AD_Facts_By_Day"
-  OWNER TO postgres;
+-- CREATE TABLE "AD_Facts_By_Day"
+-- (
+--   date_id integer NOT NULL,
+--   area_id integer,
+--   video_id integer,
+--   os_id integer,
+--   reqs_total bigint,
+--   impressions_start_total bigint,
+--   impressions_finish_total bigint,
+--   click bigint,
+--   hit_total bigint, //展示数，即命中数
+--   ad_slot_id integer,
+--   ad_card_id integer,
+--   ad_creative_id integer,
+--   ad_campaign_id integer, //订单ID
+--   CONSTRAINT "AD_Facts_By_Day_pkey" PRIMARY KEY (date_id, time_id)
+-- )
+-- WITH (
+--   OIDS=FALSE
+-- );
+-- ALTER TABLE "AD_Facts_By_Day"
+--   OWNER TO postgres;
 
 CREATE TABLE "AD_Facts_By_Video"
 (
@@ -262,6 +260,25 @@ CREATE TABLE public."Data_Audit_Details"
     error character varying NOT NULL
 )
 
+CREATE TABLE "Data_Result_Audit"
+(
+      date_id character varying NOT NULL,
+      time_id character varying NOT NULL,
+      reqs_errors double precision NOT NULL,
+      code_serves_errors double precision NOT NULL,
+      impressions_errors double precision NOT NULL,
+      unfilled_impressions_errors double precision NOT NULL,
+      click_errors double precision NOT NULL,
+      serve_rate double precision NOT NULL,
+      reqs_e_errors double precision NOT NULL,
+      code_serve_e_errors double precision NOT NULL,
+      impressions_e_errors double precision NOT NULL
+)
+WITH (
+      OIDS=FALSE
+);
+
+
 CREATE TABLE public."Data_SLA"
 (
     id serial,
@@ -277,7 +294,8 @@ CREATE TABLE "Reqs_Facts_By_Hour"
       date_id integer NOT NULL,
       time_id integer NOT NULL,
       os character varying,
-      ad_card_id integer,
+      ad_slot_id integer,
+      ad_campaign_id integer,
       total integer,
       CONSTRAINT "Reqs_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
 )
@@ -289,11 +307,79 @@ CREATE TABLE "Hit_Facts_By_Hour"
 (
       date_id integer NOT NULL,
       time_id integer NOT NULL,
+      os character varying,
       ad_card_id integer,
       ad_slot_id integer,
       ad_create_id integer,
+      ad_campaign_id integer,
       total integer,
       CONSTRAINT "Hit_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+      OIDS=FALSE
+);
+
+CREATE TABLE "Hit_Facts_By_Hour2"
+(
+      date_id integer NOT NULL,
+      time_id integer NOT NULL,
+      ad_card_id integer,
+      ad_slot_id integer,
+      ad_create_id integer,
+      ad_campaign_id integer,
+      total integer,
+      CONSTRAINT "Hit_Facts_By_Hour2_pkey" PRIMARY KEY (date_id, time_id)
+)
+WITH (
+      OIDS=FALSE
+);
+
+DROP TABLE IF EXISTS "public"."AD_Facts_By_Day";
+CREATE TABLE "AD_Facts_By_Day"
+(
+      date_id integer NOT NULL,
+      area_id integer ,
+      video_id integer ,
+      impressions_start_total integer,
+      impressions_finish_total integer,
+      click integer,
+      ad_slot_id integer,
+      ad_card_id integer,
+      ad_creative_id integer,
+      ad_campaign_id integer
+)
+WITH (
+      OIDS=FALSE
+);
+
+DROP TABLE IF EXISTS "public"."Hit_Facts_By_Day";
+CREATE TABLE "Hit_Facts_By_Day"
+(
+      date_id integer NOT NULL,
+      area_id integer ,
+      video_id integer ,
+      os varchar,
+      ad_slot_id integer,
+      ad_card_id integer,
+      ad_creative_id integer,
+      ad_campaign_id integer,
+      total integer
+)
+WITH (
+      OIDS=FALSE
+);
+
+
+DROP TABLE IF EXISTS "public"."Reqs_Facts_By_Day";
+CREATE TABLE "Reqs_Facts_By_Day"
+(
+      date_id integer NOT NULL,
+      area_id integer ,
+      video_id integer ,
+      os varchar,
+      ad_slot_id integer,
+      ad_campaign_id integer,
+      total integer
 )
 WITH (
       OIDS=FALSE
