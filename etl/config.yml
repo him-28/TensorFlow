@@ -1,12 +1,12 @@
 column_sep: "\t"
 supply:
-    raw_header: ['boardid','deviceid','videoid','slotid','cardid','creativeid','p_v_hid','p_v_rid','p_v_rname','p_c_type',
-                'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
-                'p_c_odin','p_c_aaid','p_c_duid','sid']
-    agg_header: ['slotid', 'cardid', 'creativeid']
+    raw_header: "boardid,deviceid,videoid,slotid,cardid,creativeid,p_v_hid,p_v_rid,p_v_rname,p_c_type,\
+                       p_c_ip,cityid,intime,p_c_idfa1,p_c_imei,p_c_ctmid,p_c_mac,p_c_anid,p_c_openudid,p_c_idfa,\
+                       p_c_odin,p_c_aaid,p_c_duid,sid"
+    agg_header: "slotid,cardid,creativeid"
 demand:
-    raw_header: []
-    agg_header: []
+    raw_header: "slotid,cardid,creativeid,deviceid,type,intime,ip,boardid,_sid,voideoid,second"
+    agg_header: "slotid,cardid,creativeid"
 database:
     db_name: adc
     user: postgres
