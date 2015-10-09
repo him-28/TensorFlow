@@ -266,7 +266,7 @@ CREATE TABLE "Data_Result_Audit"
       time_id character varying NOT NULL,
       reqs_errors double precision NOT NULL,
       code_serves_errors double precision NOT NULL,
-      impressions_servers_errors double precision NOT NULL,
+      impressions_errors double precision NOT NULL,
       unfilled_impressions_errors double precision NOT NULL,
       click_errors double precision NOT NULL,
       serve_rate double precision NOT NULL,
@@ -277,6 +277,7 @@ CREATE TABLE "Data_Result_Audit"
 WITH (
       OIDS=FALSE
 );
+
 
 CREATE TABLE public."Data_SLA"
 (
