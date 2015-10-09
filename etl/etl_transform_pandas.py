@@ -5,17 +5,20 @@ import pandas as pd
 import yaml
 import psycopg2 as psy
 
-''' 数据库配置 '''
-DB_DATABASE="adc"
-DB_USER="postgres"
-DB_PASSWORD=None
-DB_HOST="10.100.5.80"
-DB_PORT="11921"
 
 ''' 读取配置 '''
 config = yaml.load(open("config.yml"))
 supply_config = config.get('supply')
 demand_config = config.get('demand')
+database_config = config.get('database')
+table_config = config.get('db_table')
+
+''' 数据库配置 '''
+DB_DATABASE=database_config.get('db_name')
+DB_USER=database_config.get('user')
+DB_PASSWORD=database_config.get('password')
+DB_HOST=database_config.get('host')
+DB_PORT=database_config.get('port')
 
 SUPPLY_HEADER = supply_config.get('raw_header')
 SUPPLY_AGG_HEADER = supply_config.get('agg_header')
@@ -28,6 +31,8 @@ COLUMN_SEP = config.get('column_sep')
 OUTPUT_COLUMN_SEP = config.get('output_column_sep')
 ''' 每批次处理数据条数 '''
 CHUNK = 50000
+
+HIT_FACTS_BY_HOUR_COLUMNS = table_config.get('hit_facts_by_hour')
 
 class Etl_Transform_Pandas:
 	def __init__(self,file_path,sep,names,groupItem,date,hour):
@@ -59,7 +64,7 @@ class Etl_Transform_Pandas:
 				groupframe.to_csv(tmp_path,sep=sep,header=False,mode="a")
 			
 			# debug info
-			print("groupd: "+str(len(chunk_thin))+"/"+str(len(chunk))+" records")
+			print("groupd: "+str(len(chunk_thin))+" in "+str(len(chunk))+" records")
 		
 		# 读取数据，聚合
 		
@@ -90,6 +95,9 @@ class Etl_Transform_Pandas:
 		
 	#读取CSV文件插入数据库
 	def insert_hit_facts_by_hour(self,file_path,sep):
+		# debug info
+		print "connect --> db:"+str(DB_DATABASE)+",user:"+str(DB_USER)+",password:***,host:"+str(DB_HOST)+",port:"+str(DB_PORT)+"..."
+		
 		conn = psy.connect(database=DB_DATABASE,user=DB_USER,password=DB_PASSWORD,host=DB_HOST,port=DB_PORT)
 		cur = conn.cursor()
 		sql='INSERT INTO "public"."Hit_Facts_By_Hour2"("date_id","time_id","ad_card_id","ad_slot_id","ad_create_id","total") VALUES (%s,%s,%s,%s,%s,%s);'
@@ -97,6 +105,7 @@ class Etl_Transform_Pandas:
 		sql_count = 0
 		tg_count = str(len(self.total_groupframe))
 		for index,row in self.total_groupframe.iterrows():
+			print index,row
 			sql_count = sql_count+1
 			slotid=int(index[0])
 			cardid=int(index[1])
