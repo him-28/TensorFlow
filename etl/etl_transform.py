@@ -8,10 +8,10 @@ import petl as etl
 from petl import fromcsv
 import datetime
 import csv
-import gc
 import types
-
-from time import sleep
+import sys
+import yaml
+Config=yaml.load(file("config.yml"))
 
 class ETL_Transform:
     count=1
@@ -65,7 +65,7 @@ class ETL_Transform:
         #format date
         d=datetime.datetime.strptime(self.pdate,"%Y-%m-%d")
         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
-        etl.tocsv(self.supply_merge_table,"{0}_{1}_supply_pv_display.csv".format(pdate_,self.hour),encoding="utf-8",write_header=False) 
+#         etl.tocsv(self.supply_merge_table,"{0}_{1}_supply_pv_display.csv".format(pdate_,self.hour),encoding="utf-8",write_header=False) 
         
     def etl_aggregate_supply(self):
         row_table=[]
@@ -112,7 +112,7 @@ class ETL_Transform:
         #format date
         d=datetime.datetime.strptime(self.pdate,"%Y-%m-%d")
         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
-        etl.tocsv(self.demand_merge_table,"{0}_{1}_demand_click_imps_start_end.csv".format(pdate_,self.hour),encoding="utf-8",write_header=True)
+#         etl.tocsv(self.demand_merge_table,"{0}_{1}_demand_click_imps_start_end.csv".format(pdate_,self.hour),encoding="utf-8",write_header=True)
         
     def etl_aggregate_demand(self):
         row_table=[]
@@ -201,18 +201,18 @@ class ETL_Transform:
         etl.tocsv(hour_reqs_facts_table, "{0}_{1}_reqs_facts_by_hour.csv".format(pdate_,self.hour), encoding="utf-8",write_header=True)
         
 if __name__ == "__main__":
+    day = sys.argv[1]
+    hour = sys.argv[2]
+    supply_filePath = sys.argv[3]
+    demand_filePath = sys.argv[4]
     etls=ETL_Transform(
-                       supply_header="boardid,deviceid,videoid,slotid,cardid,creativeid,p_v_hid,p_v_rid,p_v_rname,p_c_type,\
-                       p_c_ip,cityid,intime,p_c_idfa1,p_c_imei,p_c_ctmid,p_c_mac,p_c_anid,p_c_openudid,p_c_idfa,\
-                       p_c_odin,p_c_aaid,p_c_duid,sid",
-                       demand_header="slotid,cardid,creativeid,deviceid,type,intime,ip,boardid,_sid,voideoid,second",
-                       aggre_header="slotid,cardid,creativeid",
-                       supply_csv_filePath=r"C:\Users\Administrator\Desktop\20150920.04.product.supply.csv",
-                       demand_csv_filePath=r"C:\Users\Administrator\Desktop\20150923.04.product.demand.csv",
+                       supply_header=Config["supply"]["raw_header"],
+                       demand_header=Config["demand"]["raw_header"],
+                       aggre_header=Config["supply"]["agg_header"],
+                       supply_csv_filePath=supply_filePath,
+                       demand_csv_filePath=demand_filePath,
                        batch_read_size=100000,
-                       pdate="2015-09-09",
-                       hour="11")
+                       pdate=day,
+                       hour=hour)
     
-#     etls.transform_supply()
-#     etls.transfrom_demand()
     etls.transfrom()
