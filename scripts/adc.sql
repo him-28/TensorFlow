@@ -310,7 +310,7 @@ CREATE TABLE "Hit_Facts_By_Hour"
       os character varying,
       ad_card_id integer,
       ad_slot_id integer,
-      ad_create_id integer,
+      ad_creative_id integer,
       ad_campaign_id integer,
       total integer,
       CONSTRAINT "Hit_Facts_By_Hour_pkey" PRIMARY KEY (date_id, time_id)
