@@ -105,8 +105,8 @@ class Etl_Transform_Pandas:
 			self.is_day = True
 			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d")
 		
-		self.month_folder = str(self.start_time.year) + self.double_num_str(self.start_time.month)
-		self.date = int(self.month_folder + self.double_num_str(self.start_time.day))
+		self.month_folder = str(self.start_time.year) + self.fill_num_str(self.start_time.month)
+		self.date = int(self.month_folder + self.fill_num_str(self.start_time.day))
 		
 		if(trans_type.find('supply') != -1):  # supply
 			self.names = SUPPLY_HEADER
@@ -142,7 +142,7 @@ class Etl_Transform_Pandas:
 		
 		if not os.path.exists(self.output_root_path + self.month_folder):
 			os.makedirs(self.output_root_path + self.month_folder)
-		self.output_file_path = self.output_root_path + self.month_folder + start_time + self.file_suffix
+		self.output_file_path = self.output_root_path + self.month_folder + os.sep + start_time + self.file_suffix
 		
 		self.init_info = {
 			'is_hour': self.is_hour,
@@ -163,7 +163,7 @@ class Etl_Transform_Pandas:
 		
 		print 'params init completed : ' + str(self.init_info)
 		
-		# 数据集数组
+		# 数据集数组，按小时计算只会有一个，按天计算每个文件会产生一个，最多24个数据集
 		self.dfs = []
 		file_path = None
 		if self.is_hour:
@@ -198,10 +198,8 @@ class Etl_Transform_Pandas:
 		self.total_groupframe = None
 		
 	'''两位数补0'''
-	def double_num_str(self, num):
-		if num < 10:
-			return '0' + str(num)
-		return str(num)
+	def fill_num_str(self, num):
+		return str(num).zfill(2)
 	
 	'''转换配置里的数据类型'''
 	def tran_header_dtype(self, dtype_dict):
@@ -216,7 +214,7 @@ class Etl_Transform_Pandas:
 		return target
 
 	# 返回占位数据
-	def getInitData(self, group_item, key):
+	def get_init_data(self, group_item, key):
 		obj = {}
 		for gi in group_item:
 			if self.names_dtype[gi] == np.int64:
@@ -259,10 +257,10 @@ class Etl_Transform_Pandas:
 					print("merge column result: " + column_name)
 					
 					if len(tmp_chunk) == 0:
-						tmp_chunk = self.getInitData(self.group_item, column_name)
+						tmp_chunk = self.get_init_data(self.group_item, column_name)
 					
 					if grouped is None:
-						grouped = tmp_chunk.groupby(self.group_item).size()  # TODO 确认这里是否需要深度Copy
+						grouped = tmp_chunk.groupby(self.group_item).size()
 					else:
 						grouped = pd.concat([grouped, tmp_chunk.groupby(self.group_item).size()], axis=1)
 	
@@ -288,11 +286,6 @@ class Etl_Transform_Pandas:
 		##############从临时文件读取数据计算最终结果，Group Sum####################
 		# debug info
 		print("merge the tmp file...")
-		'''
-		name_dtype = {}
-		for name in sum_names:
-			name_dtype[name] = np.int64  # TODO FIXME read from properties file
-		'''
 		# 输出结果到文件
 		df = pd.read_csv(tmp_path, sep=OUTPUT_COLUMN_SEP, names=sum_names, header=None, dtype=self.names_dtype)
 		df.dropna()
@@ -306,7 +299,7 @@ class Etl_Transform_Pandas:
 		self.total_groupframe.to_csv(self.output_file_path, sep=OUTPUT_COLUMN_SEP, header=False)
 		
 		# 删除临时文件
-		# os.remove(tmp_path)
+		os.remove(tmp_path)
 		
 		print 'transform!'
 	
@@ -410,6 +403,7 @@ if __name__ == "__main__":
 	#new_etp = Etl_Transform_Pandas('supply_day_hit', '20150923')
 	#new_etp.compute()
 	
-	new_etp = Etl_Transform_Pandas('supply_hour_hit', '20150923.04')
-	new_etp.compute()
+	#new_etp = Etl_Transform_Pandas('supply_hour_hit', '20150923.04')
 	
+	new_etp = Etl_Transform_Pandas('demand_hour_ad', '20150930.05')
+	new_etp.compute()

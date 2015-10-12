@@ -67,8 +67,8 @@ demand:
 
 supply_csv_file_path: "/data/ad2/supply/"
 demand_csv_file_path: "/data/ad2/demand/"
-hour_facts_file_path: "F:\\data\\facts\\hour\\"
-day_facts_file_path: "F:\\data\\facts\\day\\"
+hour_facts_file_path: "/data/facts/hour/"
+day_facts_file_path: "/data/facts/day/"
 
 database:
     db_name: adc
