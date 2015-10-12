@@ -1,0 +1,15 @@
+mongodb:
+    host_list: ["10.100.2.9"]
+    port: 27017
+board_list: ["4820","50","4540","4482","5287","5285","4389","4880","4821"]
+
+supply_prefix_name: "supply"
+supply_save_path: "/Users/acmj1991/work/amble/etl"
+supply_key_list: ["sid","boardid","deviceid","voideoid","slotid","cardid","creativeid","intime","p_c_os","p_c_type","p_c_ip","p_v_hid","p_v_rid","p_v_rname"]
+supply_value_type: ["int"]
+
+demand_prefix_name: "demand"
+demand_save_path: "/Users/acmj1991/work/amble/etl"
+
+log_config_path: "logger.conf"
+
