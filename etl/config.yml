@@ -24,11 +24,11 @@ demand:
     reqs_hour_header: ['ad_slot_id']
     reqs_day_header: ['ad_slot_id']
 
-supply_csv_file_path: "e:/test_data/ad2/supply/"
-demand_csv_file_path: "e:/test_data/ad2/demand/"
-hour_facts_file_path: "e:/test_data/facts/hour/"
-day_facts_file_path: "e:/test_data/facts/day/"
-day_hour_facts_file_path: "e:/test_data/facts/day/hour"
+supply_csv_file_path: "/data/ad2/supply/"
+demand_csv_file_path: "/data/ad2/demand/"
+hour_facts_file_path: "/data/facts/hour/"
+day_facts_file_path: "/data/facts/day/"
+day_hour_facts_file_path: "/data/facts/day/hour"
 
 database:
     db_name: adc
