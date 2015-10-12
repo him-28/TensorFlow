@@ -1,11 +1,11 @@
-#encoding=utf-8
+# encoding=utf-8
 
 import os
 import numpy as np
 import pandas as pd
 import yaml
 import psycopg2 as psy
-
+import datetime as dt 
 
 ''' 读取各种配置配置 '''
 config = yaml.load(open("config.yml"))
@@ -16,21 +16,25 @@ table_config = config.get('db_table')
 pandas_config = config.get('pandas')
 
 ''' 数据库配置 '''
-DB_DATABASE=database_config.get('db_name')
-DB_USER=database_config.get('user')
-DB_PASSWORD=database_config.get('password')
-DB_HOST=database_config.get('host')
-DB_PORT=database_config.get('port')
+DB_DATABASE = database_config.get('db_name')
+DB_USER = database_config.get('user')
+DB_PASSWORD = database_config.get('password')
+DB_HOST = database_config.get('host')
+DB_PORT = database_config.get('port')
 
 '''Supply'''
 SUPPLY_HEADER = supply_config.get('raw_header')
+SUPPLY_HEADER_DTYPE = supply_config.get('raw_header_dtype')
 SUPPLY_HIT_HOUR_HEADER = supply_config.get('agg_hour_header')
+SUPPLY_HIT_DAY_HEADER = supply_config.get('agg_day_header') 
 SUPPLY_REQS_HOUR_HEADER = supply_config.get('reqs_hour_header')
-SUPPLY_REQS_HIT_HOUR_HEADER = supply_config.get('reqs_hour_header')
+SUPPLY_REQS_DAY_HEADER = supply_config.get('reqs_day_header')
 
 '''Demand'''
 DEMAND_HEADER = demand_config.get('raw_header')
+DEMAND_HEADER_DTYPE = demand_config.get('raw_header_dtype')
 DEMAND_AD_HOUR_HEADER = demand_config.get('agg_hour_header')
+DEMAND_AD_DAY_HEADER = demand_config.get('agg_day_header')
 
 ''' 分隔符 '''
 INPUT_COLUMN_SEP = config.get('column_sep')
@@ -40,241 +44,318 @@ OUTPUT_COLUMN_SEP = config.get('output_column_sep')
 READ_CSV_CHUNK = pandas_config.get('read_csv_chunk')
 ''' 每批次处理数据条数(插入数据库)'''
 DB_COMMIT_CHUNK = pandas_config.get('db_commit_chunk')
-'''hit_facts_by_hour2'''
-HIT_FACTS_BY_HOUR_TABLE_NAME=pandas_config.get('hit_facts_by_hour2')
-REQS_FACTS_BY_HOUR_TABLE_NAME=pandas_config.get('reqs_facts_by_hour2')
-AD_FACTS_BY_HOUR_TABLE_NAME = pandas_config.get('ad_facts_by_hour2')
 
-PLACEHOLDER=-9
+'''table names'''
+HIT_FACTS_BY_HOUR_TABLE_NAME = pandas_config.get('hit_facts_by_hour2')
+REQS_FACTS_BY_HOUR_TABLE_NAME = pandas_config.get('reqs_facts_by_hour2')
+AD_FACTS_BY_HOUR_TABLE_NAME = pandas_config.get('ad_facts_by_hour2')
+AD_FACTS_BY_DAY_TABLE_NAME = pandas_config.get('ad_facts_by_day2')
+HIT_FACTS_BY_DAY_TABLE_NAME = pandas_config.get('hit_facts_by_day2')
+REQS_FACTS_BY_DAY_TABLE_NAME = pandas_config.get('reqs_facts_by_day2')
+
+'''file paths'''
+SUPPLY_CSV_FILE_PATH = config.get('supply_csv_file_path')  # "/data/ad2/supply/"
+DEMAND_CSV_FILE_PATH = config.get('demand_csv_file_path')  # "/data/ad2/demand/"
+HOUR_FACTS_FILE_PATH = config.get('hour_facts_file_path')  # "/data/facts/hour/"
+DAY_FACTS_FILE_PATH = config.get('day_facts_file_path')  # "/data/facts/day/"
+
+PLACEHOLDER = -9
+
+SUPPLY_CONDITION_RELATION = {
+				'total':[
+					('ad_slot_id', '!=', -1),
+					('ad_card_id', '!=', -1)
+				]
+			}
+DEMAND_CONDITION_RELATION = {
+			'click':[
+				('type', '==', 2)
+			],
+			'impressions_start_total':[
+				('type', '==', 1),
+				('second', '==', 0),
+			],
+			'impressions_finish_total':[
+				('type', '==', 1),
+				('second', '==', 3600),
+			]
+		}
 
 class Etl_Transform_Pandas:
-	def __init__(self,file_path,names,groupItem,date,hour):
-		self.groupItem = groupItem
-		self.names = names
-		self.date = date
-		self.hour = hour
-		# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-		self.df=pd.read_csv(file_path,sep=INPUT_COLUMN_SEP,names=names,header=None,chunksize=READ_CSV_CHUNK)
-		self.total_groupframe=None
+	# def __init__(self, file_path, names, group_item, date, hour):
+	# type: supply_hit/supply_reqs/demand
+	def __init__(self, trans_type, start_time):
 		
-	'''
-	分段转换数据并存储到CSV文件
-	'''
-	def transform_supply_section(self,output_path,the_type):
-		print 'transform...'
+		# TODO FIXME validate the params here
 		
-		###############遍历各个分段，分段数据第一次Group Count后存入临时文件#############
-		is_create = True
-		tmp_path = output_path+".tmp"
-		for chunk in self.df:
-			chunk_thin=chunk
-			if the_type=='hit':
-				# 过滤掉 -1
-				chunk_thin=chunk[(chunk['ad_slot_id']!=-1)&(chunk['ad_card_id']!=-1)]
-			# group
-			grouped = chunk_thin.groupby(self.groupItem).size()
-			# 转换为DataFrame
-			groupframe=pd.DataFrame(grouped)
+		self.is_hour = True
+		self.is_day = False
+		
+		self.table_ids = ["date_id"]
+		
+		self.hour = None
+		if trans_type.find('hour') != -1 :  # 每小时
+			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
+			self.hour = self.start_time.hour
+			self.output_root_path = HOUR_FACTS_FILE_PATH
+			self.table_ids.append("time_id")
+		elif trans_type.find('day') != -1 :  # 每天
+			self.output_root_path = DAY_FACTS_FILE_PATH
+			self.is_hour = False
+			self.is_day = True
+			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d")
+		
+		self.month_folder = str(self.start_time.year) + self.double_num_str(self.start_time.month)
+		self.date = int(self.month_folder + self.double_num_str(self.start_time.day))
+		
+		if(trans_type.find('supply') != -1):  # supply
+			self.names = SUPPLY_HEADER
+			self.names_dtype = self.tran_header_dtype(SUPPLY_HEADER_DTYPE)
+			self.root_path = SUPPLY_CSV_FILE_PATH
+			self.file_suffix = '.product.supply.csv'
+			self.condition_relation = SUPPLY_CONDITION_RELATION
+		elif(trans_type.find('demand') != -1):  # demand
+			self.names = DEMAND_HEADER
+			self.names_dtype = self.tran_header_dtype(DEMAND_HEADER_DTYPE)
+			self.root_path = DEMAND_CSV_FILE_PATH
+			self.file_suffix = '.product.demand.csv'
+			self.condition_relation = DEMAND_CONDITION_RELATION
+		
+		if trans_type == 'supply_hour_hit':
+			self.group_item = SUPPLY_HIT_HOUR_HEADER
+			self.table_name = HIT_FACTS_BY_HOUR_TABLE_NAME
+		elif trans_type == 'supply_hour_reqs':
+			self.group_item = SUPPLY_REQS_HOUR_HEADER
+			self.table_name = REQS_FACTS_BY_HOUR_TABLE_NAME
+		elif trans_type == 'demand_hour_ad':
+			self.group_item = DEMAND_AD_HOUR_HEADER
+			self.table_name = AD_FACTS_BY_HOUR_TABLE_NAME
+		elif trans_type == 'supply_day_hit':
+			self.group_item = SUPPLY_HIT_DAY_HEADER
+			self.table_name = HIT_FACTS_BY_DAY_TABLE_NAME
+		elif trans_type == 'supply_day_reqs':
+			self.group_item = SUPPLY_REQS_DAY_HEADER
+			self.table_name = REQS_FACTS_BY_DAY_TABLE_NAME
+		elif trans_type == 'demand_day_ad':
+			self.group_item = DEMAND_AD_DAY_HEADER
+			self.table_name = AD_FACTS_BY_DAY_TABLE_NAME
+		
+		if not os.path.exists(self.output_root_path + self.month_folder):
+			os.makedirs(self.output_root_path + self.month_folder)
+		self.output_file_path = self.output_root_path + self.month_folder + start_time + self.file_suffix
+		
+		self.init_info = {
+			'is_hour': self.is_hour,
+			'is_day': self.is_day,
+			'start_time': self.start_time,
+			'month_folder': self.month_folder,
+			'date': self.date,
+			'hour':self.hour,
+			'root_path': self.root_path,
+			'output_file_path': self.output_file_path,
+			'file_suffix': self.file_suffix,
+			'group_item': self.group_item,
+			'table_name': self.table_name,
+			'names': self.names,
+			'names_dtype': self.names_dtype,
+			'condition_relation': self.condition_relation
+		}
+		
+		print 'params init completed : ' + str(self.init_info)
+		
+		# 数据集数组
+		self.dfs = []
+		file_path = None
+		if self.is_hour:
+			# 20150901.07.product.supply.csv
+			file_path = self.root_path + self.month_folder + os.sep + start_time + self.file_suffix
+			print 'load file:' + file_path
+			if os.path.exists(file_path):
+				# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
+				df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK)
+				self.dfs.append(df)
+		elif self.is_day:
+			parent_path = self.root_path + self.month_folder + os.sep
+			print 'load dir:' + parent_path
+			file_name_contain_day = str(self.date)
+			file_generator = os.walk(parent_path).next()
 			
-			# 保存到临时CSV文件
-			if(is_create):
-				groupframe.to_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,header=False)
-				is_create = False
-			else:
-				groupframe.to_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,header=False,mode="a")
-			
-			# debug info
-			print("groupd: "+str(len(chunk_thin))+" in "+str(len(chunk))+" records")
+			if file_generator is not None:
+				for file_name in file_generator[2]:
+					file_path = parent_path + file_name
+					if(os.path.isfile(file_path) & file_name.find(file_name_contain_day) != -1):
+						# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
+						print 'load file:' + file_path
+						df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK)
+						self.dfs.append(df)
 		
-		###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
+		if len(self.dfs) == 0:
+			# TODO FIXME
+			pass
 		
+		print self.dfs
 		
-		# coppy groupItem 复制复本
-		sum_names=[]
-		for item in self.groupItem:
-			sum_names.append(item)
-		sum_names.append('total')
+		self.total_groupframe = None
 		
-		
-		##############从临时文件读取数据计算最终结果，Group Sum####################
-		# defub info
-		print("merge the tmp file...")
-		name_dtype={}
-		for name in sum_names:
-			name_dtype[name]=np.int64 # TODO FIXME read from properties file
-		# 输出结果到文件
-		df=pd.read_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,names=sum_names,header=None,dtype=name_dtype)
-		df.dropna()
-		total_grouped=df.groupby(self.groupItem).sum()
-		##############从临时文件读取数据计算最终结果，Group Sum####################
-		
-		
-		# defub info
-		print("merge result size:"+str(len(total_grouped)))
-		
-		self.total_groupframe=pd.DataFrame(total_grouped)
-		self.total_groupframe.to_csv(output_path,sep=OUTPUT_COLUMN_SEP,header=False)
-		
-		# 删除临时文件
-		os.remove(tmp_path)
-		
-		print 'transform!'
+	'''两位数补0'''
+	def double_num_str(self, num):
+		if num < 10:
+			return '0' + str(num)
+		return str(num)
+	
+	'''转换配置里的数据类型'''
+	def tran_header_dtype(self, dtype_dict):
+		target = {}
+		for dt in dtype_dict.iteritems():
+			k = dt[0]
+			t = dt[1]
+			if t == 'int':
+				target[k] = np.int64
+			elif t == 'string':
+				target[k] = np.string0
+		return target
 
 	# 返回占位数据
-	def getInitData(self,groupItem,key):
+	def getInitData(self, group_item, key):
 		obj = {}
-		for gi in groupItem:
-			obj[gi] = [PLACEHOLDER]
+		for gi in group_item:
+			if self.names_dtype[gi] == np.int64:
+				obj[gi] = [PLACEHOLDER]
+			elif self.names_dtype[gi] == np.string0:
+				obj[gi] = [str(PLACEHOLDER)]
 		obj[key] = [0]
 		return pd.DataFrame(obj)
 		
-	def transform_section(self,output_path,condition_relations):
+	def transform_section(self):
 		print 'transform...'
 		
 		###############遍历各个分段，分段数据第一次Group Count后存入临时文件#############
-		is_create = True
-		tmp_path = output_path+".tmp"
-		for chunk in self.df:
-			grouped = None
-			for item in condition_relations.items():
-				column_name=item[0]
-				relations=item[1]
-				print("filter column: "+column_name)
-				tmp_chunk = chunk
+		tmp_path = self.output_file_path + ".tmp"
+		
+		if os.path.exists(tmp_path):
+			print("tmp file already exists,remove")
+			os.remove(tmp_path)
+		
+		for df in self.dfs:
+			for chunk in df:
+				grouped = None
+				for item in self.condition_relation.items():
+					column_name = item[0]
+					relations = item[1]
+					print("filter column: " + column_name)
+					tmp_chunk = chunk
+					
+					for rel in relations:
+						key = rel[0]
+						opt = rel[1]
+						val = rel[2]
+						if '==' == opt:
+							print("filter column: " + column_name + "," + key + "==" + str(val))
+							tmp_chunk = tmp_chunk[tmp_chunk[key] == val]
+						elif '!=' == opt:
+							print("filter column: " + column_name + "," + key + "!=" + str(val))
+							tmp_chunk = tmp_chunk[tmp_chunk[key] != val]
+					
+					print("merge column result: " + column_name)
+					
+					if len(tmp_chunk) == 0:
+						tmp_chunk = self.getInitData(self.group_item, column_name)
+					
+					if grouped is None:
+						grouped = tmp_chunk.groupby(self.group_item).size()  # TODO 确认这里是否需要深度Copy
+					else:
+						grouped = pd.concat([grouped, tmp_chunk.groupby(self.group_item).size()], axis=1)
+	
+				# 转换为DataFrame
+				groupframe = pd.DataFrame(grouped)
+				# 保存到临时CSV文件
+				groupframe.to_csv(tmp_path, sep=OUTPUT_COLUMN_SEP, header=False, na_rep='0', mode="a")
 				
-				for rel in relations:
-					key = rel[0]
-					opt = rel[1]
-					val = rel[2]
-					if '==' == opt:
-						print("filter column: "+ column_name + "," + key + "==" + str(val))
-						tmp_chunk = tmp_chunk[tmp_chunk[key]==val]
-					elif '!=' == opt:
-						print("filter column: "+column_name + "," + key + "!=" + str(val))
-						tmp_chunk = tmp_chunk[tmp_chunk[key]!=val]
-				
-				print("merge column result: " + column_name)
-				
-				if len(tmp_chunk)==0:
-					tmp_chunk=self.getInitData(self.groupItem,column_name)
-				
-				if grouped is None:
-					grouped = tmp_chunk.groupby(self.groupItem).size() # TODO 确认这里是否需要深度Copy
-				else:
-					grouped = pd.concat([grouped,tmp_chunk.groupby(self.groupItem).size()],axis=1)
-
-			# 转换为DataFrame
-			groupframe=pd.DataFrame(grouped)
-			# 保存到临时CSV文件
-			if(is_create):
-				groupframe.to_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,header=False,na_rep='0')
-				is_create = False
-			else:
-				groupframe.to_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,header=False,na_rep='0',mode="a")
-			
-			# debug info
-			print("grouped: "+str(len(chunk))+" records")
+				# debug info
+				print("grouped: " + str(len(chunk)) + " records")
+		
 		print("save tmp file to : " + tmp_path)
 		###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
 		
-		
-		# coppy groupItem 复制复本
-		sum_names=[]
-		for item in self.groupItem:
+		# coppy group_item 复制复本
+		sum_names = []
+		for item in self.group_item:
 			sum_names.append(item)
 			
-		for key in condition_relations.keys():
+		for key in self.condition_relation.keys():
 			sum_names.append(key)
 		
 		##############从临时文件读取数据计算最终结果，Group Sum####################
-		# defub info
+		# debug info
 		print("merge the tmp file...")
-		name_dtype={}
+		'''
+		name_dtype = {}
 		for name in sum_names:
-			name_dtype[name]=np.int64 # TODO FIXME read from properties file
+			name_dtype[name] = np.int64  # TODO FIXME read from properties file
+		'''
 		# 输出结果到文件
-		df=pd.read_csv(tmp_path,sep=OUTPUT_COLUMN_SEP,names=sum_names,header=None,dtype=name_dtype)
+		df = pd.read_csv(tmp_path, sep=OUTPUT_COLUMN_SEP, names=sum_names, header=None, dtype=self.names_dtype)
 		df.dropna()
-		total_grouped=df.groupby(self.groupItem).sum()
+		total_grouped = df.groupby(self.group_item).sum()
 		##############从临时文件读取数据计算最终结果，Group Sum####################
 		
 		# defub info
-		print("merge result size:"+str(len(total_grouped)))
+		print("merge result size:" + str(len(total_grouped)))
 		
-		self.total_groupframe=pd.DataFrame(total_grouped)
-		self.total_groupframe.to_csv(output_path,sep=OUTPUT_COLUMN_SEP,header=False)
+		self.total_groupframe = pd.DataFrame(total_grouped)
+		self.total_groupframe.to_csv(self.output_file_path, sep=OUTPUT_COLUMN_SEP, header=False)
 		
 		# 删除临时文件
 		# os.remove(tmp_path)
 		
 		print 'transform!'
+	
+	# 分析CSV文件、计算结果、插入数据库
+	def compute(self):
+		print "compute started."
+		self.transform_section()
+		self.insert()
+		print "compute ended."
+	
 	# 读取CSV文件插入数据库
-	def supply(self,supply_out_path,the_type):
-		print "supply application started."
-		
-		condition_relation = {
-				'total':[
-					('ad_slot_id','!=',-1),
-					('ad_card_id','!=',-1)
-				]
-			}
-		
-		# self.transform_supply_section(supply_out_path,the_type)
-		self.transform_section(supply_out_path,condition_relation)
-		
-		# SUPPLY_HIT_HOUR_HEADER.append('total')
-		if the_type=='hit':
-			self.insert(supply_out_path,HIT_FACTS_BY_HOUR_TABLE_NAME,SUPPLY_HIT_HOUR_HEADER,condition_relation)
-		elif the_type=='reqs':
-			self.insert(supply_out_path,REQS_FACTS_BY_HOUR_TABLE_NAME,SUPPLY_REQS_HIT_HOUR_HEADER,condition_relation)
-		print "supply application ended."
-	def demand(self,demand_out_path):
-		print "demand application started."
-		
-		condition_relation = {
-			'click':[
-				('type','==',2)
-			],
-			'impressions_start_total':[
-				('type','==',1),
-				('second','==',0),
-			],
-			'impressions_finish_total':[
-				('type','==',1),
-				('second','==',3600),
-			]
-		}
-		
-		
-		self.transform_section(demand_out_path,condition_relation)
-		self.insert(demand_out_path,AD_FACTS_BY_HOUR_TABLE_NAME,DEMAND_AD_HOUR_HEADER,condition_relation)
-		print "demand application ended."
-		
-	# 读取CSV文件插入数据库
-	def insert(self,file_path,table_name,column_names,condition_relation):
+	def insert(self):
 		# debug info
-		print "connect --> db:"+str(DB_DATABASE)+",user:"+str(DB_USER)+",password:***,host:"+str(DB_HOST)+",port:"+str(DB_PORT)+"..."
-		conn = psy.connect(database=DB_DATABASE,user=DB_USER,password=DB_PASSWORD,host=DB_HOST,port=DB_PORT)
+		print "connect --> db:" + str(DB_DATABASE) + ",user:" + str(DB_USER) + ",password:***,host:" + str(DB_HOST) + ",port:" + str(DB_PORT) + "..."
+		conn = psy.connect(database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT)
 		cur = conn.cursor()
 		
 		#################清空表######################
-		sql='DELETE FROM "'+table_name+'" WHERE "date_id"=%s AND "time_id"=%s;'
-		print "prepare delete:" + sql, self.date,self.hour
-		cur.execute(sql,(self.date,self.hour))
+		sql = 'DELETE FROM "' + self.table_name + '" WHERE '
+		
+		insert_column = ''
+		value_str = ''
+		
+		for tid in self.table_ids:
+			if(self.table_ids.index(tid) > 0):
+				sql = sql + " AND "
+				insert_column = insert_column + ","
+				value_str = value_str + ","
+			sql = sql + " " + tid + " = %s"
+			insert_column = insert_column + '"'+tid+'"'
+			value_str = value_str + '%s'
+		sql = sql + ";"
+		
+		print "prepare delete:" + sql, self.date, self.hour
+		del_val = [self.date]
+		if(self.is_hour):
+			del_val.append(self.hour)
+		cur.execute(sql, del_val)
 		conn.commit()
 		#################清空表######################
 		
-		
 		#################拼接Insert SQL、组装Insert值######################
-		insert_column='"date_id","time_id"'
-		value_str='%s,%s'
-		for name in column_names:
-			insert_column = insert_column + ',"'+str(name)+'"'
-			value_str=value_str+',%s'
-		for key in condition_relation.keys():
-			insert_column = insert_column + ',"'+key+'"'
-			value_str=value_str+',%s'
-		sql='INSERT INTO "'+table_name+'"('+insert_column+') VALUES ('+value_str+');'
+		for name in self.group_item:
+			insert_column = insert_column + ',"' + str(name) + '"'
+			value_str = value_str + ',%s'
+		for key in self.condition_relation.keys():
+			insert_column = insert_column + ',"' + key + '"'
+			value_str = value_str + ',%s'
+		sql = 'INSERT INTO "' + self.table_name + '"(' + insert_column + ') VALUES (' + value_str + ');'
 		sql_count = 0
 		tg_count = str(len(self.total_groupframe))
 		print "prepare sql : " + sql
@@ -282,41 +363,43 @@ class Etl_Transform_Pandas:
 		
 		#################分段提交数据######################################
 		value_list = []
-		for index,row in self.total_groupframe.iterrows():
-			is_tuple = type(index)==tuple
-			value=[self.date,self.hour]
+		for index, row in self.total_groupframe.iterrows():
+			is_tuple = type(index) == tuple
+			value = [self.date]
+			if(self.is_hour):
+				value.append(self.hour)
 			is_break = False;
-			for name in column_names:
+			for name in self.group_item:
 				if is_tuple:
-					v = int(index[self.groupItem.index(name)])
+					v = int(index[self.group_item.index(name)])
 				else:
-					v=int(index)
+					v = int(index)
 				
-				if v==PLACEHOLDER or v == str(PLACEHOLDER): # 表示是占位行
+				if v == PLACEHOLDER or v == str(PLACEHOLDER):  # 表示是占位行
 					is_break = True
 					break
 				
 				value.append(v)
-			if is_break: # 跳过占位行
+			if is_break:  # 跳过占位行
 				continue
-			for r in row: # 这里是计算的值，顺序应当是和condition_relation里的Key对应的
+			for r in row:  # 这里是计算的值，顺序应当是和condition_relation里的Key对应的
 				value.append(int(r))
 					
 			value_list.append(value)
 			
-			sql_count = sql_count+1
+			sql_count = sql_count + 1
 			
 			# 每DB_COMMIT_CHUNK条提交一次
 			if sql_count % DB_COMMIT_CHUNK == 0:
 				# debug info
 				print("commit " + str(sql_count) + "/" + tg_count + " records")
-				cur.executemany(sql,value_list)
+				cur.executemany(sql, value_list)
 				conn.commit()
 				value_list = []
 			
 		print("commit all...")
-		if len(value_list)!=0:
-			cur.executemany(sql,value_list)
+		if len(value_list) != 0:
+			cur.executemany(sql, value_list)
 			conn.commit()
 		print("commit all!")
 		#################分段提交数据######################################
@@ -324,24 +407,9 @@ class Etl_Transform_Pandas:
 		cur.close()
 		conn.close()
 if __name__ == "__main__":
+	#new_etp = Etl_Transform_Pandas('supply_day_hit', '20150923')
+	#new_etp.compute()
 	
-	etp_hit = Etl_Transform_Pandas(r'F:\20150930.04.product1.demand.csv',DEMAND_HEADER,DEMAND_AD_HOUR_HEADER,'20150930','04')
-	etp_hit.demand(r'F:\20150930.04.product1.demand.ad.csv')
-	
-	'''
-	etp_hit = Etl_Transform_Pandas(r'F:\20150923.10.product.supply.csv',SUPPLY_HEADER,SUPPLY_HIT_HOUR_HEADER,'20150923','10')
-	etp_hit.supply(r'F:\20150923.10.product.supply.hit.csv','hit')
-	
-	etp_hit = Etl_Transform_Pandas(r'F:\20150923.10.product.supply.csv',SUPPLY_HEADER,SUPPLY_HIT_HOUR_HEADER,'20150923','10')
-	etp_hit.supply(r'F:\20150923.10.product.supply.hit.csv','hit')
-	
-	etp_reqs = Etl_Transform_Pandas(r'F:\20150923.04.product.supply.csv',SUPPLY_HEADER,SUPPLY_REQS_HOUR_HEADER,'20150923','04')
-	etp_reqs.supply(r'F:\20150923.04.product.supply.reqs.csv','reqs')
-
-	etp_hit = Etl_Transform_Pandas(r'F:\20150901.12.product.supply.csv',SUPPLY_HEADER,SUPPLY_HIT_HOUR_HEADER,'20150920','12')
-	etp_hit.supply(r'F:\20150901.12.product.supply.hit.csv','hit')
-	
-	etp_reqs = Etl_Transform_Pandas(r'F:\20150901.12.product.supply.csv',SUPPLY_HEADER,SUPPLY_REQS_HOUR_HEADER,'20150920','12')
-	etp_reqs.supply(r'F:\20150901.12.product.supply.reqs.csv','reqs')
-	'''
+	new_etp = Etl_Transform_Pandas('supply_hour_hit', '20150923.04')
+	new_etp.compute()
 	
