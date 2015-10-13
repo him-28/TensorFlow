@@ -200,8 +200,6 @@ class ETL_Transform:
             facts_file_path=Config["day_hour_facts_file_path"]
         else:
             facts_file_path=Config["hour_facts_file_path"]
-        if not os.path.exists(facts_file_path+"{0}".format(yearmonth)):
-            os.makedirs(facts_file_path+"{0}".format(yearmonth))
         # table ad_facts_by_hour
         hour_ad_fact_table = etl.convert(self.demand_merge_table,{'click':lambda x:(0 if not x else x),
                                                                 'impressions_start_total':lambda x:(0 if not x else x),
@@ -210,6 +208,8 @@ class ETL_Transform:
         d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
         yearmonth=datetime.datetime.strftime(d,"%Y%m")
         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
+        if not os.path.exists(facts_file_path+"{0}".format(yearmonth)):
+            os.makedirs(facts_file_path+"{0}".format(yearmonth))
         etl.tocsv(hour_ad_fact_table,facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,self.hour),encoding="utf-8",write_header=True)
         
         #table hit_facts_by_hour
