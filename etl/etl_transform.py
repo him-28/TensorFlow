@@ -224,15 +224,12 @@ class ETL_Transform:
         etl.tocsv(hour_reqs_facts_table, facts_file_path+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,pdate_,self.hour), encoding="utf-8",write_header=True)
         
     def load_to_pg(self):
-        load('hour',self.pdate,Config["db_table"]["Ad_Facts_By_Hour"]["table_name"],self.version,self.hour)
-        load('hour',self.pdate,Config["db_table"]["Hit_Facts_By_Hour"]["table_name"],self.version,self.hour)
-        load('hour',self.pdate,Config["db_table"]["Reqs_Facts_By_Hour"]["table_name"],self.version,self.hour)
+        if self.type_t == 'hour':
+            load('hour',self.pdate,Config["db_table"]["Ad_Facts_By_Hour"]["table_name"],self.version,self.hour)
+            load('hour',self.pdate,Config["db_table"]["Hit_Facts_By_Hour"]["table_name"],self.version,self.hour)
+            load('hour',self.pdate,Config["db_table"]["Reqs_Facts_By_Hour"]["table_name"],self.version,self.hour)
         
-if __name__ == "__main__":
-    day = sys.argv[1]
-    hour = sys.argv[2]
-    type_t = sys.argv[3]
-    version = sys.argv[4]
+def hour_etl(day,hour,type_t,version):
     header_name=''
     if type_t == 'hour':
         header_name='agg_hour_header'
@@ -271,3 +268,9 @@ if __name__ == "__main__":
         ex=traceback.format_exc()
         print ex
         print "ERROR:etl_transform",day,hour,e
+if __name__ == "__main__":
+    day = sys.argv[1]
+    hour = sys.argv[2]
+    type_t = sys.argv[3]
+    version = sys.argv[4]
+    hour_etl(day, hour, type_t, version)

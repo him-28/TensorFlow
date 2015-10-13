@@ -144,10 +144,7 @@ def sum_ad_facts_reducer(key,rows):
     result.append(sum_imps_end)
     result.append(sum_click)
     return result
-if __name__ == "__main__":
-    day=sys.argv[1]
-    type_t=sys.argv[2] #reload merge
-    version=sys.argv[3] #old new
+def day_etl(day,type_t,version):
     if type_t == "reload":
         for hour in range(24):
             str_hour=''
@@ -163,3 +160,8 @@ if __name__ == "__main__":
         load_to_pg(day,version)
     except Exception,e:
         print "ERROR:day_etl_transform",day,e
+if __name__ == "__main__":
+    day=sys.argv[1]
+    type_t=sys.argv[2] #reload merge
+    version=sys.argv[3] #old new
+    day_etl(day, type_t, version)
