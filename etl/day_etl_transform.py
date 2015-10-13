@@ -10,6 +10,7 @@ import datetime
 import csv
 import types
 import sys
+import os
 from data2postgresql import load
 import yaml
 Config=yaml.load(file("config.yml"))
@@ -94,6 +95,8 @@ def day_etl_agg_hour(day,version):
     day_reqs_facts_table=aggre_reqs_facts(tmp_reqs_facts_result_table,version)
     day_ad_facts_table=aggre_ad_facts(tmp_ad_facts_result_table,version)
     
+    if not os.path.exists(day_facts_file_path+"{0}".format(yearmonth)):
+            os.makedirs(day_facts_file_path+"{0}".format(yearmonth))
     etl.tocsv(day_hit_facts_table, day_facts_file_path+"{0}/{1}_hit_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)
     etl.tocsv(day_reqs_facts_table, day_facts_file_path+"{0}/{1}_reqs_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)
     etl.tocsv(day_ad_facts_table, day_facts_file_path+"{0}/{1}_ad_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)        

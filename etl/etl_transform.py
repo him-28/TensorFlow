@@ -10,6 +10,7 @@ import datetime
 import csv
 import types
 import sys
+import os
 from data2postgresql import load
 import yaml
 Config=yaml.load(file("config.yml"))
@@ -199,6 +200,8 @@ class ETL_Transform:
             facts_file_path=Config["day_hour_facts_file_path"]
         else:
             facts_file_path=Config["hour_facts_file_path"]
+        if not os.path.exists(facts_file_path+"{0}".format(yearmonth)):
+            os.makedirs(facts_file_path+"{0}".format(yearmonth))
         # table ad_facts_by_hour
         hour_ad_fact_table = etl.convert(self.demand_merge_table,{'click':lambda x:(0 if not x else x),
                                                                 'impressions_start_total':lambda x:(0 if not x else x),
