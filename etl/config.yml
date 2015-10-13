@@ -9,6 +9,7 @@ pandas:
     ad_facts_by_day2: AD_Facts_By_Day2
     hit_facts_by_day2: Hit_Facts_By_Day2
     reqs_facts_by_day2: Reqs_Facts_By_Day2
+    log_config_path: logger.conf
 supply:
     raw_header: ['boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','p_v_hid','p_v_rid','p_v_rname','p_c_type',
                 'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
