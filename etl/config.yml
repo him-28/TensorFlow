@@ -10,6 +10,9 @@ pandas:
     hit_facts_by_day2: Hit_Facts_By_Day2
     reqs_facts_by_day2: Reqs_Facts_By_Day2
     log_config_path: logger.conf
+petl:
+    batch_read_size: 5000
+    batch_insert_db_size: 1000
 supply:
     raw_header: ['boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','p_v_hid','p_v_rid','p_v_rname','p_c_type',
                 'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
@@ -70,17 +73,53 @@ supply_csv_file_path: "/data/ad2/supply/"
 demand_csv_file_path: "/data/ad2/demand/"
 hour_facts_file_path: "/data/facts/hour/"
 day_facts_file_path: "/data/facts/day/"
+day_hour_facts_file_path: "/data/facts/day/hour"
 
 database:
     db_name: adc
     user: postgres
-    password: 
+    password: ''
     host: 10.100.5.80
     port: 11921
 db_table:
-    ad_facts_by_hour:
-         cols: "ad_slot_id,ad_card_id,ad_campaign_id,ad_creative_id,click,impressions_start_total,impressions_finish_total,date_id,time_id"
-    hit_facts_by_hour:
-        cols: "ad_slot_id,ad_card_id,ad_creative_id,ad_campaign_id,os,total,date_id,time_id"
-    reqs_facts_by_hour:
-        cols: "ad_slot_id,ad_campaign_id,os,total,date_id,time_id"
+    Ad_Facts_By_Hour: 
+         table_name: "AD_Facts_By_Hour"
+         clear_cols: "date_id,time_id"
+    Hit_Facts_By_Hour:
+        table_name: Hit_Facts_By_Hour
+        clear_cols: "date_id,time_id"
+    Reqs_Facts_By_Hour:
+        table_name: Reqs_Facts_By_Hour
+        clear_cols: "date_id,time_id"
+    Ad_Facts_By_Day:
+        table_name: AD_Facts_By_Day
+        clear_cols: "date_id"
+    Hit_Facts_By_Day:
+        table_name: Hit_Facts_By_Day
+        clear_cols: "date_id"
+    Reqs_Facts_By_Day:
+        table_name: Reqs_Facts_By_Day
+        clear_cols: "date_id"
+
+old_version:
+    supply:
+        raw_header: ['boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','p_v_hid','p_v_rid','p_v_rname','p_c_type',
+                    'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
+                    'p_c_odin','p_c_aaid','p_c_duid','sid']
+        agg_filt_header: ['ad_slot_id', 'ad_card_id']
+        agg_hour_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
+        agg_day_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
+        reqs_hour_header: ['ad_slot_id']
+        reqs_day_header: ['ad_slot_id']
+    demand:
+        raw_header: ['ad_slot_id','ad_card_id','ad_creative_id','deviceid','type','intime','ip','boardid','_sid','voideoid','second']
+        agg_hour_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
+        agg_day_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
+        reqs_hour_header: ['ad_slot_id']
+        reqs_day_header: ['ad_slot_id']
+    
+    supply_csv_file_path: "/data/ad2/supply/"
+    demand_csv_file_path: "/data/ad2/demand/"
+    hour_facts_file_path: "/data/facts/hour/"
+    day_facts_file_path: "/data/facts/day/"
+    day_hour_facts_file_path: "/data/facts/day/hour"

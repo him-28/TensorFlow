@@ -351,7 +351,7 @@ class Etl_Transform_Pandas:
 			value_str = value_str + '%s'
 		sql = sql + ";"
 		
-		LOG.info ("prepare delete:" + sql + self.date + "," + str(self.hour))
+		LOG.info ("prepare delete:" + sql + str(self.date) + "," + str(self.hour))
 		del_val = [self.date]
 		if(self.is_hour):
 			del_val.append(self.hour)
