@@ -177,7 +177,7 @@ class ETL_Transform:
             self.count =self.count + 1
             self.read_buffer=[]
             
-    def union_table(slef,table1,table2):
+    def union_table(self,table1,table2):
         try:
             tmp_table = table1.list()
         except:
