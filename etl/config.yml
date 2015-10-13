@@ -4,7 +4,12 @@ pandas:
     read_csv_chunk: 1000000
     db_commit_chunk: 10000
     hit_facts_by_hour2: Hit_Facts_By_Hour2
+    ad_facts_by_hour2: AD_Facts_By_Hour2
     reqs_facts_by_hour2: Reqs_Facts_By_Hour2
+    ad_facts_by_day2: AD_Facts_By_Day2
+    hit_facts_by_day2: Hit_Facts_By_Day2
+    reqs_facts_by_day2: Reqs_Facts_By_Day2
+    log_config_path: logger.conf
 petl:
     batch_read_size: 5000
     batch_insert_db_size: 1000
@@ -12,13 +17,53 @@ supply:
     raw_header: ['boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','p_v_hid','p_v_rid','p_v_rname','p_c_type',
                 'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
                 'p_c_odin','p_c_aaid','p_c_duid','sid']
+    raw_header_dtype: {
+        'boardid':'int',
+        'deviceid':'string',
+        'videoid':'int',
+        'ad_slot_id':'int',
+        'ad_card_id':'int',
+        'ad_creative_id':'int',
+        'p_v_hid':'int',
+        'p_v_rid':'int',
+        'p_v_rname':'string',
+        'p_c_type':'int',
+        'p_c_ip':'string',
+        'cityid':'int',
+        'intime':'int',
+        'p_c_idfa1':'string',
+        'p_c_imei':'string',
+        'p_c_ctmid':'string',
+        'p_c_mac':'string',
+        'p_c_anid':'int',
+        'p_c_openudid':'int',
+        'p_c_idfa':'string',
+        'p_c_odin':'string',
+        'p_c_aaid':'int',
+        'p_c_duid':'string',
+        'sid':'string'
+    }
     agg_filt_header: ['ad_slot_id', 'ad_card_id']
     agg_hour_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
     agg_day_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
     reqs_hour_header: ['ad_slot_id']
     reqs_day_header: ['ad_slot_id']
 demand:
-    raw_header: ['ad_slot_id','ad_card_id','ad_creative_id','deviceid','type','intime','ip','boardid','_sid','voideoid','second']
+    raw_header: ['ad_slot_id','ad_card_id','ad_creative_id','deviceid','type','intime','ip','boardid','_sid','voideoid','second','sid']
+    raw_header_dtype: {
+        'ad_slot_id': 'int',
+        'ad_card_id': 'int',
+        'ad_creative_id':'int',
+        'deviceid':'string',
+        'type':'int',
+        'intime':'int',
+        'ip':'string',
+        'boardid':'int',
+        '_sid':'string',
+        'voideoid':'int',
+        'second':'int',
+        'sid':'int'
+    }
     agg_hour_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
     agg_day_header: ['ad_slot_id', 'ad_card_id', 'ad_creative_id']
     reqs_hour_header: ['ad_slot_id']
