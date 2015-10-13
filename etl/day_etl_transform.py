@@ -55,7 +55,7 @@ def day_etl_agg_hour(day,version):
     yearmonth=datetime.datetime.strftime(d,"%Y%m")
     pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
     if version == 'old':
-        hour_facts_file_path=Config["old_version"]["hour_facts_file_path"]
+        hour_facts_file_path=Config["old_version"]["day_hour_facts_file_path"]
         day_facts_file_path=Config["old_version"]["day_facts_file_path"]
     else:
         hour_facts_file_path=Config["hour_facts_file_path"]
