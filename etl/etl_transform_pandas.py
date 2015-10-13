@@ -202,7 +202,6 @@ class Etl_Transform_Pandas:
 			LOG.info('load dir:' + parent_path)
 			file_name_contain_day = str(self.date)
 			file_generator = os.walk(parent_path).next()
-			"test_0924.tar".find("20150924")
 			if file_generator is not None:
 				for file_name in file_generator[2]:
 					file_path = parent_path + file_name
