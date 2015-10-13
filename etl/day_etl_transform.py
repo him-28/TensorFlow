@@ -55,7 +55,7 @@ def day_etl_agg_hour(day,version):
     yearmonth=datetime.datetime.strftime(d,"%Y%m")
     pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
     if version == 'old':
-        hour_facts_file_path=Config["old_version"]["hour_facts_file_path"]
+        hour_facts_file_path=Config["old_version"]["day_hour_facts_file_path"]
         day_facts_file_path=Config["old_version"]["day_facts_file_path"]
     else:
         hour_facts_file_path=Config["hour_facts_file_path"]
@@ -144,10 +144,7 @@ def sum_ad_facts_reducer(key,rows):
     result.append(sum_imps_end)
     result.append(sum_click)
     return result
-if __name__ == "__main__":
-    day=sys.argv[1]
-    type_t=sys.argv[2] #reload merge
-    version=sys.argv[3] #old new
+def day_etl(day,type_t,version):
     if type_t == "reload":
         for hour in range(24):
             str_hour=''
@@ -163,3 +160,8 @@ if __name__ == "__main__":
         load_to_pg(day,version)
     except Exception,e:
         print "ERROR:day_etl_transform",day,e
+if __name__ == "__main__":
+    day=sys.argv[1]
+    type_t=sys.argv[2] #reload merge
+    version=sys.argv[3] #old new
+    day_etl(day, type_t, version)
