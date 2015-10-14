@@ -10,7 +10,9 @@ import datetime
 import types
 import sys
 import yaml
+import init_log
 Config=yaml.load(file("config.yml"))
+LOGGER = init_log.init("logger.conf", 'petlLogger')
 
 
 class Pg_Loader():
@@ -75,7 +77,6 @@ class Pg_Loader():
             self.insert_buff.append(row)
         else:
             self.insert_buff.append(row)
-            print "insert to db:",len(self.insert_buff)
             self.insert_to_pg(self.insert_buff)
             self.insert_buff=[]
             
@@ -87,10 +88,10 @@ class Pg_Loader():
             except Exception,e:
                 import traceback
                 ex=traceback.format_exc()
-                print"[ERROR]", e
-                print ex
+                LOGGER.error("insert to db error")
+                LOGGER.error(ex)
                 pass
-        print "RETRY {0} TIMES FAILED".format(retrytimes)
+        LOGGER.error("RETRY {0} TIMES FAILED".format(retrytimes))
     
         
     def insert_rows(self,rows):
@@ -114,7 +115,7 @@ class Pg_Loader():
         for row in rows:
             db_tab_vals.append(row)
         petl.appenddb(db_tab_vals,self.getConn(),self.db_table)
-        print 'table',self.db_table
+        LOGGER.info('table:'+self.db_table)
     
     def excute_by_sql(self,str_sql):
         try:
@@ -125,7 +126,7 @@ class Pg_Loader():
             result=cur.execute(str_sql)
             conn.commit()
         except Exception,e:
-            print e
+            LOGGER.error(e)
         finally:
             if cur:
                 cur.close()
@@ -211,7 +212,7 @@ def load(t_type,day,table_name,version,hour):
                 file_path=file_path_prefix+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
                 clear_cols= Config["db_table"]["Hit_Facts_By_Hour"]["clear_cols"]
             elif table_name == Config["db_table"]["Reqs_Facts_By_Hour"]["table_name"]:
-                file_path=file_path_prefix+"{0}/{1}_{2}_Reqs_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
+                file_path=file_path_prefix+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
                 clear_cols= Config["db_table"]["Reqs_Facts_By_Hour"]["clear_cols"]
         
         loader=Pg_Loader(batch_rows_size=Config["petl"]["batch_insert_db_size"],
@@ -223,7 +224,11 @@ def load(t_type,day,table_name,version,hour):
             loader.clear_db(clear_condition)
             loader.load_file_to_pgtable()
         except Exception,e:
-            print "ERROR:data2postgresql ",day,table_name,e
+            LOGGER.info("load to file failed"+day+"-"+table_name+" "+e.message)
+            import traceback
+            ex=traceback.format_exc()
+            LOGGER.error(ex)
+            sys.exit(-1)
 if __name__ == "__main__":
     t_type=sys.argv[1]
     day = sys.argv[2]

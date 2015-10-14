@@ -11,9 +11,11 @@ import csv
 import types
 import sys
 import os
+import init_log
 from data2postgresql import load
 import yaml
 Config=yaml.load(file("config.yml"))
+LOGGER = init_log.init("logger.conf", 'petlLogger')
 
 class ETL_Transform:
     count=1
@@ -48,7 +50,7 @@ class ETL_Transform:
         
         
     def transform_supply(self):
-        print "supply etl"
+        LOGGER.info("supply etl...")
         self.read_buffer=[]
         with open(self.supply_csv_filePath,'rb') as fr:
             for line in fr:
@@ -77,18 +79,18 @@ class ETL_Transform:
         
         display_table = etl.aggregate(row_table,tuple(self.aggre_header),len)
         agg_header_.append('value')
-        try:
-            tmp_table = self.supply_merge_table.list()
-        except:
-            tmp_table = self.supply_merge_table
-#        tmp_merge_table = etl.merge(self.supply_merge_table,display_table,key=tuple(agg_header_))
+#         try:
+#             tmp_table = self.supply_merge_table.list()
+#         except:
+#             tmp_table = self.supply_merge_table
+#         tmp_merge_table = etl.merge(self.supply_merge_table,display_table,key=tuple(agg_header_))
         tmp_merge_table=self.union_table(self.supply_merge_table, display_table)
 #         tmp_2_merge_table=etl.convert(tmp_merge_table,"value",lambda x:int(x))
         table_t = etl.aggregate(tmp_merge_table,tuple(self.aggre_header),sum,'value')
         self.supply_merge_table=table_t
         
     def transfrom_demand(self):
-        print "demand etl"
+        LOGGER.info("demand etl ...")
         self.read_buffer=[]
         with open(self.demand_csv_filePath,'rb') as fr:
             for line in fr:
@@ -165,7 +167,7 @@ class ETL_Transform:
         else:
             self.read_buffer.append(row)
             self.etl_aggregate_supply()
-            print "read:",self.count*self.batch_read_size
+            #print "read:",self.count*self.batch_read_size
             self.count =self.count + 1
             self.read_buffer=[]
     def demand_read_in_buffer(self,row):
@@ -174,7 +176,7 @@ class ETL_Transform:
         else:
             self.read_buffer.append(row)
             self.etl_aggregate_demand()
-            print "read:",self.count*self.batch_read_size
+            #print "read:",self.count*self.batch_read_size
             self.count =self.count + 1
             self.read_buffer=[]
             
@@ -200,8 +202,6 @@ class ETL_Transform:
             facts_file_path=Config["day_hour_facts_file_path"]
         else:
             facts_file_path=Config["hour_facts_file_path"]
-        if not os.path.exists(facts_file_path+"{0}".format(yearmonth)):
-            os.makedirs(facts_file_path+"{0}".format(yearmonth))
         # table ad_facts_by_hour
         hour_ad_fact_table = etl.convert(self.demand_merge_table,{'click':lambda x:(0 if not x else x),
                                                                 'impressions_start_total':lambda x:(0 if not x else x),
@@ -210,10 +210,14 @@ class ETL_Transform:
         d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
         yearmonth=datetime.datetime.strftime(d,"%Y%m")
         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
+        if not os.path.exists(facts_file_path+"{0}".format(yearmonth)):
+            os.makedirs(facts_file_path+"{0}".format(yearmonth))
+        LOGGER.info("generate "+facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,self.hour))
         etl.tocsv(hour_ad_fact_table,facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,self.hour),encoding="utf-8",write_header=True)
         
         #table hit_facts_by_hour
         hout_hit_facts_table = etl.select(self.supply_merge_table,"{ad_card_id} != '-1' and {ad_creative_id} != '-1'")
+        LOGGER.info("generate "+facts_file_path+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,pdate_,self.hour))
         etl.tocsv(hout_hit_facts_table, facts_file_path+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,pdate_,self.hour), encoding="utf-8",write_header=True)
         
         #table reqs_facts_by_hour
@@ -224,10 +228,12 @@ class ETL_Transform:
         aggre_tmp.append("time_id")
         tmp_ = etl.aggregate(self.supply_merge_table,tuple(aggre_tmp),sum,'total')
         hour_reqs_facts_table = etl.rename(tmp_,'value','total')
+        LOGGER.info("generate "+facts_file_path+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,pdate_,self.hour))
         etl.tocsv(hour_reqs_facts_table, facts_file_path+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,pdate_,self.hour), encoding="utf-8",write_header=True)
         
     def load_to_pg(self):
         if self.type_t == 'hour':
+            LOGGER.info("load to db ...")
             load('hour',self.pdate,Config["db_table"]["Ad_Facts_By_Hour"]["table_name"],self.version,self.hour)
             load('hour',self.pdate,Config["db_table"]["Hit_Facts_By_Hour"]["table_name"],self.version,self.hour)
             load('hour',self.pdate,Config["db_table"]["Reqs_Facts_By_Hour"]["table_name"],self.version,self.hour)
@@ -241,14 +247,16 @@ def hour_etl(day,hour,type_t,version):
     d = datetime.datetime.strptime(day,"%Y%m%d")
     yearmonth = datetime.datetime.strftime(d,"%Y%m")
     yearmonthday = datetime.datetime.strftime(d,"%Y%m%d")
-    supply_filePath = Config["supply_csv_file_path"]+"{0}/{1}.{2}.product.supply.csv"
-    demand_filePath = Config["demand_csv_file_path"]+"{0}/{1}.{2}.product.demand.csv"
      
     if version == 'old':
+        supply_filePath = Config["old_version"]["supply_csv_file_path"]+"{0}/{1}.{2}.product.supply.csv".format(yearmonth,yearmonthday,hour)
+        demand_filePath = Config["old_version"]["demand_csv_file_path"]+"{0}/{1}.{2}.product.demand.csv".format(yearmonth,yearmonthday,hour)
         supply_header=Config["old_version"]["supply"]["raw_header"]
         demand_header=Config["old_version"]["demand"]["raw_header"]
         aggre_header=Config["old_version"]["supply"][header_name]
     else:
+        supply_filePath = Config["supply_csv_file_path"]+"{0}/{1}.{2}.product.supply.csv".format(yearmonth,yearmonthday,hour)
+        demand_filePath = Config["demand_csv_file_path"]+"{0}/{1}.{2}.product.demand.csv".format(yearmonth,yearmonthday,hour)
         supply_header=Config["supply"]["raw_header"]
         demand_header=Config["demand"]["raw_header"]
         aggre_header=Config["supply"][header_name]
@@ -256,21 +264,23 @@ def hour_etl(day,hour,type_t,version):
                        supply_header=supply_header,
                        demand_header=demand_header,
                        aggre_header=aggre_header,
-                       supply_csv_filePath=supply_filePath.format(yearmonth,yearmonthday,hour),
-                       demand_csv_filePath=demand_filePath.format(yearmonth,yearmonthday,hour),
+                       supply_csv_filePath=supply_filePath,
+                       demand_csv_filePath=demand_filePath,
                        batch_read_size=Config["petl"]["batch_read_size"],
                        pdate=day,
                        hour=hour,
                        version=version,
                        type_t=type_t)
     try:
+        LOGGER.info("petl etl start...")
         etls.transform()
         etls.load_to_pg()
     except Exception,e:
         import traceback
         ex=traceback.format_exc()
-        print ex
-        print "ERROR:etl_transform",day,hour,e
+        LOGGER.error("day:"+day+" hour:"+hour+" message:"+e.message)
+        LOGGER.error(ex)
+        sys.exit(-1)
 if __name__ == "__main__":
     day = sys.argv[1]
     hour = sys.argv[2]
