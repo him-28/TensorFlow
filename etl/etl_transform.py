@@ -278,8 +278,9 @@ def hour_etl(day,hour,type_t,version):
     except Exception,e:
         import traceback
         ex=traceback.format_exc()
-        LOGGER.error("day:"+day+" hour:"+hour+" message:"+e)
+        LOGGER.error("day:"+day+" hour:"+hour+" message:"+e.message)
         LOGGER.error(ex)
+        sys.exit(-1)
 if __name__ == "__main__":
     day = sys.argv[1]
     hour = sys.argv[2]
