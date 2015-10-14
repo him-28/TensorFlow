@@ -100,11 +100,41 @@ class Etl_Transform_Pandas:
 		
 		# TODO FIXME validate the params here
 		
+		self.init_params(trans_type, start_time)
+		
+		self.load_start_time = dt.datetime.now()
+		insert_takes = 0
+		try:
+			is_load_success = self.load_files(start_time, day_merge)
+			self.load_end_time = dt.datetime.now()
+			if is_load_success:
+				self.insert_start_time = dt.datetime.now()
+				self.insert()
+				self.insert_end_time = dt.datetime.now()
+				insert_takes = self.insert_end_time - self.insert_start_time
+			else:
+				LOG.error("load file failed,exit.")
+		except Exception as e:
+			LOG.error(e.message)
+		self.exec_end_time = dt.datetime.now()
+		
+		exec_takes = self.exec_end_time - self.exec_start_time
+		load_takes = self.load_end_time - self.load_start_time
+		
+		LOG.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + str(exec_takes.seconds / 60) + " minutes), inside load file and transform takes " 
+				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes.seconds) + " seconds")
+	
+	def validate_params(self,trans_type,start_time):
+		if trans_type == '' or trans_type == '':
+			pass
+		else:
+			return False
+	
+	def init_params(self,trans_type,start_time):
+		
 		self.is_hour = True
 		self.is_day = False
-		
 		self.table_ids = ["date_id"]
-		
 		self.hour = None
 		if trans_type.find('hour') != -1 :  # 每小时
 			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
@@ -184,26 +214,6 @@ class Etl_Transform_Pandas:
 		
 		LOG.info('params init completed : ' + str(self.init_info))
 		
-		self.load_start_time = dt.datetime.now()
-		try:
-			is_load_success = self.load_files(start_time, day_merge)
-			self.load_end_time = dt.datetime.now()
-			if is_load_success:
-				self.insert_start_time = dt.datetime.now()
-				self.insert()
-				self.insert_end_time = dt.datetime.now()
-			else:
-				LOG.error("load file failed,exit.")
-		except Exception as e:
-			LOG.error(e.message)
-		self.exec_end_time = dt.datetime.now()
-		
-		exec_takes = self.exec_end_time - self.exec_start_time
-		load_takes = self.load_end_time - self.load_start_time
-		insert_takes = self.insert_end_time - self.insert_start_time
-		
-		LOG.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + str(exec_takes.seconds / 60) + " minutes), inside load file and transform takes " 
-				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes.seconds) + "seconds")
 	def load_files(self, start_time_str, day_merge):
 		if os.path.exists(self.tmp_path):
 			LOG.warn("tmp file already exists,remove")
