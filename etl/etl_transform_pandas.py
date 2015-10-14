@@ -98,6 +98,31 @@ class Etl_Transform_Pandas:
 			console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s", ""))
 			LOG.addHandler(console_handler)
 		self.day_merge = day_merge
+	
+	def compute_old(self, trans_type, start_time):
+		config_old = config.get('old_version')
+		supply_config = config_old.get('supply')
+		demand_config = config_old.get('demand')
+		
+		'''Supply'''
+		SUPPLY_HEADER = supply_config.get('raw_header')
+		SUPPLY_HEADER_DTYPE = supply_config.get('raw_header_dtype')
+		SUPPLY_HIT_HOUR_HEADER = supply_config.get('agg_hour_header')
+		SUPPLY_HIT_DAY_HEADER = supply_config.get('agg_day_header') 
+		SUPPLY_REQS_HOUR_HEADER = supply_config.get('reqs_hour_header')
+		SUPPLY_REQS_DAY_HEADER = supply_config.get('reqs_day_header')
+		
+		'''Demand'''
+		DEMAND_HEADER = demand_config.get('raw_header')
+		DEMAND_HEADER_DTYPE = demand_config.get('raw_header_dtype')
+		DEMAND_AD_HOUR_HEADER = demand_config.get('agg_hour_header')
+		DEMAND_AD_DAY_HEADER = demand_config.get('agg_day_header')
+	
+		SUPPLY_CSV_FILE_PATH = config_old.get('supply_csv_file_path')
+		DEMAND_CSV_FILE_PATH = config_old.get('demand_csv_file_path')
+		HOUR_FACTS_FILE_PATH = config_old.get('hour_facts_file_path')
+		DAY_FACTS_FILE_PATH = config_old.get('day_facts_file_path')
+		return self.compute(trans_type, start_time)
 		
 	def compute(self, trans_type, start_time):
 		LOG.info("started with transform type:" + trans_type + ", handle time:" + start_time)
@@ -483,46 +508,3 @@ class Etl_Transform_Pandas:
 		#################分段提交数据######################################
 		cur.close()
 		conn.close()
-if __name__ == "__main__":
-	cop_type = sys.argv[1]  # 'supply_day_hit'
-	time = sys.argv[2]  # '20150923'
-	
-	if 'old' == sys.argv[3]:
-		config_old = config.get('old_version')
-		supply_config = config_old.get('supply')
-		demand_config = config_old.get('demand')
-		
-		'''Supply'''
-		SUPPLY_HEADER = supply_config.get('raw_header')
-		SUPPLY_HEADER_DTYPE = supply_config.get('raw_header_dtype')
-		SUPPLY_HIT_HOUR_HEADER = supply_config.get('agg_hour_header')
-		SUPPLY_HIT_DAY_HEADER = supply_config.get('agg_day_header') 
-		SUPPLY_REQS_HOUR_HEADER = supply_config.get('reqs_hour_header')
-		SUPPLY_REQS_DAY_HEADER = supply_config.get('reqs_day_header')
-		
-		'''Demand'''
-		DEMAND_HEADER = demand_config.get('raw_header')
-		DEMAND_HEADER_DTYPE = demand_config.get('raw_header_dtype')
-		DEMAND_AD_HOUR_HEADER = demand_config.get('agg_hour_header')
-		DEMAND_AD_DAY_HEADER = demand_config.get('agg_day_header')
-	
-		SUPPLY_CSV_FILE_PATH = config_old.get('supply_csv_file_path')  # "/data/ad2/supply/"
-		DEMAND_CSV_FILE_PATH = config_old.get('demand_csv_file_path')  # "/data/ad2/demand/"
-		HOUR_FACTS_FILE_PATH = config_old.get('hour_facts_file_path')  # "/data/facts/hour/"
-		DAY_FACTS_FILE_PATH = config_old.get('day_facts_file_path')  # "/data/facts/day/"
-		'''
-		SUPPLY_CSV_FILE_PATH = "F:\\data\\ad2\\supply\\" # config_old.get('supply_csv_file_path')  # "/data/ad2/supply/"
-		DEMAND_CSV_FILE_PATH = config_old.get('demand_csv_file_path')  # "/data/ad2/demand/"
-		HOUR_FACTS_FILE_PATH = "F:\\data\\facts\\hour\\"  #config_old.get('hour_facts_file_path')  # "/data/facts/hour/"
-		DAY_FACTS_FILE_PATH = "F:\\data\\facts\\day\\" # config_old.get('day_facts_file_path')  # "/data/facts/day/"
-		'''
-	day_merge = False
-	if len(sys.argv) > 4 :
-		day_merge = sys.argv[4] == 'merge'
-	
-	Etl_Transform_Pandas(cop_type, time, day_merge)  # .compute()
-		
-	# new_etp = Etl_Transform_Pandas('supply_hour_hit', '20150923.04')
-	# LOG.info("Welcome to Etl_Transform_Pandas. Version : 0.1.1  code by Dico:dingzheng@imgo.tv")
-	# new_etp = Etl_Transform_Pandas('demand_hour_ad', '20150930.05')
-	# new_etp.compute()
