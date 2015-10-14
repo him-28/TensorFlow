@@ -9,7 +9,6 @@ import datetime as dt
 import init_log
 import logging
 import sys
-from numpy import insert
 
 ''' 读取各种配置配置 '''
 config = yaml.load(open("config.yml"))
@@ -69,8 +68,7 @@ LOG_FILE_PATH = pandas_config.get("log_config_path")
 LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.DEBUG)
-fmt = logging.Formatter("[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s", "")
-console_handler.setFormatter(fmt)
+console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s", ""))
 LOG.addHandler(console_handler)
 
 SUPPLY_CONDITION_RELATION = {
@@ -96,16 +94,47 @@ DEMAND_CONDITION_RELATION = {
 class Etl_Transform_Pandas:
 	# def __init__(self, file_path, names, group_item, date, hour):
 	# type: supply_hit/supply_reqs/demand
-	def __init__(self, trans_type, start_time):
+	def __init__(self, trans_type, start_time, day_merge=False):
+		self.exec_start_time = dt.datetime.now()
 		LOG.info("started with transform type:" + trans_type + ", handle time:" + start_time)
 		
 		# TODO FIXME validate the params here
 		
+		self.init_params(trans_type, start_time)
+		
+		self.load_start_time = dt.datetime.now()
+		insert_takes = 0
+		try:
+			is_load_success = self.load_files(start_time, day_merge)
+			self.load_end_time = dt.datetime.now()
+			if is_load_success:
+				self.insert_start_time = dt.datetime.now()
+				self.insert()
+				self.insert_end_time = dt.datetime.now()
+				insert_takes = self.insert_end_time - self.insert_start_time
+			else:
+				LOG.error("load file failed,exit.")
+		except Exception as e:
+			LOG.error(e.message)
+		self.exec_end_time = dt.datetime.now()
+		
+		exec_takes = self.exec_end_time - self.exec_start_time
+		load_takes = self.load_end_time - self.load_start_time
+		
+		LOG.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + str(exec_takes.seconds / 60) + " minutes), inside load file and transform takes " 
+				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes.seconds) + " seconds")
+	
+	def validate_params(self,trans_type,start_time):
+		if trans_type == '' or trans_type == '':
+			pass
+		else:
+			return False
+	
+	def init_params(self,trans_type,start_time):
+		
 		self.is_hour = True
 		self.is_day = False
-		
 		self.table_ids = ["date_id"]
-		
 		self.hour = None
 		if trans_type.find('hour') != -1 :  # 每小时
 			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
@@ -114,12 +143,13 @@ class Etl_Transform_Pandas:
 			self.table_ids.append("time_id")
 		elif trans_type.find('day') != -1 :  # 每天
 			self.output_root_path = DAY_FACTS_FILE_PATH
+			self.hour_output_root_path = HOUR_FACTS_FILE_PATH
 			self.is_hour = False
 			self.is_day = True
 			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d")
 		
-		self.month_folder = str(self.start_time.year) + self.fill_num_str(self.start_time.month)
-		self.date = int(self.month_folder + self.fill_num_str(self.start_time.day))
+		self.month_folder = str(self.start_time.year) + ("%02d" % self.start_time.month)
+		self.date = int(self.month_folder + ("%02d" % self.start_time.day))
 		
 		if(trans_type.find('supply') != -1):  # supply
 			self.names = SUPPLY_HEADER
@@ -137,26 +167,33 @@ class Etl_Transform_Pandas:
 		if trans_type == 'supply_hour_hit':
 			self.group_item = SUPPLY_HIT_HOUR_HEADER
 			self.table_name = HIT_FACTS_BY_HOUR_TABLE_NAME
+			self.run_type = 'hit'
 		elif trans_type == 'supply_hour_reqs':
 			self.group_item = SUPPLY_REQS_HOUR_HEADER
 			self.table_name = REQS_FACTS_BY_HOUR_TABLE_NAME
+			self.run_type = 'reqs'
 		elif trans_type == 'demand_hour_ad':
 			self.group_item = DEMAND_AD_HOUR_HEADER
 			self.table_name = AD_FACTS_BY_HOUR_TABLE_NAME
+			self.run_type = 'ad'
 		elif trans_type == 'supply_day_hit':
 			self.group_item = SUPPLY_HIT_DAY_HEADER
 			self.table_name = HIT_FACTS_BY_DAY_TABLE_NAME
+			self.run_type = 'hit'
 		elif trans_type == 'supply_day_reqs':
 			self.group_item = SUPPLY_REQS_DAY_HEADER
 			self.table_name = REQS_FACTS_BY_DAY_TABLE_NAME
+			self.run_type = 'reqs'
 		elif trans_type == 'demand_day_ad':
 			self.group_item = DEMAND_AD_DAY_HEADER
 			self.table_name = AD_FACTS_BY_DAY_TABLE_NAME
+			self.run_type = 'ad'
 		
 		if not os.path.exists(self.output_root_path + self.month_folder):
 			os.makedirs(self.output_root_path + self.month_folder)
-		self.output_file_path = self.output_root_path + self.month_folder + os.sep + start_time + self.file_suffix
+		self.output_file_path = self.output_root_path + self.month_folder + os.sep + start_time + "." + self.run_type + self.file_suffix
 		
+		self.tmp_path = self.output_file_path + ".tmp"
 		self.init_info = {
 			'is_hour': self.is_hour,
 			'is_day': self.is_day,
@@ -171,53 +208,71 @@ class Etl_Transform_Pandas:
 			'table_name': self.table_name,
 			'names': self.names,
 			'names_dtype': self.names_dtype,
-			'condition_relation': self.condition_relation
+			'condition_relation': self.condition_relation,
+			'tmp_file' : self.tmp_path
 		}
 		
 		LOG.info('params init completed : ' + str(self.init_info))
 		
-		self.total_groupframe = None
-		
-		tmp_path = self.output_file_path + ".tmp"
-		
-		if os.path.exists(tmp_path):
+	def load_files(self, start_time_str, day_merge):
+		if os.path.exists(self.tmp_path):
 			LOG.warn("tmp file already exists,remove")
-			os.remove(tmp_path)
-		
+			os.remove(self.tmp_path)
 		
 		# 数据集数组，按小时计算只会有一个，按天计算每个文件会产生一个，最多24个数据集
 		# self.dfs = []
 		file_path = None
+		df = None
 		if self.is_hour:
 			# 20150901.07.product.supply.csv
-			file_path = self.root_path + self.month_folder + os.sep + start_time + self.file_suffix
+			file_path = self.root_path + self.month_folder + os.sep + start_time_str + self.file_suffix
 			LOG.info('load file:' + file_path)
 			if os.path.exists(file_path):
 				# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-				df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK)
+				df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK, index_col=False)
 				self.transform_section(df)
-				# self.dfs.append(df)
+			else:
+				return False
 		elif self.is_day:
-			parent_path = self.root_path + self.month_folder + os.sep
-			LOG.info('load dir:' + parent_path)
-			file_name_contain_day = str(self.date)
-			file_generator = os.walk(parent_path).next()
-			if file_generator is not None:
-				for file_name in file_generator[2]:
-					file_path = parent_path + file_name
-					if(os.path.isfile(file_path) and file_name.find(file_name_contain_day) != -1):
-						# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-						LOG.info('load file:' + file_path)
-						df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK)
-						LOG.info('handel file:'+file_path)
-						self.transform_section(df)
-						# self.dfs.append(df)
-		
-		self.insert()
-	'''两位数补0'''
-	def fill_num_str(self, num):
-		return str(num).zfill(2)
-	
+			count = 0
+			if not day_merge:  # 重新计算所有小时数
+				parent_path = self.root_path + self.month_folder + os.sep
+				LOG.info('load dir:' + parent_path)
+				file_name_contain_day = str(self.date)
+				file_generator = os.walk(parent_path).next()
+				if file_generator is not None:
+					for file_name in file_generator[2]:
+						file_path = parent_path + file_name
+						if(os.path.isfile(file_path) 
+							and file_name.find(file_name_contain_day) != -1
+								and str(file_name).endwith(self.file_suffix)):
+							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
+							LOG.info('load file:' + file_path)
+							df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK, index_col=False)
+							LOG.info('handel file:' + file_path)
+							count = count + 1
+							self.transform_section(df)
+			else:  # 寻找已经计算过的小时数据合并
+				for h24 in range(0, 24):
+					hour_file_path = self.hour_output_root_path + self.month_folder + os.sep + str(self.date) + (".%02d" % h24) + "." + self.run_type + self.file_suffix
+					if(os.path.isfile(hour_file_path)):
+							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
+							LOG.info('load file:' + hour_file_path)
+							# coppy group_item 复制复本
+							sum_names = []
+							for item in self.group_item:
+								sum_names.append(item)
+							for key in self.condition_relation.keys():
+								sum_names.append(key)
+							df = pd.read_csv(hour_file_path, sep=OUTPUT_COLUMN_SEP, names=sum_names, header=None, index_col=False)
+							LOG.info('merge file:' + hour_file_path)
+							df.to_csv(self.tmp_path, sep=OUTPUT_COLUMN_SEP, header=False, na_rep='0', mode="a")
+							count = count + 1
+					else:
+						LOG.warn("merge file not exists:" + hour_file_path)
+			if count == 0:
+				return False
+		return True
 	'''转换配置里的数据类型'''
 	def tran_header_dtype(self, dtype_dict):
 		target = {}
@@ -241,13 +296,11 @@ class Etl_Transform_Pandas:
 		obj[key] = [0]
 		return pd.DataFrame(obj)
 		
-	def transform_section(self,df):
+	def transform_section(self, df):
 		LOG.info('transform...')
-		tmp_path = self.output_file_path + ".tmp"
-		
 		###############遍历各个分段，分段数据第一次Group Count后存入临时文件#############
-	
-		#for df in self.dfs:
+		
+		# for df in self.dfs:
 		for chunk in df:
 			grouped = None
 			for item in self.condition_relation.items():
@@ -266,12 +319,10 @@ class Etl_Transform_Pandas:
 					elif '!=' == opt:
 						LOG.info("filter column: " + column_name + "," + key + "!=" + str(val))
 						tmp_chunk = tmp_chunk[tmp_chunk[key] != val]
-				
 				LOG.info("merge column result: " + column_name)
 				
 				if len(tmp_chunk) == 0:
 					tmp_chunk = self.get_init_data(self.group_item, column_name)
-				
 				if grouped is None:
 					grouped = tmp_chunk.groupby(self.group_item).size()
 				else:
@@ -280,26 +331,17 @@ class Etl_Transform_Pandas:
 			# 转换为DataFrame
 			groupframe = pd.DataFrame(grouped)
 			# 保存到临时CSV文件
-			groupframe.to_csv(tmp_path, sep=OUTPUT_COLUMN_SEP, header=False, na_rep='0', mode="a")
+			groupframe.to_csv(self.tmp_path, sep=OUTPUT_COLUMN_SEP, header=False, na_rep='0', mode="a")
 			
 			# info info
 			LOG.info("grouped: " + str(len(chunk)) + " records")
 		
-		LOG.info("save tmp file to : " + tmp_path)
+		LOG.info("save to tmp file : " + self.tmp_path)
 		###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
 		LOG.info ('transform!')
 	
-	
-	# 分析CSV文件、计算结果、插入数据库
-	def compute(self):
-		LOG.info ("compute started.")
-		self.transform_section()
-		self.insert()
-		LOG.info ("compute ended.")
-	
 	# 读取CSV文件插入数据库
 	def insert(self):
-		tmp_path = self.output_file_path + ".tmp"
 		
 		# coppy group_item 复制复本
 		sum_names = []
@@ -311,9 +353,9 @@ class Etl_Transform_Pandas:
 		
 		##############从临时文件读取数据计算最终结果，Group Sum####################
 		# info info
-		LOG.info("merge the tmp file...")
+		LOG.info("merge the tmp file : " + self.tmp_path)
 		# 输出结果到文件
-		df = pd.read_csv(tmp_path, sep=OUTPUT_COLUMN_SEP, names=sum_names, header=None, dtype=self.names_dtype)
+		df = pd.read_csv(self.tmp_path, sep=OUTPUT_COLUMN_SEP, names=sum_names, header=None, dtype=self.names_dtype)
 		df.dropna()
 		total_grouped = df.groupby(self.group_item).sum()
 		##############从临时文件读取数据计算最终结果，Group Sum####################
@@ -321,13 +363,13 @@ class Etl_Transform_Pandas:
 		# defub info
 		LOG.info("merge result size:" + str(len(total_grouped)))
 		
-		self.total_groupframe = pd.DataFrame(total_grouped)
-		self.total_groupframe.to_csv(self.output_file_path, sep=OUTPUT_COLUMN_SEP, header=False)
+		total_groupframe = pd.DataFrame(total_grouped)
+		LOG.info("write result to csv file:" + self.output_file_path)
+		total_groupframe.to_csv(self.output_file_path, sep=OUTPUT_COLUMN_SEP, header=False)
 		
+		LOG.info("remove tmp file:" + self.tmp_path)
 		# 删除临时文件
-		os.remove(tmp_path)
-		
-		
+		os.remove(self.tmp_path)
 		
 		# info info
 		LOG.info("connect --> db:" + str(DB_DATABASE) + ",user:" + str(DB_USER) + ",password:***,host:" + str(DB_HOST) + ",port:" + str(DB_PORT) + "...")
@@ -367,13 +409,13 @@ class Etl_Transform_Pandas:
 			value_str = value_str + ',%s'
 		sql = 'INSERT INTO "' + self.table_name + '"(' + insert_column + ') VALUES (' + value_str + ');'
 		sql_count = 0
-		tg_count = str(len(self.total_groupframe))
+		tg_count = str(len(total_groupframe))
 		LOG.info("prepare insert : " + sql)
 		#################拼接Insert SQL、组装Insert值######################
 		
 		#################分段提交数据######################################
 		value_list = []
-		for index, row in self.total_groupframe.iterrows():
+		for index, row in total_groupframe.iterrows():
 			is_tuple = type(index) == tuple
 			value = [self.date]
 			if(self.is_hour):
@@ -420,9 +462,9 @@ if __name__ == "__main__":
 	time = sys.argv[2]  # '20150923'
 	
 	if 'old' == sys.argv[3]:
-		
-		supply_config = config.get('old_version').get('supply')
-		demand_config = config.get('old_version').get('demand')
+		config_old = config.get('old_version')
+		supply_config = config_old.get('supply')
+		demand_config = config_old.get('demand')
 		
 		'''Supply'''
 		SUPPLY_HEADER = supply_config.get('raw_header')
@@ -438,8 +480,21 @@ if __name__ == "__main__":
 		DEMAND_AD_HOUR_HEADER = demand_config.get('agg_hour_header')
 		DEMAND_AD_DAY_HEADER = demand_config.get('agg_day_header')
 	
+		SUPPLY_CSV_FILE_PATH = config_old.get('supply_csv_file_path')  # "/data/ad2/supply/"
+		DEMAND_CSV_FILE_PATH = config_old.get('demand_csv_file_path')  # "/data/ad2/demand/"
+		HOUR_FACTS_FILE_PATH = config_old.get('hour_facts_file_path')  # "/data/facts/hour/"
+		DAY_FACTS_FILE_PATH = config_old.get('day_facts_file_path')  # "/data/facts/day/"
+		'''
+		SUPPLY_CSV_FILE_PATH = "F:\\data\\ad2\\supply\\" # config_old.get('supply_csv_file_path')  # "/data/ad2/supply/"
+		DEMAND_CSV_FILE_PATH = config_old.get('demand_csv_file_path')  # "/data/ad2/demand/"
+		HOUR_FACTS_FILE_PATH = "F:\\data\\facts\\hour\\"  #config_old.get('hour_facts_file_path')  # "/data/facts/hour/"
+		DAY_FACTS_FILE_PATH = "F:\\data\\facts\\day\\" # config_old.get('day_facts_file_path')  # "/data/facts/day/"
+		'''
+	day_merge = False
+	if len(sys.argv) > 4 :
+		day_merge = sys.argv[4] == 'merge'
 	
-	Etl_Transform_Pandas(cop_type, time) #.compute()
+	Etl_Transform_Pandas(cop_type, time, day_merge)  # .compute()
 		
 	# new_etp = Etl_Transform_Pandas('supply_hour_hit', '20150923.04')
 	# LOG.info("Welcome to Etl_Transform_Pandas. Version : 0.1.1  code by Dico:dingzheng@imgo.tv")
