@@ -66,10 +66,6 @@ PLACEHOLDER = -9
 
 LOG_FILE_PATH = pandas_config.get("log_config_path")
 LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s", ""))
-LOG.addHandler(console_handler)
 
 SUPPLY_CONDITION_RELATION = {
 				'total':[
@@ -94,50 +90,81 @@ DEMAND_CONDITION_RELATION = {
 class Etl_Transform_Pandas:
 	# def __init__(self, file_path, names, group_item, date, hour):
 	# type: supply_hit/supply_reqs/demand
-	def __init__(self, trans_type, start_time, day_merge=False):
-		self.exec_start_time = dt.datetime.now()
+	def __init__(self, day_merge=False, console_print=False):
+		LOG.info("[Etl_Transform_Pandas] ["+str(day_merge)+"] ["+str(console_print)+"]")
+		if console_print:  # print debug info in console
+			console_handler = logging.StreamHandler(sys.stdout)
+			console_handler.setLevel(logging.DEBUG)
+			console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s", ""))
+			LOG.addHandler(console_handler)
+		self.day_merge = day_merge
+		
+	def compute(self, trans_type, start_time):
 		LOG.info("started with transform type:" + trans_type + ", handle time:" + start_time)
+		# 验证
+		if not self.validate_params(trans_type, start_time):
+			LOG.error("wrong params,plz fix it.")
+			return -1
 		
-		# TODO FIXME validate the params here
 		
+		self.exec_start_time = dt.datetime.now()
+		# 初始化
 		self.init_params(trans_type, start_time)
 		
 		self.load_start_time = dt.datetime.now()
 		insert_takes = 0
 		try:
-			is_load_success = self.load_files(start_time, day_merge)
+			is_load_success = self.load_files(start_time)
 			self.load_end_time = dt.datetime.now()
 			if is_load_success:
 				self.insert_start_time = dt.datetime.now()
 				self.insert()
 				self.insert_end_time = dt.datetime.now()
-				insert_takes = self.insert_end_time - self.insert_start_time
+				insert_takes = (self.insert_end_time - self.insert_start_time).seconds
 			else:
 				LOG.error("load file failed,exit.")
+				return -1
 		except Exception as e:
 			LOG.error(e.message)
+			return -1
 		self.exec_end_time = dt.datetime.now()
 		
 		exec_takes = self.exec_end_time - self.exec_start_time
 		load_takes = self.load_end_time - self.load_start_time
 		
 		LOG.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + str(exec_takes.seconds / 60) + " minutes), inside load file and transform takes " 
-				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes.seconds) + " seconds")
+				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes) + " seconds")
+		return 0
 	
-	def validate_params(self,trans_type,start_time):
-		if trans_type == '' or trans_type == '':
-			pass
+	def validate_params(self, trans_type, start_time):
+		if (trans_type == 'supply_hour_hit' or trans_type == 'supply_hour_reqs' 
+			or trans_type == 'demand_hour_ad' or trans_type == 'supply_day_hit' 
+			or trans_type == 'supply_day_reqs' or trans_type == 'demand_day_ad'):
+			
+			if trans_type.find('day') != -1:
+				try:
+					self.start_time = dt.datetime.strptime(start_time, "%Y%m%d")
+				except:
+					LOG.error(start_time + ' need format as : %Y%m%d')
+					return False
+			else:
+				try:
+					self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
+				except:
+					LOG.error(start_time + ' need format as : %Y%m%d.%H')
+					return False
 		else:
+			LOG.error('can not handle the trans_type:'+trans_type+' ,it should be one of them:[supply_hour_hit,supply_hour_reqs,demand_hour_ad,supply_day_hit,supply_day_reqs,demand_day_ad]')
 			return False
+		return True
 	
-	def init_params(self,trans_type,start_time):
+	def init_params(self, trans_type, start_time):
 		
 		self.is_hour = True
 		self.is_day = False
 		self.table_ids = ["date_id"]
 		self.hour = None
 		if trans_type.find('hour') != -1 :  # 每小时
-			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
 			self.hour = self.start_time.hour
 			self.output_root_path = HOUR_FACTS_FILE_PATH
 			self.table_ids.append("time_id")
@@ -146,7 +173,6 @@ class Etl_Transform_Pandas:
 			self.hour_output_root_path = HOUR_FACTS_FILE_PATH
 			self.is_hour = False
 			self.is_day = True
-			self.start_time = dt.datetime.strptime(start_time, "%Y%m%d")
 		
 		self.month_folder = str(self.start_time.year) + ("%02d" % self.start_time.month)
 		self.date = int(self.month_folder + ("%02d" % self.start_time.day))
@@ -214,7 +240,7 @@ class Etl_Transform_Pandas:
 		
 		LOG.info('params init completed : ' + str(self.init_info))
 		
-	def load_files(self, start_time_str, day_merge):
+	def load_files(self, start_time_str):
 		if os.path.exists(self.tmp_path):
 			LOG.warn("tmp file already exists,remove")
 			os.remove(self.tmp_path)
@@ -235,7 +261,7 @@ class Etl_Transform_Pandas:
 				return False
 		elif self.is_day:
 			count = 0
-			if not day_merge:  # 重新计算所有小时数
+			if not self.day_merge:  # 重新计算所有小时数
 				parent_path = self.root_path + self.month_folder + os.sep
 				LOG.info('load dir:' + parent_path)
 				file_name_contain_day = str(self.date)
@@ -245,7 +271,7 @@ class Etl_Transform_Pandas:
 						file_path = parent_path + file_name
 						if(os.path.isfile(file_path) 
 							and file_name.find(file_name_contain_day) != -1
-								and str(file_name).endwith(self.file_suffix)):
+								and str(file_name).endswith(self.file_suffix)):
 							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
 							LOG.info('load file:' + file_path)
 							df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK, index_col=False)
