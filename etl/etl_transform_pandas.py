@@ -95,6 +95,7 @@ class Etl_Transform_Pandas:
 	# def __init__(self, file_path, names, group_item, date, hour):
 	# type: supply_hit/supply_reqs/demand
 	def __init__(self, trans_type, start_time, day_merge=False):
+		self.exec_start_time = dt.datetime.now()
 		LOG.info("started with transform type:" + trans_type + ", handle time:" + start_time)
 		
 		# TODO FIXME validate the params here
@@ -183,15 +184,27 @@ class Etl_Transform_Pandas:
 		
 		LOG.info('params init completed : ' + str(self.init_info))
 		
+		self.load_start_time = dt.datetime.now()
 		try:
 			is_load_success = self.load_files(start_time, day_merge)
+			self.load_end_time = dt.datetime.now()
 			if is_load_success:
-				 self.insert()
+				self.insert_start_time = dt.datetime.now()
+				self.insert()
+				self.insert_end_time = dt.datetime.now()
 			else:
 				LOG.error("load file failed,exit.")
 		except Exception as e:
 			LOG.error(e.message)
-	def load_files(self,start_time_str,day_merge):
+		self.exec_end_time = dt.datetime.now()
+		
+		exec_takes = self.exec_end_time - self.exec_start_time
+		load_takes = self.load_end_time - self.load_start_time
+		insert_takes = self.insert_end_time - self.insert_start_time
+		
+		LOG.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + str(exec_takes.seconds / 60) + " minutes), inside load file and transform takes " 
+				+ str(load_takes.seconds) + " seconds, and insert to DB takes " + str(insert_takes.seconds) + "seconds")
+	def load_files(self, start_time_str, day_merge):
 		if os.path.exists(self.tmp_path):
 			LOG.warn("tmp file already exists,remove")
 			os.remove(self.tmp_path)
@@ -212,7 +225,7 @@ class Etl_Transform_Pandas:
 				return False
 		elif self.is_day:
 			count = 0
-			if not day_merge: # 重新计算所有小时数
+			if not day_merge:  # 重新计算所有小时数
 				parent_path = self.root_path + self.month_folder + os.sep
 				LOG.info('load dir:' + parent_path)
 				file_name_contain_day = str(self.date)
@@ -222,15 +235,15 @@ class Etl_Transform_Pandas:
 						file_path = parent_path + file_name
 						if(os.path.isfile(file_path) 
 							and file_name.find(file_name_contain_day) != -1
-								and str(file_name).endwith(self.file_suffix) ):
+								and str(file_name).endwith(self.file_suffix)):
 							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
 							LOG.info('load file:' + file_path)
 							df = pd.read_csv(file_path, sep=INPUT_COLUMN_SEP, names=self.names, header=None, chunksize=READ_CSV_CHUNK, index_col=False)
 							LOG.info('handel file:' + file_path)
 							count = count + 1
 							self.transform_section(df)
-			else: # 寻找已经计算过的小时数据合并
-				for h24 in range(0,24):
+			else:  # 寻找已经计算过的小时数据合并
+				for h24 in range(0, 24):
 					hour_file_path = self.hour_output_root_path + self.month_folder + os.sep + str(self.date) + (".%02d" % h24) + "." + self.run_type + self.file_suffix
 					if(os.path.isfile(hour_file_path)):
 							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
