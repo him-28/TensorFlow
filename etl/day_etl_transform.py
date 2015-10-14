@@ -12,42 +12,22 @@ import types
 import sys
 import os
 from data2postgresql import load
+import init_log
 import yaml
 Config=yaml.load(file("config.yml"))
 from etl_transform import ETL_Transform
+from etl_transform import hour_etl
+LOGGER = init_log.init("logger.conf", 'petlLogger')
 
 def etl_by_hour(day,hour,version):
-    d = datetime.datetime.strptime(day,"%Y%m%d")
-    yearmonth = datetime.datetime.strftime(d,"%Y%m")
-    yearmonthday = datetime.datetime.strftime(d,"%Y%m%d")
-    if version == 'old':
-        supply_filePath = Config["old_version"]["supply_csv_file_path"]+"{0}/{1}.{2}.product.supply.csv".format(yearmonth,yearmonthday,hour)
-        demand_filePath = Config["old_version"]["demand_csv_file_path"]+"{0}/{1}.{2}.product.demand.csv".format(yearmonth,yearmonthday,hour)
-        supply_head=Config["old_version"]["supply"]["raw_header"]
-        demand_head=Config["old_version"]["demand"]["raw_header"]
-        agg_head=Config["old_version"]["supply"]["agg_hour_header"]
-    else:
-        supply_filePath = Config["supply_csv_file_path"]+"{0}/{1}.{2}.product.supply.csv".format(yearmonth,yearmonthday,hour)
-        demand_filePath = Config["demand_csv_file_path"]+"{0}/{1}.{2}.product.demand.csv".format(yearmonth,yearmonthday,hour)
-        supply_head=Config["supply"]["raw_header"]
-        demand_head=Config["demand"]["raw_header"]
-        agg_head=Config["supply"]["agg_hour_header"]
-    print supply_filePath
-    etls = ETL_Transform(
-                        supply_header=supply_head,
-                        demand_header=demand_head,
-                        aggre_header=agg_head,
-                        supply_csv_filePath=supply_filePath,
-                        demand_csv_filePath=demand_filePath,
-                        batch_read_size=Config["petl"]["batch_read_size"],
-                        pdate=day,
-                        hour=hour)
-    etls.transform()
+    LOGGER.info("etl hour reload:"+day+"-"+hour)
+    hour_etl(day,hour,'day',version)
     
 def load_to_pg(day,version):
-        load('day',day,Config["db_table"]["Ad_Facts_By_Day"]["table_name"],version,'')
-        load('day',day,Config["db_table"]["Hit_Facts_By_Day"]["table_name"],version,'')
-        load('day',day,Config["db_table"]["Reqs_Facts_By_Day"]["table_name"],version,'')
+    LOGGER.info("load day file to db:"+day)
+    load('day',day,Config["db_table"]["Ad_Facts_By_Day"]["table_name"],version,'')
+    load('day',day,Config["db_table"]["Hit_Facts_By_Day"]["table_name"],version,'')
+    load('day',day,Config["db_table"]["Reqs_Facts_By_Day"]["table_name"],version,'')
 def day_etl_agg_hour(day,version):
     tmp_ad_facts_result_table=[]
     tmp_hit_facts_result_table=[]
@@ -69,7 +49,7 @@ def day_etl_agg_hour(day,version):
         else:
             str_hour=str(hour)
             
-        print hour_facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,str_hour)
+        LOGGER.info("etl merge hour file:"+hour_facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,str_hour))
         hour_ad_facts_table = etl.fromcsv(hour_facts_file_path+"{0}/{1}_{2}_ad_facts_by_hour.csv".format(yearmonth,pdate_,str_hour),"utf-8")
         header=hour_ad_facts_table.list()[0]
         if tmp_ad_facts_result_table:
@@ -77,6 +57,7 @@ def day_etl_agg_hour(day,version):
         else:
             tmp_ad_facts_result_table=hour_ad_facts_table
         
+        LOGGER.info("etl merge hour file:"+hour_facts_file_path+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,pdate_,str_hour))
         hour_hit_facts_table = etl.fromcsv(hour_facts_file_path+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,pdate_,str_hour),"utf-8")
         header=hour_hit_facts_table.list()[0]
         if tmp_hit_facts_result_table:
@@ -84,6 +65,7 @@ def day_etl_agg_hour(day,version):
         else:
             tmp_hit_facts_result_table=hour_hit_facts_table
         
+        LOGGER.info("etl merge hour file:"+hour_facts_file_path+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,pdate_,str_hour))
         hour_reqs_facts_table = etl.fromcsv(hour_facts_file_path+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,pdate_,str_hour),"utf-8")
         header=hour_reqs_facts_table.list()[0]
         if tmp_reqs_facts_result_table:
@@ -97,8 +79,13 @@ def day_etl_agg_hour(day,version):
     
     if not os.path.exists(day_facts_file_path+"{0}".format(yearmonth)):
             os.makedirs(day_facts_file_path+"{0}".format(yearmonth))
+    LOGGER.info("generate day file:"+day_facts_file_path+"{0}/{1}_hit_facts_by_day.csv".format(yearmonth,pdate_))
     etl.tocsv(day_hit_facts_table, day_facts_file_path+"{0}/{1}_hit_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)
+    
+    LOGGER.info("generate day file:"+day_facts_file_path+"{0}/{1}_reqs_facts_by_day.csv".format(yearmonth,pdate_))
     etl.tocsv(day_reqs_facts_table, day_facts_file_path+"{0}/{1}_reqs_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)
+    
+    LOGGER.info("generate day file:"+day_facts_file_path+"{0}/{1}_ad_facts_by_day.csv".format(yearmonth,pdate_))
     etl.tocsv(day_ad_facts_table, day_facts_file_path+"{0}/{1}_ad_facts_by_day.csv".format(yearmonth,pdate_), encoding="utf-8",write_header=True)        
     
 def aggre_hit_facts(table,version):
@@ -162,7 +149,10 @@ def day_etl(day,type_t,version):
         day_etl_agg_hour(day,version)
         load_to_pg(day,version)
     except Exception,e:
-        print "ERROR:day_etl_transform",day,e
+        import traceback
+        ex=traceback.format_exc()
+        LOGGER.error("day:"+day+" message:"+e.value)
+        LOGGER.error(ex)
 if __name__ == "__main__":
     day=sys.argv[1]
     type_t=sys.argv[2] #reload merge

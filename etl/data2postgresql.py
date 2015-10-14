@@ -211,7 +211,7 @@ def load(t_type,day,table_name,version,hour):
                 file_path=file_path_prefix+"{0}/{1}_{2}_hit_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
                 clear_cols= Config["db_table"]["Hit_Facts_By_Hour"]["clear_cols"]
             elif table_name == Config["db_table"]["Reqs_Facts_By_Hour"]["table_name"]:
-                file_path=file_path_prefix+"{0}/{1}_{2}_Reqs_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
+                file_path=file_path_prefix+"{0}/{1}_{2}_reqs_facts_by_hour.csv".format(yearmonth,yearmonthday,hour)
                 clear_cols= Config["db_table"]["Reqs_Facts_By_Hour"]["clear_cols"]
         
         loader=Pg_Loader(batch_rows_size=Config["petl"]["batch_insert_db_size"],
