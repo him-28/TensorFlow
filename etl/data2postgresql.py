@@ -224,7 +224,10 @@ def load(t_type,day,table_name,version,hour):
             loader.clear_db(clear_condition)
             loader.load_file_to_pgtable()
         except Exception,e:
-            LOGGER.info("load to file failed"+day+"-"+table_name)
+            LOGGER.info("load to file failed"+day+"-"+table_name+" "+e.message)
+            import traceback
+            ex=traceback.format_exc()
+            LOGGER.error(ex)
             sys.exit(-1)
 if __name__ == "__main__":
     t_type=sys.argv[1]
