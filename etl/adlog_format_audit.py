@@ -21,6 +21,7 @@ from pymongo import MongoClient
 import uuid
 import types
 import psycopg2
+import os
 
 CONFIG = yaml.load(file("audit_config.yml"))
 LOG_FILE_PATH = CONFIG["log_config_path"]
@@ -202,7 +203,7 @@ class AdlogFormatAudit:
             elif _k == 'p_v_rname':
                 format_str += log_dict['p_v_rname'].encode('utf-8')
             else:
-                format_str += str(log_dict.get(_k, "-1"))
+                format_str += str(log_dict.get(_k, "-1").encode('utf-8'))
         s_len = len(slotid_list)
         if s_len != len(cardid_list) or s_len != len(createiveid_list):
             return ''
@@ -230,9 +231,11 @@ class AdlogFormatAudit:
     def supplyLogAudit(self):
         '''
         '''
-        supply_save_file = "%s/%s.%s.supply.csv" % (self.supply_save_path,
-                self.run_year_day[:8], self.run_hour)
-        with open(supply_save_file, "w") as fw:
+        save_path = "%s/%s/" % (self.supply_save_path, self.run_year_day[:6])
+        supply_save_file = "%s.%s.product.supply.csv" % (self.run_year_day[:8], self.run_hour)
+        if os.path.exists(save_path) == False:
+            os.makedirs(save_path)
+        with open(save_path + supply_save_file, "w") as fw:
             check_total = 0
             error_total = 0
             for board_id in self.board_list:
@@ -257,9 +260,11 @@ class AdlogFormatAudit:
     def demandLogAudit(self):
         '''
         '''
-        demand_save_file = "%s/%s.%s.demand.csv" % (self.demand_save_path,
-                self.run_year_day[:8], self.run_hour)
-        with open(demand_save_file, "w") as fw:
+        save_path = "%s/%s/" % (self.demand_save_path, self.run_year_day[:6])
+        demand_save_file = "%s.%s.product.demand.csv" % (self.run_year_day[:8], self.run_hour)
+        if os.path.exists(save_path) == False:
+            os.makedirs(save_path)
+        with open(save_path + demand_save_file, "w") as fw:
             check_total = 0
             error_total = 0
             for board_id in self.board_list:

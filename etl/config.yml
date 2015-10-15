@@ -14,9 +14,7 @@ petl:
     batch_read_size: 5000
     batch_insert_db_size: 1000
 supply:
-    raw_header: ['boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','p_v_hid','p_v_rid','p_v_rname','p_c_type',
-                'p_c_ip','cityid','intime','p_c_idfa1','p_c_imei','p_c_ctmid','p_c_mac','p_c_anid','p_c_openudid','p_c_idfa',
-                'p_c_odin','p_c_aaid','p_c_duid','sid']
+    raw_header: ['sid','boardid','deviceid','videoid','ad_slot_id','ad_card_id','ad_creative_id','intime','p_c_os','p_c_type','p_c_ip','p_v_hid','p_v_rid','p_v_rname']
     raw_header_dtype: {
         'boardid':'int',
         'deviceid':'string',
@@ -48,7 +46,7 @@ supply:
     reqs_hour_header: ['ad_slot_id']
     reqs_day_header: ['ad_slot_id']
 demand:
-    raw_header: ['ad_slot_id','ad_card_id','ad_creative_id','deviceid','type','intime','ip','boardid','_sid','voideoid','second','sid']
+    raw_header: ['sid','boardid','deviceid','voideoid','ad_slot_id','ad_card_id','ad_creative_id','intime','type','ip','second','orderid']
     raw_header_dtype: {
         'ad_slot_id': 'int',
         'ad_card_id': 'int',
@@ -68,11 +66,11 @@ demand:
     reqs_hour_header: ['ad_slot_id']
     reqs_day_header: ['ad_slot_id']
 
-supply_csv_file_path: "/data/ad2/supply/"
-demand_csv_file_path: "/data/ad2/demand/"
-hour_facts_file_path: "/data/facts/hour/"
-day_facts_file_path: "/data/facts/day/"
-day_hour_facts_file_path: "/data/facts/day/hour"
+supply_csv_file_path: "/data1/ad/data/etl/"
+demand_csv_file_path: "/data1/ad/data/etl/"
+hour_facts_file_path: "/data1/ad/facts/hour/"
+day_facts_file_path: "/data1/ad/facts/day/"
+day_hour_facts_file_path: "/data1/ad/facts/day/hour"
 
 database:
     db_name: adc
