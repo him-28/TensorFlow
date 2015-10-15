@@ -66,13 +66,15 @@ PLACEHOLDER = -9
 
 LOG_FILE_PATH = pandas_config.get("log_config_path")
 LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
-
-SUPPLY_CONDITION_RELATION = {
-				'total':[
-					('ad_slot_id', '!=', -1),
-					('ad_card_id', '!=', -1)
-				]
-			}
+SUPPLY_REQS_CONDITION_RELATION = {
+		'total':[]
+		}
+SUPPLY_HIT_CONDITION_RELATION = {
+			'total':[
+				('ad_card_id', '!=', -1),
+				('ad_creative_id', '!=', -1)
+			]
+		}
 DEMAND_CONDITION_RELATION = {
 			'click':[
 				('type', '==', 2)
@@ -207,7 +209,6 @@ class Etl_Transform_Pandas:
 			self.names_dtype = self.tran_header_dtype(SUPPLY_HEADER_DTYPE)
 			self.root_path = SUPPLY_CSV_FILE_PATH
 			self.file_suffix = '.product.supply.csv'
-			self.condition_relation = SUPPLY_CONDITION_RELATION
 		elif(trans_type.find('demand') != -1):  # demand
 			self.names = DEMAND_HEADER
 			self.names_dtype = self.tran_header_dtype(DEMAND_HEADER_DTYPE)
@@ -218,10 +219,12 @@ class Etl_Transform_Pandas:
 		if trans_type == 'supply_hour_hit':
 			self.group_item = SUPPLY_HIT_HOUR_HEADER
 			self.table_name = HIT_FACTS_BY_HOUR_TABLE_NAME
+			self.condition_relation = SUPPLY_HIT_CONDITION_RELATION
 			self.run_type = 'hit'
 		elif trans_type == 'supply_hour_reqs':
 			self.group_item = SUPPLY_REQS_HOUR_HEADER
 			self.table_name = REQS_FACTS_BY_HOUR_TABLE_NAME
+			self.condition_relation = SUPPLY_REQS_CONDITION_RELATION
 			self.run_type = 'reqs'
 		elif trans_type == 'demand_hour_ad':
 			self.group_item = DEMAND_AD_HOUR_HEADER
@@ -230,10 +233,12 @@ class Etl_Transform_Pandas:
 		elif trans_type == 'supply_day_hit':
 			self.group_item = SUPPLY_HIT_DAY_HEADER
 			self.table_name = HIT_FACTS_BY_DAY_TABLE_NAME
+			self.condition_relation = SUPPLY_HIT_CONDITION_RELATION
 			self.run_type = 'hit'
 		elif trans_type == 'supply_day_reqs':
 			self.group_item = SUPPLY_REQS_DAY_HEADER
 			self.table_name = REQS_FACTS_BY_DAY_TABLE_NAME
+			self.condition_relation = SUPPLY_REQS_CONDITION_RELATION
 			self.run_type = 'reqs'
 		elif trans_type == 'demand_day_ad':
 			self.group_item = DEMAND_AD_DAY_HEADER
