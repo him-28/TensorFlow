@@ -4,13 +4,13 @@ mongodb:
 board_list: ["4820","50","4540","4482","5287","5285","4389","4880","4821"]
 
 supply_prefix_name: "supply"
-supply_save_path: "."
+supply_save_path: "/data1/ad/data/etl"
 supply_key_list: ["sid","boardid","deviceid","voideoid","slotid","cardid","creativeid","intime","p_c_os","p_c_type","p_c_ip","p_v_hid","p_v_rid","p_v_rname"]
 supply_value_type: ["str", "int", "str", "int", "list_int", "list_int", "list_int", "int", "str", "int", "str", "int", "int", "str"]
 supply_value_isnull: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1]
 
 demand_prefix_name: "demand"
-demand_save_path: "."
+demand_save_path: "/data1/ad/data/etl"
 demand_key_list: ["sid","boardid","deviceid","voideoid","slotid","cardid","creativeid","intime","type","ip","second","orderid"]
 demand_value_type: ["str", "int", "str", "int", "int", "int", "int", "int", "int", "str", "int", "int"]
 demand_value_isnull: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
