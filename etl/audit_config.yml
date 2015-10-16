@@ -17,17 +17,17 @@ demand_value_isnull: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 metrics:
     reqs: 
-        hour: 'reqs_facts_by_hour'
-        day: 'reqs_facts_by_day'
+        hour: 'Reqs_Facts_By_Hour'
+        day: 'Reqs_Facts_By_Day'
     code_serves:
-        hour: 'hit_facts_by_hour'
-        day: 'hit_facts_by_day'
-    impressions:
-        hour: 'impressions_facts_by_hour'
-        day: 'impressions_facts_by_day'
-    click:
-        hour: 'ad_facts_by_hour'
-        day: 'ad_facts_by_day'
+        hour: 'Hit_Facts_By_Hour'
+        day: 'Hit_Facts_By_Day'
+    #impressions:
+    #    hour: 'Impressions_facts_by_hour'
+    #    day: 'impressions_facts_by_day'
+    #click:
+    #    hour: 'Ad_facts_by_hour'
+    #    day: 'Ad_facts_by_day'
     
 
 log_config_path: "logger.conf"
