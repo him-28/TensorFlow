@@ -1,7 +1,7 @@
 import sys
 if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
-
+from etl.logic0.etl_transform import hour_etl
 from etl.audit import *
 
 def run_cli(arguments):
@@ -11,4 +11,5 @@ def run_cli(arguments):
         pass
 
 if __name__ == '__main__':
-    run_cli(sys.argv[1:])
+#     run_cli(sys.argv[1:])
+    hour_etl('20150923','11','hour','new')
