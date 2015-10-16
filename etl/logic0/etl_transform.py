@@ -5,17 +5,15 @@ Created on 2015年9月10日
 @author: jyb
 '''
 import petl as etl
-from petl import fromcsv
 import datetime
-import csv
-import types
 import sys
 import os
-import init_log
-from data2postgresql import load
+from etl.util.data2postgresql import load
+from etl.util import init_log
 import yaml
-Config=yaml.load(file("config.yml"))
-LOGGER = init_log.init("logger.conf", 'petlLogger')
+# Config=yaml.load(file("../conf/config.yml"))
+from etl.conf.settings import Config
+LOGGER = init_log.init("util/logger.conf", 'petlLogger')
 
 class ETL_Transform:
     count=1
@@ -66,8 +64,8 @@ class ETL_Transform:
         self.supply_merge_table = etl.addfield(self.supply_merge_table,'time_id',self.hour)
         
         #format date
-        d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
-        pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
+#         d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
+#         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
 #         etl.tocsv(self.supply_merge_table,"{0}_{1}_supply_pv_display.csv".format(pdate_,self.hour),encoding="utf-8",write_header=False) 
         
     def etl_aggregate_supply(self):
@@ -114,8 +112,8 @@ class ETL_Transform:
         self.demand_merge_table = etl.addfield(self.demand_merge_table,'time_id',self.hour)
         
         #format date
-        d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
-        pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
+#         d=datetime.datetime.strptime(self.pdate,"%Y%m%d")
+#         pdate_=datetime.datetime.strftime(d,"%Y_%m_%d")
 #         etl.tocsv(self.demand_merge_table,"{0}_{1}_demand_click_imps_start_end.csv".format(pdate_,self.hour),encoding="utf-8",write_header=True)
         
     def etl_aggregate_demand(self):
@@ -281,6 +279,7 @@ def hour_etl(day,hour,type_t,version):
         LOGGER.error("day:"+day+" hour:"+hour+" message:"+e.message)
         LOGGER.error(ex)
         sys.exit(-1)
+
 if __name__ == "__main__":
     day = sys.argv[1]
     hour = sys.argv[2]
