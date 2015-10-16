@@ -128,16 +128,17 @@ class Etl_Transform_Pandas:
 		
 	def compute(self, trans_type, start_time):
 		LOG.info("started with transform type:" + trans_type + ", handle time:" + start_time)
-		# 验证
+		
+		# 验证参数是否正确
 		if not self.validate_params(trans_type, start_time):
 			LOG.error("wrong params,plz fix it.")
 			return -1
 		
-		
+		# 开始执行时间
 		self.exec_start_time = dt.datetime.now()
 		# 初始化
 		self.init_params(trans_type, start_time)
-		
+		# 开始加载文件时间
 		self.load_start_time = dt.datetime.now()
 		insert_takes = 0
 		try:

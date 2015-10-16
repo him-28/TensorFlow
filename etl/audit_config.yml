@@ -15,6 +15,21 @@ demand_key_list: ["sid","boardid","deviceid","voideoid","slotid","cardid","creat
 demand_value_type: ["str", "int", "str", "int", "int", "int", "int", "int", "int", "str", "int", "int"]
 demand_value_isnull: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+metrics:
+    reqs: 
+        hour: 'Reqs_Facts_By_Hour'
+        day: 'Reqs_Facts_By_Day'
+    code_serves:
+        hour: 'Hit_Facts_By_Hour'
+        day: 'Hit_Facts_By_Day'
+    #impressions:
+    #    hour: 'Impressions_facts_by_hour'
+    #    day: 'impressions_facts_by_day'
+    #click:
+    #    hour: 'Ad_facts_by_hour'
+    #    day: 'Ad_facts_by_day'
+    
+
 log_config_path: "logger.conf"
 
 boardid_dict:
