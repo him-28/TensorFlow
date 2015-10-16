@@ -21,15 +21,15 @@ day=$3
 hour=$4
 
 if [ "$year" == "" ];then
-    year=`date -d '-1 day' +%Y`
+    year=`date -d '-1 hour' +%Y`
 fi
 
 if [ "$month" == "" ];then
-    month=`date -d '-1 day' +%m`
+    month=`date -d '-1 hour' +%m`
 fi
 
 if [ "$day" == "" ];then
-    day=`date -d '-1 day' +%d`
+    day=`date -d '-1 hour' +%d`
 fi
 
 if [ "$hour" == "" ];then
