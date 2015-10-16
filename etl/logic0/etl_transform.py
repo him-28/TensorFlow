@@ -10,10 +10,8 @@ import sys
 import os
 from etl.util.data2postgresql import load
 from etl.util import init_log
-import yaml
-# Config=yaml.load(file("../conf/config.yml"))
 from etl.conf.settings import Config
-LOGGER = init_log.init("util/logger.conf", 'petlLogger')
+from etl.conf.settings import LOGGER
 
 class ETL_Transform:
     count=1
