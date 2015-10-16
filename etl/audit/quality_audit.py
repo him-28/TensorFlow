@@ -6,8 +6,7 @@ import yaml
 from datetime import datetime
 from itertools import *
 
-import init_log
-import bearychat
+from util import bearychat, init_log
 #from utils import DBUtils
 
 CONFIG = yaml.load(file("audit_config.yml"))
