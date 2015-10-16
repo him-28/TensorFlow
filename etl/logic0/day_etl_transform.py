@@ -11,13 +11,12 @@ import csv
 import types
 import sys
 import os
-from data2postgresql import load
-import init_log
-import yaml
-Config=yaml.load(file("config.yml"))
+from etl.util.data2postgresql import load
+from etl.util import init_log
+from etl.conf.settings import Config
+from etl.conf.settings import LOGGER
 from etl_transform import ETL_Transform
 from etl_transform import hour_etl
-LOGGER = init_log.init("logger.conf", 'petlLogger')
 
 def etl_by_hour(day,hour,version):
     LOGGER.info("etl hour reload:"+day+"-"+hour)
