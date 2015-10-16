@@ -10,9 +10,9 @@ import datetime
 import types
 import sys
 import yaml
-import init_log
-Config=yaml.load(file("config.yml"))
-LOGGER = init_log.init("logger.conf", 'petlLogger')
+from etl.util import init_log
+from etl.conf.settings import Config
+LOGGER = init_log.init("util/logger.conf", 'petlLogger')
 
 
 class Pg_Loader():
