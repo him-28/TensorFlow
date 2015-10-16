@@ -12,7 +12,7 @@ import sys
 import yaml
 from etl.util import init_log
 from etl.conf.settings import Config
-LOGGER = init_log.init("util/logger.conf", 'petlLogger')
+from etl.conf.settings import LOGGER
 
 
 class Pg_Loader():
