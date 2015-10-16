@@ -46,6 +46,6 @@ boardid_dict:
 database:
     db_name: 'adc'
     user: 'postgres'
-    password: ''
+    password: 'adpg@150909'
     host: '10.100.5.80'
     port: '11921'

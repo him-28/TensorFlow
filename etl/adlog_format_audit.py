@@ -22,6 +22,7 @@ import uuid
 import types
 import psycopg2
 import os
+import bearychat
 
 CONFIG = yaml.load(file("audit_config.yml"))
 LOG_FILE_PATH = CONFIG["log_config_path"]
@@ -169,21 +170,21 @@ class AdlogFormatAudit:
                     #insert error pg
                     ADUIT_LOGGER.error("row_dict not key %s, table_name: %s _id:%s" % (key_name,
                         table_name, _id))
-                    return -1
+                    return 1
             _value = row_dict[key_name]
             if (value_isnull_bool == 0 and (_value == '' or _value == None)):
                 self.excute_by_sql(error_detail_sql % (self.run_year_day + self.run_hour, table_name, key_name, '', 'key is null', _id))
                 #insert error pg
                 ADUIT_LOGGER.error("key %s is null, table_name: %s _id:%s" % (key_name,
                     table_name, _id))
-                return -1
+                return 1
             if _value != '' and _value != None and self.valueTypeConform(_value, value_type_str) == -1:
                 error_detail = "%s value %s type not %s" % (key_name, str(_value), value_type_str)
                 self.excute_by_sql(error_detail_sql % (self.run_year_day + self.run_hour, table_name, key_name, str(_value), error_detail, _id))
                 #insert error pg
                 ADUIT_LOGGER.error("%s value %s type not %s, table_name: %s _id:%s" % (key_name,
                     str(_value), value_type_str, table_name, _id))
-                return -1
+                return 2
         return 0
 
     def slotidSpread(self, log_dict, key_list, table_name, fw):
@@ -238,6 +239,8 @@ class AdlogFormatAudit:
         with open(save_path + supply_save_file, "w") as fw:
             check_total = 0
             error_total = 0
+            key_error_total = 0
+            value_type_error_total = 0
             for board_id in self.board_list:
                 table_name = "%s_%s_%s_%s" % (self.supply_prefix_name, str(board_id), self.run_year_day,
                         self.run_hour)
@@ -250,12 +253,18 @@ class AdlogFormatAudit:
                     log_dict = self.logKeyAggregation(request_row)
                     rt = self.logRowAudit(log_dict, self.supply_key_list, self.supply_value_type,
                             self.supply_value_isnull, table_name)
-                    if rt == -1:
+                    if rt != 0:
                         error_total += 1
                         continue
+                    if rt == 1:
+                        key_error_total += 1
+                    elif rt == 2:
+                        value_type_error_total += 1
                     self.slotidSpread(log_dict, self.supply_key_list, table_name, fw)
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (supply_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
-        ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f" % (supply_save_file, check_total, self.get_probability(check_total, error_total)))
+        ADUIT_LOGGER.info("table_name:%s|check_total:%d|rf:%f" % (supply_save_file, check_total, self.get_probability(check_total, error_total)))
+        message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
+        bearychat.send_message(message_str % (supply_save_file, check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total))
  
     def demandLogAudit(self):
         '''
@@ -267,6 +276,8 @@ class AdlogFormatAudit:
         with open(save_path + demand_save_file, "w") as fw:
             check_total = 0
             error_total = 0
+            key_error_total = 0
+            value_type_error_total = 0
             for board_id in self.board_list:
                 table_name = "%s_%s_%s_%s" % (self.demand_prefix_name, str(board_id), self.run_year_day,
                         self.run_hour)
@@ -279,9 +290,13 @@ class AdlogFormatAudit:
                     log_dict = self.logKeyAggregation(request_row)
                     rt = self.logRowAudit(log_dict, self.demand_key_list, self.demand_value_type,
                             self.demand_value_isnull, table_name)
-                    if rt == -1:
+                    if rt != 0:
                         error_total += 1
                         continue
+                    if rt == 1:
+                        key_error_total += 1
+                    elif rt == 2:
+                        value_type_error_total += 1
                     format_str = ''
                     for _k in self.demand_key_list:
                         if format_str != '':
@@ -290,6 +305,8 @@ class AdlogFormatAudit:
                     fw.write(format_str + '\n')
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (demand_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
         ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f" % (demand_save_file, check_total, self.get_probability(check_total, error_total)))
+        message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
+        bearychat.send_message(message_str % (demand_save_file, check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total))
                     
 if __name__ == '__main__':
     if len(sys.argv) != 3:
