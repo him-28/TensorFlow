@@ -268,7 +268,7 @@ class Etl_Transform_Pandas:
 			'tmp_file' : self.tmp_path
 		}
 		
-		LOG.info('params init completed : ' + str(self.init_info))
+		LOG.debug('params init completed : ' + str(self.init_info))
 		
 	def load_files(self, start_time_str):
 		if os.path.exists(self.tmp_path):
