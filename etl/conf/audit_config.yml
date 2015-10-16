@@ -30,7 +30,7 @@ metrics:
     #    day: 'Ad_facts_by_day'
     
 
-log_config_path: "logger.conf"
+log_config_path: "util/logger.conf"
 
 boardid_dict:
     '4820': ['65', '66', '67', '68', '69']

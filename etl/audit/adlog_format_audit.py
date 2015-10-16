@@ -15,16 +15,16 @@
 # #  
 # ##
 import sys
-import init_log
+from etl.util import init_log
 import yaml
 from pymongo import MongoClient
 import uuid
 import types
 import psycopg2
 import os
-import bearychat
+from etl.util import bearychat
+from etl.conf.settings import AUDIT_CONFIG as CONFIG
 
-CONFIG = yaml.load(file("audit_config.yml"))
 LOG_FILE_PATH = CONFIG["log_config_path"]
 ADUIT_LOGGER = init_log.init(LOG_FILE_PATH, 'aduitInfoLogger')
 
@@ -307,6 +307,11 @@ class AdlogFormatAudit:
         ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f" % (demand_save_file, check_total, self.get_probability(check_total, error_total)))
         message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
         bearychat.send_message(message_str % (demand_save_file, check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total))
+
+def run_aduit_adlog(year_day, hour):
+    adlog_format_audit = AdlogFormatAudit(year_day, hour)
+    adlog_format_audit.supplyLogAudit()
+    adlog_format_audit.demandLogAudit()
                     
 if __name__ == '__main__':
     if len(sys.argv) != 3:
