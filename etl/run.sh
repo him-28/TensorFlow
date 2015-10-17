@@ -71,3 +71,9 @@ if [ "${hour}" == "23" ];then
         exit
     fi
 fi
+python quality_audit.py ${year}${month}${day} ${hour}
+if [ $? -eq 255 ];then
+    echo "quality error"
+    sh send_mail.sh ${year}${month}${day} ${hour} quality error
+    exit
+fi
