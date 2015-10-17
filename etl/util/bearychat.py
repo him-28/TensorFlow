@@ -18,8 +18,9 @@ import httplib
 import urllib
 import json
 
-def send_message(message):
-    params_str = ({"text": message})
+def send_message(title, text):
+    #params_str = ({"text": message, "attachments": [{"title":"This attachments Test", "text": "pls ignore this msg", "color":"#ffa500"}]})
+    params_str = ({"text": "", "attachments": [{"title": title, "text": text, "color":"#ffa500"}]})
     params = json.JSONEncoder().encode(params_str)
     headers = {"Content-Type" : "application/json"}
     bearychat_url = "https://hook.bearychat.com/=bw7by/incoming/c8a733da6e453ec05e5bb2883d8af05e"
@@ -31,3 +32,5 @@ def send_message(message):
 
 ## vim: set ts=2 sw=2: #
 
+if __name__ == '__main__':
+  send_message("hello world", "what's this")
