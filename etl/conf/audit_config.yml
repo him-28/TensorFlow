@@ -22,12 +22,12 @@ metrics:
     code_serves:
         hour: 'Hit_Facts_By_Hour'
         day: 'Hit_Facts_By_Day'
-    #impressions:
-    #    hour: 'Impressions_facts_by_hour'
-    #    day: 'impressions_facts_by_day'
-    #click:
-    #    hour: 'Ad_facts_by_hour'
-    #    day: 'Ad_facts_by_day'
+    impressions:
+        hour: 'AD_Facts_By_Hour'
+        day: 'AD_Facts_By_Day'
+    click:
+        hour: 'AD_Facts_By_Hour'
+        day: 'AD_Facts_By_Day'
     
 
 log_config_path: "util/logger.conf"

@@ -2,30 +2,33 @@
 
 import psycopg2
 import yaml
+import sys
 
 from datetime import datetime
 from itertools import *
 
-from util import bearychat, init_log
+from etl.util import bearychat, init_log
+from etl.conf.settings import Config, AuditConfig
 #from utils import DBUtils
 
-CONFIG = yaml.load(file("audit_config.yml"))
-METRICS = CONFIG.get('metrics')
-LOG_FILE_PATH = CONFIG["log_config_path"]
+#Config = yaml.load(file("audit_config.yml"))
+METRICS = AuditConfig.get('metrics')
+LOG_FILE_PATH = AuditConfig["log_config_path"]
 AUDIT_LOGGER = init_log.init(LOG_FILE_PATH, 'auditResInfoLogger')
 
-class QualityAuditBot(object):
+class QualityAuditRobot(object):
     def __init__(self, date, hour): 
         self._date = date
         self._hour = hour
+        self._title = u"phone_msite %s %s数据统计完成" % (date, hour)
         self._msgs = []
         self._metrics = []
         self._emitter = Message()
-        self.db=CONFIG["database"]["db_name"]
-        self.db_user=CONFIG["database"]["user"]
-        self.db_password=CONFIG["database"]["password"]
-        self.db_host=CONFIG["database"]["host"]
-        self.db_port=CONFIG["database"]["port"]
+        self.db=Config["database"]["db_name"]
+        self.db_user=Config["database"]["user"]
+        self.db_password=Config["database"]["password"]
+        self.db_host=Config["database"]["host"]
+        self.db_port=Config["database"]["port"]
 
     def statistic(self, metric, sqls=[]):
         #
@@ -39,11 +42,12 @@ class QualityAuditBot(object):
                 res = cur.fetchone()
                 conn.commit()
                 #res = DBUtils.excute_by_sql(sql)
-                msg = u'logic%d,%s 总计: %d' % (i, metric, res[0])
+                msg = u'logic%d, %s 总计: %d' % (i, metric, res[0])
                 self._msgs.append(msg)
                 AUDIT_LOGGER.info("quality audit bot scan result: %s" % msg)
             except Exception, e:
                 AUDIT_LOGGER.error("pg: %s, error: %s" % (sql, e))
+                msg = u'logic%d, 异常' % i
 
         if cur:
             cur.close()
@@ -60,7 +64,7 @@ class QualityAuditBot(object):
             AUDIT_LOGGER.info("quality audit bot scan sql: %s" % sum_sqls)
             self.statistic(metric, sum_sqls)
 
-        self._emitter.emit(self._msgs)
+        self._emitter.emit(self._title, self._msgs)
 
     def concat_sql(self, metric):
         '''
@@ -70,12 +74,27 @@ class QualityAuditBot(object):
 
         if self._hour:
             table_name = METRICS[metric]['hour']
-            sum_sqls.append('select sum(total) from "%s" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
-            sum_sqls.append('select sum(total) from "%s2" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+            if metric in ['reqs', 'code_serves']:
+                sum_sqls.append('select sum(total) from "%s" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+                sum_sqls.append('select sum(total) from "%s2" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+            elif metric == 'impressions':
+                sum_sqls.append('select sum(impressions_start_total) from "%s" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+                sum_sqls.append('select sum(impressions_start_total) from "%s2" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+            elif metric == 'click':
+                sum_sqls.append('select sum(click) from "%s" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
+                sum_sqls.append('select sum(click) from "%s2" where date_id=%s and time_id=%s' %(table_name, self._date, self._hour))
         else:
             table_name = METRICS[metric]['day']
-            sum_sqls.append('select sum(total) from "%s" where date_id=%s' %(table_name, self._date, self._hour))
-            sum_sqls.append('select sum(total) from "%s2" where date_id=%s' %(table_name, self._date, self._hour))
+            if metric in ['reqs', 'code_serves']:
+                sum_sqls.append('select sum(total) from "%s" where date_id=%s' %(table_name, self._date))
+                sum_sqls.append('select sum(total) from "%s2" where date_id=%s' %(table_name, self._date))
+            elif metric == 'impressions':
+                sum_sqls.append('select sum(impressions_start_total) from "%s" where date_id=%s' %(table_name, self._date))
+                sum_sqls.append('select sum(impressions_start_total) from "%s2" where date_id=%s' %(table_name, self._date))
+            elif metric == 'click':
+                sum_sqls.append('select sum(click) from "%s" where date_id=%s' %(table_name, self._date, self._hour))
+                sum_sqls.append('select sum(click) from "%s2" where date_id=%s' %(table_name, self._date, self._hour))
+
 
         return sum_sqls
 
@@ -87,16 +106,17 @@ class Message:
     def __init__(self):
         pass
 
-    def emit(self, msg):
+    def emit(self, title, msg):
         AUDIT_LOGGER.info("message begin emit: %s" % msg)
         msg_str = ''.join(m+'\r\n' for m in msg)
         AUDIT_LOGGER.info("message begin emit: %s" % msg_str)
-        msg = '%s @QualityAuditBot' % msg_str
-        bearychat.send_message(msg)
+        msg = '%s @QualityAuditRobot' % msg_str
+
+        bearychat.send_message(title, msg)
         AUDIT_LOGGER.info("message emited")
 
 
 if __name__ == '__main__':
-    from pdb import set_trace as st
-    bot = QualityAuditBot('20151016', '01')
+    bot = QualityAuditBot('20151017', '22')
     bot.scan()
+
