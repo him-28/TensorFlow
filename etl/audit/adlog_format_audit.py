@@ -263,8 +263,10 @@ class AdlogFormatAudit:
                     self.slotidSpread(log_dict, self.supply_key_list, table_name, fw)
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (supply_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
         ADUIT_LOGGER.info("table_name:%s|check_total:%d|rf:%f" % (supply_save_file, check_total, self.get_probability(check_total, error_total)))
-        message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
-        bearychat.send_message(message_str % (supply_save_file, check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total))
+
+        title = u"phone_msite: %s 原始日志审计完成" % supply_save_file
+        text = u"总纪录行数: %d, 错误纪录行数: %d\r\n错误比率: %f (error/total)\r\n列名错误: %d, 值类型错误: %d" % (check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total)
+        bearychat.send_message(title, text)
  
     def demandLogAudit(self):
         '''
@@ -306,7 +308,9 @@ class AdlogFormatAudit:
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (demand_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
         ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f" % (demand_save_file, check_total, self.get_probability(check_total, error_total)))
         message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
-        bearychat.send_message(message_str % (demand_save_file, check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total))
+        title = u"phone_msite: %s 原始日志审计完成" % demand_save_file
+        text = u"总纪录行数: %d, 错误纪录行数: %d\r\n错误比率: %f (error/total)\r\n列名错误: %d, 值类型错误: %d" % (check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total)
+        bearychat.send_message(title, text)
 
 def run_aduit_adlog(year_day, hour):
     adlog_format_audit = AdlogFormatAudit(year_day, hour)
