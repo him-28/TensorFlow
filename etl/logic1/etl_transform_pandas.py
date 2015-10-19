@@ -14,7 +14,6 @@ from etl.conf.settings import Config
 from etl.util import init_log
 LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
 
-
 def tran_header_dtype(dtype_dict):
     '''转换配置里的数据类型'''
     target = {}
@@ -286,9 +285,7 @@ class Etl_Transform_Pandas:
             hour_output_root_path = self.config['HOUR_FACTS_FILE_PATH']
             is_hour = False
             is_day = True
-
         month_folder = str(self.start_time.year) + ("%02d" % self.start_time.month)
-
         if trans_type.find('supply') != -1:# supply
             names = self.config['SUPPLY_HEADER']
             names_dtype = tran_header_dtype(self.config['SUPPLY_HEADER_DTYPE'])
@@ -329,7 +326,6 @@ class Etl_Transform_Pandas:
         self.params["tmp_path"] = output_file_path + ".tmp"
         if is_hour:
             self.params["hour"] = int(start_time.split(".")[1])
-
         LOG.debug('params init completed : ' + str(self.params))
     def init_transform_type(self, trans_type):
         '''初始化类型'''
@@ -399,7 +395,7 @@ class Etl_Transform_Pandas:
                         LOG.warn("hour file not exists:" + file_path)
                         return False
         else:  # 寻找已经计算过的小时数据合并
-            for h24 in range(0, 24):
+            for h24 in range(1, 25):
                 hour_file_path = self.params['hour_output_root_path'] + self.params['month_folder']\
                     + os.sep + str(self.params['date']) + (".%02d" % h24) + "."\
                     + self.params['run_type'] + self.params['file_suffix']
