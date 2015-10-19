@@ -3,6 +3,7 @@ import sys
 if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
 from etl.logic0.etl_transform import hour_etl
+from etl.audit.quality_audit import QualityAuditRobot
 from etl.logic0.etl_transform import hour_etl
 from etl.logic0.day_etl_transform import day_etl
 from etl.logic1.etl_transform_pandas import Etl_Transform_Pandas
@@ -19,12 +20,23 @@ def run_cli(arguments):
             pandasEtl(args)
         elif run_type == 'petl':
             petlEtl(args)
+        elif run_type == 'quality':
+            qualityAudit(args)
+            pass
         else:    
             LOGGER.error("app run_type [{0}] is wrong".format(run_type))
             sys.exit(-1)
     except Exception,e:
         LOGGER.error("run app error,error message:"+e.message)
         sys.exit(-1)
+
+def qualityAudit(args):
+    '''Args: '20151016' '09' '''
+    if len(args) == 2:
+        rob = QualityAuditRobot(args[0],args[1])
+        rob.scan()
+    else:
+        LOGGER.error("run qualityAudit error,wrong args: "+"\t".join(args))
 
 def auditLog(args):
     '''Args: '20151016' '09' '''
