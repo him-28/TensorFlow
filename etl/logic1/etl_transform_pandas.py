@@ -12,7 +12,6 @@ import logging
 import sys
 
 ''' 读取各种配置配置 '''
-#config = yaml.load(open("../conf/config.yml"))
 supply_config = config.get('supply')
 demand_config = config.get('demand')
 database_config = config.get('database')
@@ -65,8 +64,6 @@ DAY_FACTS_FILE_PATH = config.get('day_facts_file_path')  # "/data/facts/day/"
 
 PLACEHOLDER = -9
 
-#LOG_FILE_PATH = pandas_config.get("log_config_path")
-#LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
 SUPPLY_REQS_CONDITION_RELATION = {
 		'total':[]
 		}
@@ -521,7 +518,3 @@ class Etl_Transform_Pandas:
 		cur.close()
 		conn.close()
 		
-
-if __name__ == '__main__':
-	etp = Etl_Transform_Pandas(False, True)
-	etp.compute("supply_hour_reqs", "20151014.24")
