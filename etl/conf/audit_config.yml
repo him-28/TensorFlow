@@ -49,3 +49,5 @@ database:
     password: 'adpg@150909'
     host: '10.100.5.80'
     port: '11921'
+    minconn: 10
+    maxconn: 50
