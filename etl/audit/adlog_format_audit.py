@@ -15,6 +15,7 @@
 # #  
 # ##
 import sys
+import time
 from etl.util import init_log
 import yaml
 from pymongo import MongoClient
@@ -236,6 +237,7 @@ class AdlogFormatAudit:
     def supplyLogAudit(self):
         '''
         '''
+        start_time = time.time()
         save_path = "%s/%s/" % (self.supply_save_path, self.run_year_day[:6])
         supply_save_file = "%s.%s.product.supply.csv" % (self.run_year_day[:8], self.run_hour)
         if os.path.exists(save_path) == False:
@@ -265,8 +267,10 @@ class AdlogFormatAudit:
                     elif rt == 2:
                         value_type_error_total += 1
                     self.slotidSpread(log_dict, self.supply_key_list, table_name, fw)
+        end_time = time.time()
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (supply_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
-        ADUIT_LOGGER.info("table_name:%s|check_total:%d|rf:%f" % (supply_save_file, check_total, self.get_probability(check_total, error_total)))
+        ADUIT_LOGGER.info("table_name:%s|check_total:%d|rf:%f|run_time:%d" % (supply_save_file,
+          check_total, self.get_probability(check_total, error_total), end_time - start_time))
 
         title = u"phone_msite: %s 原始日志审计完成" % supply_save_file
         text = u"总纪录行数: %d, 错误纪录行数: %d\r\n错误比率: %f (error/total)\r\n列名错误: %d, 值类型错误: %d" % (check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total)
@@ -275,6 +279,7 @@ class AdlogFormatAudit:
     def demandLogAudit(self):
         '''
         '''
+        start_time = time.time()
         save_path = "%s/%s/" % (self.demand_save_path, self.run_year_day[:6])
         demand_save_file = "%s.%s.product.demand.csv" % (self.run_year_day[:8], self.run_hour)
         if os.path.exists(save_path) == False:
@@ -309,17 +314,20 @@ class AdlogFormatAudit:
                             format_str += '\t'
                         format_str += str(log_dict.get(_k, "-1"))
                     fw.write(format_str + '\n')
+        end_time = time.time()
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (demand_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
-        ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f" % (demand_save_file, check_total, self.get_probability(check_total, error_total)))
-        message_str = "phone_m adlog file %s total:%d\n error_totale:%d\n rf:%f\n key_error_total:%d\n value_type_error_total:%d"
+        ADUIT_LOGGER.info("table_name:%s|check_total:%s|rf:%f|run_time:%d" % (demand_save_file, check_total, self.get_probability(check_total, error_total), end_time - start_time))
         title = u"phone_msite: %s 原始日志审计完成" % demand_save_file
         text = u"总纪录行数: %d, 错误纪录行数: %d\r\n错误比率: %f (error/total)\r\n列名错误: %d, 值类型错误: %d" % (check_total, error_total, self.get_probability(check_total, error_total), key_error_total, value_type_error_total)
         bearychat.send_message(title, text)
 
 def run_aduit_adlog(year_day, hour):
+    start_time = time.time()
     adlog_format_audit = AdlogFormatAudit(year_day, hour)
     adlog_format_audit.supplyLogAudit()
     adlog_format_audit.demandLogAudit()
+    end_time = time.time()
+    ADUIT_LOGGER.info("phome msite aduit run total time:%d" % (end_time - start_time))
                     
 if __name__ == '__main__':
     if len(sys.argv) != 3:
