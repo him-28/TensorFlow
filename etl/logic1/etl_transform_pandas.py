@@ -179,12 +179,17 @@ class Etl_Transform_Pandas:
 					LOG.error(start_time + ' need format as : %Y%m%d.%H')
 					return False
 				self.hour = int(s_arr[1])
-				new_start_time = s_arr[0] + "." + str(self.hour - 1)
+				
+				# 把1~24小时格式时间格式化成0~23小时 Start
+				# 拼接时间字符串
+				start_time_format_in_23hours = s_arr[0] + "." + str(self.hour - 1)
 				try:
-					self.start_time = dt.datetime.strptime(new_start_time, "%Y%m%d.%H")
+					#格式化
+					self.start_time = dt.datetime.strptime(start_time_format_in_23hours, "%Y%m%d.%H")
 				except:
 					LOG.error(start_time + ' need format as : %Y%m%d.%H')
 					return False
+				# 把1~24小时格式时间格式化成0~23小时 End
 		else:
 			LOG.error('can not handle the trans_type:'+trans_type+' ,it should be one of them:[supply_hour_hit,supply_hour_reqs,demand_hour_ad,supply_day_hit,supply_day_reqs,demand_day_ad]')
 			return False
@@ -196,7 +201,6 @@ class Etl_Transform_Pandas:
 		self.is_day = False
 		self.table_ids = ["date_id"]
 		if trans_type.find('hour') != -1 :  # 每小时
-			#self.hour = self.start_time.hour + 1
 			self.output_root_path = HOUR_FACTS_FILE_PATH
 			self.table_ids.append("time_id")
 		elif trans_type.find('day') != -1 :  # 每天
