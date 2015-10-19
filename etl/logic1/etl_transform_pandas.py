@@ -6,12 +6,13 @@ import pandas as pd
 import yaml
 import psycopg2 as psy
 import datetime as dt 
-import init_log
+from etl.conf.settings import LOGGER as LOG
+from etl.conf.settings import Config as config
 import logging
 import sys
 
 ''' 读取各种配置配置 '''
-config = yaml.load(open("config.yml"))
+#config = yaml.load(open("../conf/config.yml"))
 supply_config = config.get('supply')
 demand_config = config.get('demand')
 database_config = config.get('database')
@@ -64,8 +65,8 @@ DAY_FACTS_FILE_PATH = config.get('day_facts_file_path')  # "/data/facts/day/"
 
 PLACEHOLDER = -9
 
-LOG_FILE_PATH = pandas_config.get("log_config_path")
-LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
+#LOG_FILE_PATH = pandas_config.get("log_config_path")
+#LOG = init_log.init(LOG_FILE_PATH, 'pandasEtlLogger')
 SUPPLY_REQS_CONDITION_RELATION = {
 		'total':[]
 		}
@@ -176,8 +177,14 @@ class Etl_Transform_Pandas:
 					LOG.error(start_time + ' need format as : %Y%m%d')
 					return False
 			else:
+				s_arr = start_time.split(".")
+				if len(s_arr) != 2:
+					LOG.error(start_time + ' need format as : %Y%m%d.%H')
+					return False
+				self.hour = int(s_arr[1])
+				new_start_time = s_arr[0] + "." + str(self.hour - 1)
 				try:
-					self.start_time = dt.datetime.strptime(start_time, "%Y%m%d.%H")
+					self.start_time = dt.datetime.strptime(new_start_time, "%Y%m%d.%H")
 				except:
 					LOG.error(start_time + ' need format as : %Y%m%d.%H')
 					return False
@@ -191,9 +198,8 @@ class Etl_Transform_Pandas:
 		self.is_hour = True
 		self.is_day = False
 		self.table_ids = ["date_id"]
-		self.hour = None
 		if trans_type.find('hour') != -1 :  # 每小时
-			self.hour = self.start_time.hour
+			#self.hour = self.start_time.hour + 1
 			self.output_root_path = HOUR_FACTS_FILE_PATH
 			self.table_ids.append("time_id")
 		elif trans_type.find('day') != -1 :  # 每天
@@ -310,7 +316,7 @@ class Etl_Transform_Pandas:
 							count = count + 1
 							self.transform_section(df)
 			else:  # 寻找已经计算过的小时数据合并
-				for h24 in range(0, 24):
+				for h24 in range(1, 25):
 					hour_file_path = self.hour_output_root_path + self.month_folder + os.sep + str(self.date) + (".%02d" % h24) + "." + self.run_type + self.file_suffix
 					if(os.path.isfile(hour_file_path)):
 							# 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
@@ -514,3 +520,8 @@ class Etl_Transform_Pandas:
 		#################分段提交数据######################################
 		cur.close()
 		conn.close()
+		
+
+if __name__ == '__main__':
+	etp = Etl_Transform_Pandas(False, True)
+	etp.compute("supply_hour_reqs", "20151014.24")
