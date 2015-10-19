@@ -23,7 +23,7 @@ import types
 import psycopg2
 import os
 from etl.util import bearychat
-from etl.conf.settings import AUDIT_CONFIG as CONFIG
+from etl.conf.settings import AuditConfig as CONFIG
 
 LOG_FILE_PATH = CONFIG["log_config_path"]
 ADUIT_LOGGER = init_log.init(LOG_FILE_PATH, 'aduitInfoLogger')
@@ -56,6 +56,10 @@ class AdlogFormatAudit:
         self.db_port=CONFIG["database"]["port"]
         self.run_year_day = year_day
         self.run_hour = hour
+        if int(hour) <= 10:
+          self.table_hour = "0" + str(int(hour) - 1)
+        else:
+          self.table_hour = str(int(hour) - 1)
         pass
 
     def getDBTableNameAllData(self, table_name, query_filter):
@@ -243,7 +247,7 @@ class AdlogFormatAudit:
             value_type_error_total = 0
             for board_id in self.board_list:
                 table_name = "%s_%s_%s_%s" % (self.supply_prefix_name, str(board_id), self.run_year_day,
-                        self.run_hour)
+                        self.table_hour)
                 query_filter = {'p.v.title':0,'p.v.keyword':0,'p.c.ua':0, 'p.v.hname':0,
                         'p.v.sub_type':0,'p.v.name':0,'p.v.rname':0}
                 ADUIT_LOGGER.info("table %s start load" % (table_name))
@@ -282,7 +286,7 @@ class AdlogFormatAudit:
             value_type_error_total = 0
             for board_id in self.board_list:
                 table_name = "%s_%s_%s_%s" % (self.demand_prefix_name, str(board_id), self.run_year_day,
-                        self.run_hour)
+                        self.table_hour)
                 query_filter = {'p.v.title':0,'p.v.keyword':0,'p.c.ua':0, 'p.v.hname':0,
                         'p.v.sub_type':0,'p.v.name':0,'p.v.rname':0}
                 ADUIT_LOGGER.info("table %s start load" % (table_name))
