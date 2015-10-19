@@ -135,7 +135,7 @@ def sum_ad_facts_reducer(key,rows):
     return result
 def day_etl(day,type_t,version):
     if type_t == "reload":
-        for hour in range(24):
+        for hour in range(1,25):
             str_hour=''
             if hour < 10:
                 str_hour='0'+str(hour)
