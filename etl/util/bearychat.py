@@ -35,14 +35,14 @@ def new_send_message(text, margdown=True, channel=u'广告-数据', at_title='',
     params_dict = ({"text": text, "channel": channel, "margdown": margdown, "attachments": [{"title": at_title, "text":
       at_text, "color":at_color}]})
     params = json.JSONEncoder().encode(params_dict)
-    #return by_json_send_message(params)
+    return send_message_by_json(params)
 
-def sen_message(title, text):
+def send_message(title, text):
     params_str = ({"text": "", "attachments": [{"title": title, "text": text, "color":"#ffa500"}]})
     params = json.JSONEncoder().encode(params_str)
-    return by_json_send_message(params)
+    return send_message_by_json(params)
 
-def by_json_send_message(params):
+def send_message_by_json(params):
     headers = {"Content-Type" : "application/json"}
     bearychat_url = "https://hook.bearychat.com/=bw7by/incoming/c8a733da6e453ec05e5bb2883d8af05e"
 
