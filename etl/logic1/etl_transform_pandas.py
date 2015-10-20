@@ -401,18 +401,7 @@ class Etl_Transform_Pandas:
                     + self.params['run_type'] + self.params['file_suffix']
                 if os.path.isfile(hour_file_path):
                     # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-                    LOG.info('load file:' + hour_file_path)
-                    # coppy group_item 复制复本
-                    sum_names = []
-                    for item in self.params['group_item']:
-                        sum_names.append(item)
-                    for key in self.params['condition_relation'].keys():
-                        sum_names.append(key)
-                    dataframe = pd.read_csv(hour_file_path, sep=self.config['OUTPUT_COLUMN_SEP'],\
-                                    names=sum_names, header=None, index_col=False)
-                    LOG.info('merge file:' + hour_file_path)
-                    dataframe.to_csv(self.params['tmp_path'], sep=self.config['OUTPUT_COLUMN_SEP']\
-                                    , header=False, na_rep='0', mode="a")
+                    self.merge_hour_file(hour_file_path)
                     count = count + 1
                 else:
                     LOG.warn("merge file not exists:" + hour_file_path)
@@ -420,6 +409,23 @@ class Etl_Transform_Pandas:
         if count == 0:
             return False
         return True
+
+    def merge_hour_file(self,hour_file_path):
+        '''分段处理CSV文件，每READ_CSV_CHUNK行读取一次'''
+
+        LOG.info('load file:' + hour_file_path)
+        # coppy group_item 复制复本
+        sum_names = []
+        for item in self.params['group_item']:
+            sum_names.append(item)
+        for key in self.params['condition_relation'].keys():
+            sum_names.append(key)
+        dataframe = pd.read_csv(hour_file_path, sep=self.config['OUTPUT_COLUMN_SEP'],\
+                        names=sum_names, header=None, index_col=False)
+        LOG.info('merge file:' + hour_file_path)
+        dataframe.to_csv(self.params['tmp_path'], sep=self.config['OUTPUT_COLUMN_SEP']\
+                        , header=False, na_rep='0', mode="a")
+
     def load_hour_files(self, start_time_str):
         '''加载小时文件'''
         file_path = self.params['root_path'] + self.params['month_folder']\
@@ -454,33 +460,10 @@ class Etl_Transform_Pandas:
 
         # for df in self.dfs:
         for chunk in data_chunks:
+            chunk_len = len(chunk) #记录chunk长度
             grouped = None
             for item in self.params['condition_relation'].items():
-                column_name = item[0]
-                relations = item[1]
-                LOG.info("filter column: " + column_name)
-                tmp_chunk = chunk
-
-                for rel in relations:
-                    key = rel[0]
-                    opt = rel[1]
-                    val = rel[2]
-                    if '==' == opt:
-                        LOG.info("filter column: " + column_name + "," + key + "==" + str(val))
-                        tmp_chunk = tmp_chunk[tmp_chunk[key] == val]
-                    elif '!=' == opt:
-                        LOG.info("filter column: " + column_name + "," + key + "!=" + str(val))
-                        tmp_chunk = tmp_chunk[tmp_chunk[key] != val]
-                LOG.info("merge column result: " + column_name)
-
-                if len(tmp_chunk) == 0:
-                    tmp_chunk = self.get_init_data(self.params['group_item'], column_name)
-                if grouped is None:
-                    grouped = tmp_chunk.groupby(self.params['group_item']).size()
-                else:
-                    grouped = pd.concat([grouped, tmp_chunk.\
-                                        groupby(self.params['group_item']).size()], axis=1)
-
+                grouped = self.merge_section_group(grouped, item, chunk)
             # 转换为DataFrame
             groupframe = pd.DataFrame(grouped)
             # 保存到临时CSV文件
@@ -488,12 +471,37 @@ class Etl_Transform_Pandas:
                              header=False, na_rep='0', mode="a")
 
             # info info
-            LOG.info("grouped: " + str(len(chunk)) + " records")
+            LOG.info("grouped: " + str(chunk_len) + " records")
 
         LOG.info("save to tmp file : " + self.params['tmp_path'])
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
         LOG.info ('transform!')
 
+    def merge_section_group(self,grouped,item,tmp_chunk):
+        '''根据关系规则Group分段数据，把分段Group结果合并'''
+        column_name = item[0]
+        LOG.info("filter column: " + column_name)
+        relations = item[1]
+        for rel in relations:
+            key = rel[0]
+            opt = rel[1]
+            val = rel[2]
+            if '==' == opt:
+                LOG.info("filter column: " + column_name + "," + key + "==" + str(val))
+                tmp_chunk = tmp_chunk[tmp_chunk[key] == val]
+            elif '!=' == opt:
+                LOG.info("filter column: " + column_name + "," + key + "!=" + str(val))
+                tmp_chunk = tmp_chunk[tmp_chunk[key] != val]
+        LOG.info("merge column result: " + column_name)
+
+        if len(tmp_chunk) == 0:
+            tmp_chunk = self.get_init_data(self.params['group_item'], column_name)
+        if grouped is None:
+            grouped = tmp_chunk.groupby(self.params['group_item']).size()
+        else:
+            grouped = pd.concat([grouped, tmp_chunk.\
+                                groupby(self.params['group_item']).size()], axis=1)
+        return grouped
 
     def get_del_values(self,sql):
         '''删除SQL传入的参数'''
@@ -552,10 +560,8 @@ class Etl_Transform_Pandas:
             conn.commit()
         LOG.info("commit all!")
 
-    # 读取CSV文件插入数据库
-    def insert(self):
-        '''读取CSV文件插入数据库'''
-        # coppy group_item 复制复本
+    def sum_dataframe(self):
+        '''从临时文件读取数据计算最终结果，Group Sum'''
         sum_names = []
         for item in self.params['group_item']:
             sum_names.append(item)
@@ -563,37 +569,21 @@ class Etl_Transform_Pandas:
         for key in self.params['condition_relation'].keys():
             sum_names.append(key)
 
-        ##############从临时文件读取数据计算最终结果，Group Sum####################
         # info info
         LOG.info("merge the tmp file : " + self.params['tmp_path'])
         # 输出结果到文件
         dateframe = pd.read_csv(self.params['tmp_path'], sep=self.config['OUTPUT_COLUMN_SEP'], \
                          names=sum_names, header=None, dtype=self.params['names_dtype'])
-        dateframe.dropna()
+        dateframe.dropna() # 去除NaN行
         total_grouped = dateframe.groupby(self.params['group_item']).sum()
-        ##############从临时文件读取数据计算最终结果，Group Sum####################
 
-        # defub info
+        # merge info
         LOG.info("merge result size:" + str(len(total_grouped)))
-
         total_groupframe = pd.DataFrame(total_grouped)
-        LOG.info("write result to csv file:" + self.params['output_file_path'])
-        total_groupframe.to_csv(self.params['output_file_path'], sep=\
-                self.config['OUTPUT_COLUMN_SEP'], header=False)
+        return total_groupframe
 
-        LOG.info("remove tmp file:" + self.params['tmp_path'])
-        # 删除临时文件
-        os.remove(self.params['tmp_path'])
-
-        # info info
-        LOG.info("connect --> db:" + str(self.config['DB_DATABASE']) + ",user:" + \
-                str(self.config['DB_USER']) + ",password:***,host:" + str(self.config['DB_HOST'])\
-                + ",port:" + str(self.config['DB_PORT']) + "...")
-        conn = psy.connect(database=self.config['DB_DATABASE'], user=self.config['DB_USER'], \
-                        password=self.config['DB_PASSWORD'], host=self.config['DB_HOST'],\
-                        port=self.config['DB_PORT'])
-        cur = conn.cursor()
-
+    def clear_old_value(self,conn,cur):
+        '''清空旧的值（可能没有值）'''
         #################清空表######################
         sql = 'DELETE FROM "' + self.params['table_name'] + '" WHERE '
 
@@ -613,8 +603,10 @@ class Etl_Transform_Pandas:
         cur.execute(sql, self.get_del_values(sql))
         conn.commit()
         #################清空表######################
+        return insert_column,value_str
 
-        #################拼接Insert SQL、组装Insert值######################
+    def split_insert_sql(self,insert_column,value_str):
+        '''拼接Insert SQL 组装Insert值'''
         for name in self.params['group_item']:
             insert_column = insert_column + ',"' + str(name) + '"'
             value_str = value_str + ',%s'
@@ -624,11 +616,40 @@ class Etl_Transform_Pandas:
         sql = 'INSERT INTO "' + self.params['table_name'] + '"(' + \
             insert_column + ') VALUES (' + value_str + ');'
         LOG.info("prepare insert : " + sql)
-        #################拼接Insert SQL、组装Insert值######################
+        return sql
+
+
+    def insert(self):
+        '''从CSV文件读取结果插入数据库'''
+
+        total_groupframe = self.sum_dataframe()
+        LOG.info("write result to csv file:" + self.params['output_file_path'])
+        total_groupframe.to_csv(self.params['output_file_path'], sep=\
+                self.config['OUTPUT_COLUMN_SEP'], header=False)
+
+        LOG.info("remove tmp file:" + self.params['tmp_path'])
+        # 删除临时文件
+        os.remove(self.params['tmp_path'])
+
+        # connect info
+        LOG.info("connect --> db:" + str(self.config['DB_DATABASE']) + ",user:" + \
+                str(self.config['DB_USER']) + ",password:***,host:" + str(self.config['DB_HOST'])\
+                + ",port:" + str(self.config['DB_PORT']) + "...")
+        conn = psy.connect(database=self.config['DB_DATABASE'], user=self.config['DB_USER'], \
+                        password=self.config['DB_PASSWORD'], host=self.config['DB_HOST'],\
+                        port=self.config['DB_PORT'])
+        cur = conn.cursor()
+
+        #################清空表,并返回表的ID键、值######################
+        insert_column,value_str = self.clear_old_value(conn, cur)
+
+        #################拼接Insert SQL 组装Insert值####################
+        sql = self.split_insert_sql(insert_column, value_str)
 
         #################分段提交数据######################################
         self.commit_insert(total_groupframe, sql, cur, conn)
+
+        # close
         cur.close()
         conn.close()
-        #################分段提交数据######################################
         
