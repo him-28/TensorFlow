@@ -40,7 +40,7 @@ def trans_audit_result(arr, title):
     for item in arr:
         msg = msg + "\n" + str(item)
         LOG.warn(item)
-    bearychat.new_send_message(None, at_title=title, at_text=msg)
+    #bearychat.new_send_message(None, at_title=title, at_text=msg)
     return msg
 
 def audit_count(count1, count2, c_type):
@@ -48,7 +48,7 @@ def audit_count(count1, count2, c_type):
     msg = 'logic0,%s 总计%s条数据\nlogic1,%s 总计%s条数据\n'\
         % (c_type, count1, c_type, count2)
     if count1 == 0L or count2 == 0L:
-        return False, msg + '差异数据总计:%s\n' % (count1 + count2)
+        return False, msg + '差异数据条数:%s\n' % (count1 + count2)
     return True, msg
 
 class QualityFullAuditRobot(object):
@@ -65,12 +65,12 @@ class QualityFullAuditRobot(object):
         '''审计，审计天数据则把audit_hour设为None'''
         audit_date = str(audit_date)
         if audit_hour is None:
-            self._title = "%s 天数据审核结果：" % audit_date
+            self._title = "%s 数据集审计结果：" % audit_date
             # self.diff_list.append("%s 天数据审核结果：" % audit_date)
             self.audit_day(audit_date)
         else:
             audit_hour = str(audit_hour)
-            self._title = "%s %s 小时数据审核结果：" % (audit_date, audit_hour)
+            self._title = "%s %s 数据集审计结果：" % (audit_date, audit_hour)
             self.audit_hour(audit_date, audit_hour)
 
         msg = trans_audit_result(self.diff_list, self._title)
@@ -145,7 +145,7 @@ class QualityFullAuditRobot(object):
             details2 = self.__handle_diff(result2, title2, to_table, from_table)
             LOG.error(trans_arr_by_line(details2))
         result = len1 == 0 and len2 == 0
-        msg = '差异数据总计:%s\n' % (len1 + len2)
+        msg = '差异数据条数:%s\n' % (len1 + len2)
         return result, msg
 
     def __handle_diff(self, result, header, from_table, to_table):

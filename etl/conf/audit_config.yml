@@ -19,16 +19,20 @@ metrics:
     reqs: 
         hour: 'Reqs_Facts_By_Hour'
         day: 'Reqs_Facts_By_Day'
+        compare_field: ['total','ad_slot_id']
     code_serves:
         hour: 'Hit_Facts_By_Hour'
         day: 'Hit_Facts_By_Day'
+        compare_field: ['total','ad_card_id','ad_creative_id','ad_slot_id']
     impressions:
         hour: 'AD_Facts_By_Hour'
         day: 'AD_Facts_By_Day'
+        compare_field: ['click','ad_card_id','ad_creative_id','ad_slot_id','impressions_start_total','impressions_finish_total']
     click:
         hour: 'AD_Facts_By_Hour'
         day: 'AD_Facts_By_Day'
-    
+        compare_field: ['click','ad_card_id','ad_creative_id','ad_slot_id','impressions_start_total','impressions_finish_total']
+
 
 log_config_path: "util/logger.conf"
 
@@ -44,7 +48,7 @@ boardid_dict:
     '4821': ['127']
     '5286': ['134', '135', '136']
 database:
-    db_name: 'adc'
+    db_name: 'test2'
     user: 'postgres'
     password: 'adpg@150909'
     host: '10.100.5.80'
