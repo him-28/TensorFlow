@@ -12,7 +12,7 @@ class TestPGUtil(unittest.TestCase):
 
     def setUp(self):
         self.insert_sql = "insert into \"AD_Facts_By_Day\" (date_id) VALUES (10001)"
-        self.bulkInsert_sql = "insert into \"AD_Facts_By_Day\" (date_id) VALUES (%d)"
+        self.bulkInsert_sql = "insert into \"AD_Facts_By_Day\" (date_id,click) VALUES ( %s, %s )"
         self.fetchone_sql = "select date_id from \"AD_Facts_By_Day\" where date_id=10001"
         self.fetchall_sql = "select date_id from \"AD_Facts_By_Day\" where date_id=10001"
 
@@ -24,13 +24,13 @@ class TestPGUtil(unittest.TestCase):
         
 
     def test1_bulkInsert(self):
-        vals=[(10002),(10003),(10004)]
+        vals=[(10002,12),(10003,13),(10004,14)]
         DBUtils.bulkInsert(self.bulkInsert_sql,vals)
         sql = "select date_id from \"AD_Facts_By_Day\" where date_id=%d"
         for t in vals:
-            result = DBUtils.fetchone(sql % t)
+            result = DBUtils.fetchone(sql % t[0])
             self.assertIsNotNone(result, "result is null")
-            self.assertEqual(result[0], t[0], "not equal")
+            self.assertEqual(result, t[0], "not equal")
 
     def test2_fetchone(self):
         DBUtils.insert(self.insert_sql)
