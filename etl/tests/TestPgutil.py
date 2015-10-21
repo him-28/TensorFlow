@@ -5,26 +5,51 @@ import unittest
 
 sys.path.insert(1, '../..')
 
-from etl.utils.pgutil import DBUtils
+from util.pgutil import DBUtils
 
 
 class TestPGUtil(unittest.TestCase):
 
     def setUp(self):
-        self.insert_sql = ""
-        self.bulkInsert_sql = ""
-        self.fetchone_sql = ""
-        self.fetchall_sql = ""
+        self.insert_sql = "insert into \"AD_Facts_By_Day\" (date_id) VALUES (10001)"
+        self.bulkInsert_sql = "insert into \"AD_Facts_By_Day\" (date_id) VALUES (%d)"
+        self.fetchone_sql = "select date_id from \"AD_Facts_By_Day\" where date_id=10001"
+        self.fetchall_sql = "select date_id from \"AD_Facts_By_Day\" where date_id=10001"
 
     def test0_insert(self):
-        pass
+        DBUtils.insert(self.insert_sql)
+        result=DBUtils.fetchone(self.fetchone_sql)
+        self.assertIsNotNone(result, "result is  null")
+        self.assertEqual(result, 10001, "not equal")
+        
 
     def test1_bulkInsert(self):
-        pass
+        vals=[(10002),(10003),(10004)]
+        DBUtils.bulkInsert(self.bulkInsert_sql,vals)
+        sql = "select date_id from \"AD_Facts_By_Day\" where date_id=%d"
+        for t in vals:
+            result = DBUtils.fetchone(sql % t)
+            self.assertIsNotNone(result, "result is null")
+            self.assertEqual(result[0], t[0], "not equal")
 
     def test2_fetchone(self):
-        pass
+        DBUtils.insert(self.insert_sql)
+        row=DBUtils.fetchone(self.fetchone_sql)
+        self.assertIsNotNone(row, "result is null")
+        self.assertEqual(row, 10001, "not equal")
 
     def test3_fetchall(self):
-        pass
+        DBUtils.insert(self.insert_sql)
+        rows = DBUtils.fetchall(self.fetchall_sql)
+        self.assertIsNotNone(rows, "result is null")
+        self.assertEqual(rows[0][0], 10001, "not equal")
+            
+    def tearDown(self):
+        clear_sql="delete  from \"AD_Facts_By_Day\" where date_id=%d"
+        vals=[(10002),(10003),(10004)]
+        DBUtils.insert(clear_sql%10001)
+        for t in vals:
+            DBUtils.insert(clear_sql%t)
         
+if __name__ == '__main__':
+    unittest.main()
