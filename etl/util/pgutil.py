@@ -6,22 +6,24 @@ import psycopg2
 from psycopg2.pool import ThreadedConnectionPool
 
 from etl.conf.settings import LOGGER
-from etl.conf.settings import AUDIT_CONFIG as CONFIG
+from etl.conf.settings import AuditConfig as CONFIG
 
 
 class DBConfig:
-
+    
+    @staticmethod
     def defaultConfig():
         return {
-            'database':  'test',
-            'user': 'test',
-            'password': 'test',
-            'host': '127.0.0.1',
-            'port': '27091',
-            'mincached': 5,
-            'maxcached': 50
+            'database':  'test2',
+            'user': 'postgres',
+            'password': 'adpg@150909',
+            'host': '10.100.5.80',
+            'port': '11921',
+            'minconn': 5,
+            'maxconn': 50
         }
 
+    @staticmethod
     def Config():
         config = DBConfig.defaultConfig()
         return config.update({
@@ -32,11 +34,11 @@ class DBConfig:
             'port': CONFIG['database']['port'],
             'minconn': CONFIG['database']['minconn'],
             'maxconn': CONFIG['database']['maxconn']
-        )}
+            })
 
 
-config = DBConfig.Config()
-pool = SafePoolManager(config.minconn, config.maxconn, config.host, config.port)
+config = DBConfig.defaultConfig()
+
 
 class SafePoolManager:
     """
@@ -50,7 +52,13 @@ class SafePoolManager:
         self._init()
 
     def _init(self):
-        self._pool = ThreadedConnectionPool(*args, **kwargs)
+        #database=self.db, user=self.db_user, password=self.db_password, host=self.db_host, port=self.db_port
+        self._pool = ThreadedConnectionPool(self.args[0],self.args[1],
+                                            database=config.get('database'),
+                                            user=config.get('user'),
+                                             password=config.get('password'), 
+                                             host=config.get('host'), 
+                                             port=config.get('port'))
 
     def getconn(self):
         current_pid = os.getpid()
@@ -58,7 +66,7 @@ class SafePoolManager:
             self._init()
             LOGGER.info("New id is %s, old id was %s" % (current_pid, self.last_seen_process_id))
             self.last_seen_process_id = current_pid
-        return self._pool.putconn(conn)
+        return self._pool.getconn()
 
 
 class DBUtils:
@@ -66,7 +74,7 @@ class DBUtils:
     insert: DBUtils.insert('insert into [table] values(1,2,3)')
     bulkInsert: DBUtils.bulkInsert('insert into [table] values(%d, %d, %d)', [(1,2,3), (4,5,6)])
     """
-    
+    @staticmethod
     def insert(sql):
         try:
             conn = pool.getconn()
@@ -79,6 +87,7 @@ class DBUtils:
                 conn.rollback()
             return None
 
+    @staticmethod
     def bulkInsert(sql, vals=[]):
         try:
             conn = pool.getconn()
@@ -94,6 +103,7 @@ class DBUtils:
                 conn.rollback()
             return None
 
+    @staticmethod
     def fetchone(sql):
         try:
             conn = pool.getconn()
@@ -110,6 +120,7 @@ class DBUtils:
                 conn.rollback()
             return None
 
+    @staticmethod
     def fetchall(sql):
         try:
             conn = pool.getconn()
@@ -122,3 +133,4 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
+pool = SafePoolManager(config['minconn'], config['maxconn'],test=12232 )
