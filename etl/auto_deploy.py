@@ -5,7 +5,7 @@ etl.auto_deploy -- etl auto deploy script
 
 Use to deploy etl codes to the servers
 
-It defines classes_and_methods
+It defines task_deploy to run shell scripts in hosts.
 
 @author:     dico
 @copyright:  2015 http://www.hunantv.com All rights reserved.
@@ -17,16 +17,32 @@ import os
 
 from optparse import OptionParser
 
-from fabric.api import *
+from fabric.api import run,env,execute,roles
 
 __all__ = []
-__version__ = 0.1
+__version__ = 0.2
 __date__ = '2015-10-23'
-__updated__ = '2015-10-23'
+__updated__ = '2015-10-26'
 
-DEBUG = 0
-TESTRUN = 0
-PROFILE = 0
+DEBUG = 0 # 调试标志
+
+#########################################################################################
+# Usage: auto_deploy.py [options]
+#
+# Options:
+#  --version             show program's version number and exit
+#  -h, --help            show this help message and exit
+#  -s Host, --server=Host
+#                        set deploy host,should be a IP address or
+#                        domain name [default: 127.0.0.1]
+#  -u User, --user=User  set user in the host [default: dingzheng]
+#  -p Port, --port=Port  set the prot of the ssh [default: 22]
+#  -d Directory, --dir=Directory
+#                        set the root directory witch the code will
+#                        deploy in [default: ~/etl/]
+#########################################################################################
+# EX. python auto_deploy.py -s 10.100.5.82 -u dingzheng -p 22 -d /home/dingzheng/etl_test
+#########################################################################################
 
 def main(argv=None):
     '''Command line options.'''
@@ -81,51 +97,16 @@ def main(argv=None):
         return 2
 
 @roles("theserver")
-def task_deploy(dir):
+def task_deploy(root_dir):
     '''发布shell脚本'''
     shell_script = '''
-    
-root_path="''' + dir + '''"
-conf_file=""
-audit_conf_file=""
-log_conf_file=""
-
-while getopts "p:c:a:l:" arg
-do
-    case $arg in
-        p)
-            echo "use deploy dir:$OPTARG"
-            root_path="$OPTARG"
-            ;;
-        c)
-            echo "use conf file:$OPTARG"
-            conf_file="$OPTARG"
-            ;;
-        a)
-            echo "use audit conf file:$OPTARG"
-            audit_conf_file="$OPTARG"
-            ;;
-        l)
-            echo "use log conf file:$OPTARG"
-            log_conf_file="$OPTARG"
-            ;;
-        ?)
-            echo "unknow argument"
-            exit 1
-            ;;
-    esac
-done
-
-
+root_path="''' + root_dir + '''"
 if [ "$root_path" == "" ];then
-    echo "the arg -p must be set"
+    echo "root_path must be set"
     exit 1
 fi
 
-
 [[ $root_path != *"/" ]] && root_path="$root_path/"
-
-
 echo "deploy to dir:$root_path"
 
 git init ${root_path}
@@ -134,26 +115,11 @@ git pull git@git.hunantv.com:Data-S/amble.git
 
 echo "deploy completed"
 
-    '''
+'''
     run(shell_script)
-
 
 
 if __name__ == "__main__":
     if DEBUG:
         sys.argv.append("-h")
-    if TESTRUN:
-        import doctest
-        doctest.testmod()
-    if PROFILE:
-        import cProfile
-        import pstats
-        PROFILE_FILENAME = 'etl.auto_deploy_profile.txt'
-        cProfile.run('main()', PROFILE_FILENAME)
-        STATSFILE = open("profile_stats.txt", "wb")
-        P_STATS = pstats.Stats(PROFILE_FILENAME, stream=STATSFILE)
-        STATS = P_STATS.strip_dirs().sort_stats('cumulative')
-        STATS.print_stats()
-        STATSFILE.close()
-        sys.exit(0)
     sys.exit(main())
