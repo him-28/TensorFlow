@@ -41,6 +41,7 @@ class AdMonitorRunner(object):
             ngx_filename = "{minute}_ad.csv".format(minute=time.minute)
 
             transform_ngx_log(ngx_path, ngx_filename, path, filename)
+            calc_ad_monitor(path, filename)
         elif mode == 'h':
             path = "{prefix}/{year}/{month}/{day}".format({
                     prefix = settings.prefix,
@@ -49,6 +50,7 @@ class AdMonitorRunner(object):
                     day = time.day
                 })
             filename = "{hour}_ad.csv".format(hour=time.hour)
+            agg_hour_file(time)
 
         elif mode == 'd':
             path = "{prefix}/{year}/{month}".format({
@@ -57,13 +59,14 @@ class AdMonitorRunner(object):
                     month = time.month
                 })
             filename = "{day}_ad.csv".format(day=time.day)
-
-        calc_ad_monitor(path, filename)
-
-        if time.minute == 60:
-            agg_hour_file(time)
-        elif time.hour == 24:
             agg_day_file(time)
+
+        #calc_ad_monitor(path, filename)
+
+        #if time.minute == 60:
+        #    agg_hour_file(time)
+        #elif time.hour == 24:
+        #    agg_day_file(time)
 
 
 def run_cli(arguments):
