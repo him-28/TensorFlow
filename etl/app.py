@@ -10,6 +10,62 @@ from etl.logic1.etl_transform_pandas import Etl_Transform_Pandas
 from etl.audit.adlog_format_audit import run_aduit_adlog
 from etl.conf.settings import LOGGER
 
+class AdMonitorRunner(object):
+    def run(self, time, mode='m'):
+        """
+        mode in minute, hour, day
+        """
+        assert type(time) == datetime
+        assert mode in ['m', 'h', 'd']
+
+        path = ""
+        filename = ""
+
+        if mode == 'm':
+            path = "{prefix}/{year}/{month}/{day}/{hour}".format({
+                    prefix = settings.prefix,
+                    year = time.year,
+                    month = time.month,
+                    day = time.day,
+                    hour = time.hour
+                })
+            filename = "{minute}_ad.csv".format(minute=time.minute)
+
+            ngx_path = "{prefix}/{year}/{month}/{day}/{hour}".format({
+                    prefix = settings.ngx_prefix,
+                    year = time.year,
+                    month = time.month,
+                    day = time.day,
+                    hour = time.hour
+                })
+            ngx_filename = "{minute}_ad.csv".format(minute=time.minute)
+
+            transform_ngx_log(ngx_path, ngx_filename, path, filename)
+        elif mode == 'h':
+            path = "{prefix}/{year}/{month}/{day}".format({
+                    prefix = settings.prefix,
+                    year = time.year,
+                    month = time.month,
+                    day = time.day
+                })
+            filename = "{hour}_ad.csv".format(hour=time.hour)
+
+        elif mode == 'd':
+            path = "{prefix}/{year}/{month}".format({
+                    prefix = settings.prefix,
+                    year = time.year,
+                    month = time.month
+                })
+            filename = "{day}_ad.csv".format(day=time.day)
+
+        calc_ad_monitor(path, filename)
+
+        if time.minute == 60:
+            agg_hour_file(time)
+        elif time.hour == 24:
+            agg_day_file(time)
+
+
 def run_cli(arguments):
     try:
         run_type = arguments[1]
