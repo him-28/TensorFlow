@@ -1,3 +1,8 @@
+data_prefix: "/data1/ad"
+ngx_prefix: "/data1/ad"
+h_delay: 10
+d_delay: 1
+metrics: ['display_poss', 'display', 'impression', 'impression_end', 'click', 'up']
 column_sep: "\t"
 output_column_sep: ","
 pandas:

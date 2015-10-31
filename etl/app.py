@@ -1,148 +1,297 @@
 # encoding:utf-8
 import sys
+import os
+import time
+from datetime import datetime
+
 if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
-from etl.logic0.etl_transform import hour_etl
-from etl.audit.quality_audit import QualityAuditRobot
-from etl.logic0.etl_transform import hour_etl
-from etl.logic0.day_etl_transform import day_etl
-from etl.logic1.etl_transform_pandas import Etl_Transform_Pandas
-from etl.audit.adlog_format_audit import run_aduit_adlog
-from etl.conf.settings import LOGGER
+
+from etl.conf.settings import LOGGER, Config
+from etl.util.datautil import merge_file, transform_ngx_log
+from etl.logic2.calc import calc_ad_monitor
+
+from pdb import set_trace as st
+
+METRICS = Config['metrics']
+
+class AdMonitorRunner(object):
+
+    def concat_output_path(self, path, num, minute):
+        output_paths = {}
+        for metric in METRICS:
+            filename = "logic{num}_{metric}_ad_{minute}.csv".format(
+                    num=num, 
+                    metric=metric,
+                    minute=minute)
+            output_paths.update({ metric: os.path.join(path, filename)})
+
+        return output_paths
+
+    def _job_ready_by_minute(self, now):
+        paths = {}
+        ad_src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
+                prefix = Config["data_prefix"],
+                year = now.year,
+                month = now.month,
+                day = now.day,
+                hour = now.hour
+            )
+        ad_src_filename = "ad_{minute}.csv".format(minute=now.minute)
+
+        paths.update({
+            'ad_src_path': ad_src_path,
+            'ad_src_filename': ad_src_filename
+            })
+
+        ngx_src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
+                prefix = Config["ngx_prefix"],
+                year = now.year,
+                month = now.month,
+                day = now.day,
+                hour = now.hour
+            )
+        ngx_src_filename = "ad_{minute}.csv".format(minute=now.minute)
+
+        paths.update({
+            'ngx_src_path': ngx_src_path,
+            'ngx_src_filename': ngx_src_filename
+            })
+
+
+        ### logic0 path
+        output_paths = self.concat_output_path(ad_src_path, 0, now.minute)
+
+        paths.update({
+            'logic0_output_paths': output_paths
+            })
+
+        ### logic1 path
+        output_paths = self.concat_output_path(ad_src_path, 1, now.minute)
+
+        paths.update({
+            'logic1_output_paths': output_paths
+            })
+
+        ### logic2 path
+        output_paths = self.concat_output_path(ad_src_path, 2, now.minute)
+
+        paths.update({
+            'logic2_output_paths': output_paths
+            })
+
+        return paths
+
+    def _job_ready_by_hour(self, now):
+        src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
+            prefix = Config["data_prefix"],
+            year = now.year,
+            month = now.month,
+            day = now.day,
+            hour = now.hour - 1
+        )
+        output_path = "{prefix}/{year}/{month}/{day}".format(
+            prefix = Config['data_prefix'],
+            year = now.year,
+            month = now.month,
+            day = now. day
+        )
+
+        paths = {}
+        logic0_src_paths = {}
+        logic1_src_paths = {}
+        logic0_output_paths = {}
+        logic1_output_paths = {}
+
+        for metric in METRICS:
+            src_filename0 = "logic0_{metric}_ad_{minute}.csv"
+            src_filename1 = "logic1_{metric}_ad_{minute}.csv"
+            output_filename0 = "logic0_{metric}_ad_{hour}.csv".format(
+                    metric = metric,
+                    hour = now.hour
+                    )
+            output_filename1 = "logic1_{metric}_ad_{hour}.csv".format(
+                    metric = metric,
+                    hour = now.hour
+                    )
+            paths0 = []
+            paths1 = []
+
+            for i in xrange(10, 70, Config["h_delay"]):
+                logic0_filename = src_filename0.format(minute=i, metric=metric)
+                logic1_filename = src_filename1.format(minute=i, metric=metric)
+                paths0.append(os.path.join(src_path, logic0_filename))
+                paths1.append(os.path.join(src_path, logic1_filename))
+
+            logic0_src_paths.update({metric: paths0})
+            logic1_src_paths.update({metric: paths1})
+
+            logic0_output_paths.update({metric: os.path.join(output_path, output_filename0)})
+            logic1_output_paths.update({metric: os.path.join(output_path, output_filename1)})
+
+        paths.update({
+            'logic0_src_paths': logic0_src_paths,
+            'logic1_src_paths': logic1_src_paths,
+            'logic0_output_paths': logic0_output_paths,
+            'logic1_output_paths': logic1_output_paths
+            })
+
+        return paths
+        
+    def _job_ready_by_day(self, now):
+        path = "{prefix}/{year}/{month}".format(
+                prefix = Config["data_prefix"],
+                year = now.year,
+                month = now.month,
+                day = now.day
+            )
+
+        paths = {}
+        logic0_output_paths = {}
+        logic1_output_paths = {}
+
+        for metric in METRICS:
+            filename0 = "{hour}_logic0_{metric}_ad.csv"
+            filename1 = "{hour}_logic1_{metric}_ad.csv"
+            paths0 = []
+            paths1 = []
+
+            for i in xrange(24, Config["d_delay"]):
+                filename0.format(hour=i, metric=metric)
+                filename1.format(hour=i, metric=metric)
+                paths0.append(os.path.join(path, filename0))
+                paths1.append(os.path.join(path, filename1))
+
+            logic0_output_paths.update({metric: paths0})
+            logic1_output_paths.update({metric: paths1})
+
+        paths.update({
+            'logic0_output_paths': logic0_output_paths,
+            'logic1_output_paths': logic1_output_paths
+            })
+        return paths
+
+
+    def run(self, now, mode='m'):
+        """
+        mode in minute, hour, day
+        """
+
+        LOGGER.info("begin running etl job")
+
+        assert type(now) == datetime
+        assert mode in ['m', 'h', 'd']
+
+        if mode == 'm':
+            paths = self._job_ready_by_minute(now)
+
+            LOGGER.info("Job minutes paths: \r\n \
+                    ngx_src_path: %s \r\n \
+                    ngx_src_filename: %s \r\n \
+                    ad_src_path: %s \r\n \
+                    ad_src_filename: %s \r\n \
+                    logic0_output_paths: %s \r\n \
+                    logic1_output_paths: %s \r\n \
+                    logic2_output_paths: %s \r\n" % (paths['ngx_src_path'],
+                        paths['ngx_src_filename'],
+                        paths['ad_src_path'],
+                        paths['ad_src_filename'],
+                        paths['logic0_output_paths'],
+                        paths['logic1_output_paths'],
+                        paths['logic2_output_paths']))
+
+            #Transform nginx log
+            start = time.clock()
+            transform_ngx_log(
+                    paths['ngx_src_path'], 
+                    paths['ngx_src_filename'], 
+                    paths['ad_src_path'],
+                    paths['ad_src_filename'])
+            end = time.clock()
+            LOGGER.info("transform ngx log spent: %f s" % (end-start))
+
+            #Calc File
+            start = time.clock()
+            # TODO: logic0
+            #
+            end = time.clock()
+            LOGGER.info("logic0 calc spent: %f s" % (end-start))
+
+            start = time.clock()
+            # TODO: logic1
+            #
+            end = time.clock()
+            LOGGER.info("logic1 calc spent: %f s" % (end-start))
+
+            # logic2 code
+            start = time.clock()
+            calc_ad_monitor(
+                    paths['ad_src_path'],
+                    paths['ad_src_filename'],
+                    paths['logic0_output_paths'])
+            end = time.clock()
+            LOGGER.info("logic2 calc spent: %f s" % (end-start))
+
+        elif mode == 'h':
+            paths = self._job_ready_by_hour(now)
+
+            LOGGER.info("Job hour paths: \r\n \
+                    logic0_src_paths: %s \r\n \
+                    logic1_src_paths: %s \r\n \
+                    logic0_output_path: %s \r\n \
+                    logic1_output_path: %s \r\n \
+                    " % (paths['logic0_src_paths'],
+                        paths['logic1_src_paths'],
+                        paths['logic0_output_paths'],
+                        paths['logic1_output_paths']))
+            # logic0 code
+            start = time.clock()
+            merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
+            end = time.clock()
+            LOGGER.info("logic0 hour agg spent: %f s" % (end-start))
+
+            # logic1 code
+            start = time.clock()
+            merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
+            end = time.clock()
+            LOGGER.info("logic1 hour agg spend: %f s" % (end-start))
+
+        elif mode == 'd':
+            paths = self._job_ready_by_day(now)
+
+            LOGGER.info("Job day paths: %s " % paths)
+
+            # logic0 code
+            start = time.clock()
+            merge_file(paths['logic0_output_paths'])
+            end = time.clock()
+            LOGGER.info("logic0 hour agg spend: %f s" % (end-start))
+
+            # logic1 code
+            start = time.clock()
+            merge_file(paths['logic1_output_paths'])
+            end = time.clock()
+            LOGGER.info("logic1 hour agg spend: %f s" % (end-start))
+
 
 def run_cli(arguments):
     try:
         run_type = arguments[1]
         args = arguments[2:]
-        if run_type == 'audit':
-            auditLog(args)
-        elif run_type == 'pandas':
-            pandasEtl(args)
-        elif run_type == 'petl':
-            petlEtl(args)
-        elif run_type == 'quality':
-            qualityAudit(args)
-            pass
+        if run_type == 'admonitor':
+            now = datetime.now()
+            AdMonitorRunner().run(now, args[0])
         else:    
             LOGGER.error("app run_type [{0}] is wrong".format(run_type))
             sys.exit(-1)
     except Exception,e:
-        LOGGER.error("run app error,error message:"+e.message)
+        LOGGER.error("run app error,error message:"+ str(e))
         sys.exit(-1)
 
-def qualityAudit(args):
-    '''Args: '20151016' '09' '''
-    if len(args) == 2:
-        rob = QualityAuditRobot(args[0],args[1])
-        rob.scan()
-    else:
-        LOGGER.error("run qualityAudit error,wrong args: "+"\t".join(args))
 
-def auditLog(args):
-    '''Args: '20151016' '09' '''
-    if len(args) == 2:
-        run_aduit_adlog(args[0],args[1])
-    else:
-        LOGGER.error("run audit error,wrong args: "+"\t".join(args))
-
-def pandasEtl(args):
-    ''' Pandas etl Args:'day' '20151016' 'merge' 'new' 'False' or 'hour' '20151016' '09' 'new' 'False' '''
-    etl_type = args[0]
-    if etl_type == 'day' and len(args) == 5:
-        pandasEtlByDay(args[1:])
-    elif etl_type == 'hour' and len(args) == 5:
-        pandasEtlByHour(args[1:])
-    else:
-        LOGGER.error("run pandas etl error,wrong args: "+"\t".join(args))
-        
-def petlEtl(args):
-    ''' Args:'day' '20151016' 'merge' 'new'  or 'hour' '20151016' '09' 'merge' 'new'  '''
-    etl_type = args[0]
-    if etl_type == 'day' and len(args) == 4:
-        #day,type_t,version
-        day_etl(args[1],args[2],args[3])
-    elif etl_type == 'hour' and len(args) == 5:
-        #day,hour,type_t,version
-        hour_etl(args[1],args[2],args[3],args[4])
-    else:
-        LOGGER.error("run petl error,wrong args: "+"\t".join(args))
-    
-def pandasEtlByDay(args):
-    ''' Args: '20151016'  'merge' 'new' 'False' '''
-    start_time = args[0]
-    is_merge = True
-    if len(args) > 1:
-        is_merge = args[1] == 'merge'
-    is_console_print = False
-    is_old = False
-    if len(args) > 2:
-        is_old = args[2] == 'old'
-    if len(args) > 3:
-        is_console_print = args[3] == 'True'
-    etp = Etl_Transform_Pandas(is_merge, is_console_print)
-    if is_old:
-        result1 = etp.compute_old('supply_day_hit', start_time)
-        if result1 == -1:
-            sys.exit(-1)
-        result2 = etp.compute_old('supply_day_reqs', start_time)
-        if result2 == -1:
-            sys.exit(-1)
-        result3 = etp.compute_old('demand_day_ad', start_time)
-        if result3 == -1:
-            sys.exit(-1)
-    else:
-        result1 = etp.compute('supply_day_hit', start_time)
-        if result1 == -1:
-            sys.exit(-1)
-        result2 = etp.compute('supply_day_reqs', start_time)
-        if result2 == -1:
-            sys.exit(-1)
-        result3 = etp.compute('demand_day_ad', start_time)
-        if result3 == -1:
-            sys.exit(-1)
-            
-def pandasEtlByHour(args):
-    ''' Args: '20151016' '09' 'new' 'False' '''
-    date = args[0]
-    hour = args[1]
-    is_old = False
-    if len(args) > 2:
-        is_old = args[2] == 'old'
-    is_console_print = False
-    if len(args) > 3:
-        is_console_print = args[3] == 'True'
-    date_hour = date + "." + hour
-    etp = Etl_Transform_Pandas(False, is_console_print)
-    if is_old:
-        result1 = etp.compute_old('supply_hour_hit', date_hour)
-        if result1 == -1:
-            sys.exit(-1)
-        result2 = etp.compute_old('supply_hour_reqs', date_hour)
-        if result2 == -1:
-            sys.exit(-1)
-        result3 = etp.compute_old('demand_hour_ad', date_hour)
-        if result3 == -1:
-            sys.exit(-1)
-    else:
-        result1 = etp.compute('supply_hour_hit', date_hour)
-        if result1 == -1:
-            sys.exit(-1)
-        result2 = etp.compute('supply_hour_reqs', date_hour)
-        if result2 == -1:
-            sys.exit(-1)
-        result3 = etp.compute('demand_hour_ad', date_hour)
-        if result3 == -1:
-            sys.exit(-1)
 if __name__ == '__main__':
     '''
-      Args like 20151016 08 
-            支持 按审计 ,按petl/pandas 按天，按小时，按新/老版本 etl
-       run audit args: 'audit' '20151016' '09'
-       run petl args: 'petl' 'day' '20151016' 'merge' 'new'  
-                        or 'petl' 'hour' '20151016' '09' 'hour' 'new'
-       run pandas args: 'pandas' 'day' '20151016' 'merge' 'new' 'False' 
-                       or 'pandas' 'hour' '20151016' '09' 'new' 'False'
+    args: python app.py ad_monitor m|h|d
     '''
-    #audit 20151016 09
     run_cli(sys.argv)
     
