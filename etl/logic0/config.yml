@@ -1,0 +1,18 @@
+header: ['ip','ty','ur','v','ci','b','rs','l','td','req','s','cp','c','ct','o','e','pf','d','u','net','os','mf','mod','app','ts','si']
+chance_aggre_header: ['b']
+count_aggre_header: ['s','cp','c']
+start_aggre_header: ['s','cp','c']
+end_aggre_header: ['s','cp','c']
+click_aggre_header: ['s','cp','c']
+aggre_header: ['s','cp','c']
+chance_select: "{ty} == 'e' and ({rs} == '0' or {rs}== '1') and {pf} == '010101' "
+count_select: "{ty} == 'e' and {rs} == '0' and {pf} == '010101' "
+start_select: "{ty} == 'p' and {e} == 's' and {pf} == '010101' "
+end_select: "{ty} == 'e' and {e} == 'e' and {pf} == '010101' "
+click_select: "{ty} == 'e' and {e} == 'c' and {pf} == '010101' "
+batch_read_size: 1000005
+display_pos: display_pos
+display: display
+impression: impression
+impression_end: impression_end
+click: click
