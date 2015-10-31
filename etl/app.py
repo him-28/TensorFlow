@@ -10,6 +10,7 @@ if 'amble' not in sys.modules and __name__ == '__main__':
 from etl.conf.settings import LOGGER, Config
 from etl.util.datautil import merge_file, transform_ngx_log
 from etl.logic2.calc import calc_ad_monitor
+from etl.logic1.ad_transform_pandas import AdTransformPandas
 
 from pdb import set_trace as st
 
@@ -218,8 +219,12 @@ class AdMonitorRunner(object):
             LOGGER.info("logic0 calc spent: %f s" % (end-start))
 
             start = time.clock()
-            # TODO: logic1
-            #
+            # logic1 code
+            atp = AdTransformPandas(True)
+            atp.calculate(
+                    paths['ad_src_path'],
+                    paths['ad_src_filename'],
+                    paths['logic0_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 calc spent: %f s" % (end-start))
 
