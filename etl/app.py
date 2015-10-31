@@ -11,6 +11,7 @@ from etl.conf.settings import LOGGER, Config
 from etl.util.datautil import merge_file, transform_ngx_log
 from etl.logic2.calc import calc_ad_monitor
 from etl.logic1.ad_transform_pandas import AdTransformPandas
+from etl.logic0.ad_etl_transform import calc_etl
 
 from pdb import set_trace as st
 
@@ -213,8 +214,11 @@ class AdMonitorRunner(object):
 
             #Calc File
             start = time.clock()
-            # TODO: logic0
-            #
+            #  logic0
+            calc_etl(
+                    paths['ad_src_path'],
+                    paths['ad_src_filename'],
+                    paths['logic0_output_paths'])
             end = time.clock()
             LOGGER.info("logic0 calc spent: %f s" % (end-start))
 
