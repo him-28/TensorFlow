@@ -35,7 +35,7 @@ read_csv_chunk: 100000
 db_commit_chunk: 10000
 
 algorithm: 
-    display_pos: #展示机会
+    display_poss: #展示机会
         group_item: 'b' #播放器ID
         condition:
             count: [

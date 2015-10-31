@@ -3,19 +3,17 @@
 使用Pandas处理CSV文件数据
 '''
 import os
-import numpy as np
-import pandas as pd
-import datetime as dt
-import logging
 import sys
-
-from etl.util import init_log
-LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
-
+import logging
+import datetime as dt
 
 import yaml
+import numpy as np
+import pandas as pd
 
-PLACEHOLDER = -9
+from etl.util import init_log
+
+LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
 
 def split_header(names, header):
     '''转换配置里的数据类型、列名'''
@@ -95,8 +93,10 @@ class AdTransformPandas(object):
 
     def __calculate(self, trans_type, output_file_path, input_path, input_filename):
         ''' 计算一个维度的数据 '''
-        self.__configure(trans_type, output_file_path, input_path, input_filename)
+        conf_result = self.__configure(trans_type, output_file_path, input_path, input_filename)
 
+        if not conf_result:
+            return -1
         exec_start_time = dt.datetime.now()  # 开始执行时间
         try:
             is_load_success = self.__load_file()
@@ -130,13 +130,17 @@ class AdTransformPandas(object):
         self.__put(("names", "dtype"), split_header(cnf.get("names"), cnf.get("header")))
         self.__put(("chunk", "db_chunk"), (cnf.get("read_csv_chunk"), cnf.get("db_commit_chunk")))
         self.__put("tmp_file_path", output_file_path + ".tmp")
-        self.__configure_algorithm(trans_type, cnf)
+        config_result = self.__configure_algorithm(trans_type, cnf)
         LOG.info("configure complete, retrieve params:" + str(self.params))
+        return config_result
 
     def __configure_algorithm(self, trans_type, cnf):
         '''各个维度的配置'''
         algorithm = cnf.get("algorithm")
         trans_type_cnf = algorithm.get(trans_type)
+        if trans_type_cnf is None:
+            LOG.error("can not find algorithm type in config:" + trans_type)
+            return False
         self.__put("condition", trans_type_cnf.get("condition"))
         self.__put("group_item", trans_type_cnf.get("group_item"))
         sum_names = []
@@ -145,6 +149,7 @@ class AdTransformPandas(object):
         for key in self.__get('condition').keys():
             sum_names.append(key)
         self.__put("sum_names", sum_names)
+        return True
 
     def __load_file(self):
         '''加载文件并计算'''
@@ -227,7 +232,6 @@ class AdTransformPandas(object):
 
     def __save_result_file(self, merge_result):
         '''保存计算结果到文件'''
-        #merge_result = merge_result[merge_result[0] != PLACEHOLDER]
         LOG.info("save result to csv file:" + self.__get('output_file_path'))
         merge_result.to_csv(self.__get('output_file_path'), sep=\
                 self.__get('output_column_sep'), header=False)
