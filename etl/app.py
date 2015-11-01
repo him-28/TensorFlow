@@ -8,6 +8,7 @@ if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
 
 from etl.conf.settings import LOGGER, Config
+from etl.util import path_chk_or_create
 from etl.util.datautil import merge_file, transform_ngx_log
 from etl.logic2.calc import calc_ad_monitor
 from etl.logic1.ad_transform_pandas import AdTransformPandas
@@ -16,8 +17,18 @@ from etl.logic0.ad_etl_transform import calc_etl
 from pdb import set_trace as st
 
 METRICS = Config['metrics']
+M_Dir = "{prefix}/{year}/{month}/{day}/{hour}"
+H_Dir = "{prefix}/{year}/{month}/{day}"
+D_Dir = "{prefix}/{year}/{month}"
+M_Logic0_Filename = "logic0_{metric}_ad_{minute}"
+H_Logic0_Filename = "logic0_{metric}_ad_{hour}"
+D_Logic0_Filename = "logic0_{metric}_ad_{day}"
+M_Logic1_Filename = "logic1_{metric}_ad_{minute}"
+H_Logic1_Filename = "logic1_{metric}_ad_{hour}"
+D_Logic1_Filename = "logic1_{metric}_ad_{day}"
 
 class AdMonitorRunner(object):
+
 
     def concat_output_path(self, path, num, minute):
         output_paths = {}
@@ -26,7 +37,9 @@ class AdMonitorRunner(object):
                     num=num, 
                     metric=metric,
                     minute=minute)
-            output_paths.update({ metric: os.path.join(path, filename)})
+
+            tmp_path = os.path.join(path, filename)
+            output_paths.update({ metric: tmp_path})
 
         return output_paths
 
@@ -39,6 +52,9 @@ class AdMonitorRunner(object):
                 day = now.day,
                 hour = now.hour
             )
+
+        path_chk_or_create(ad_src_path)
+
         ad_src_filename = "ad_{minute}.csv".format(minute=now.minute)
 
         paths.update({
@@ -85,19 +101,16 @@ class AdMonitorRunner(object):
         return paths
 
     def _job_ready_by_hour(self, now):
-        src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
-            prefix = Config["data_prefix"],
-            year = now.year,
-            month = now.month,
-            day = now.day,
-            hour = now.hour - 1
-        )
-        output_path = "{prefix}/{year}/{month}/{day}".format(
-            prefix = Config['data_prefix'],
-            year = now.year,
-            month = now.month,
-            day = now. day
-        )
+        output_path = H_Dir.format(prefix=Config["data_prefix"],
+                                year=now.year,
+                                month=now.month,
+                                day=now.day)
+
+        src_path = M_Dir.format(prefix=Config["data_prefix"],
+                                year=now.year,
+                                month=now.month,
+                                day=now.day,
+                                hour=now.hour-1)
 
         paths = {}
         logic0_src_paths = {}
@@ -106,24 +119,17 @@ class AdMonitorRunner(object):
         logic1_output_paths = {}
 
         for metric in METRICS:
-            src_filename0 = "logic0_{metric}_ad_{minute}.csv"
-            src_filename1 = "logic1_{metric}_ad_{minute}.csv"
-            output_filename0 = "logic0_{metric}_ad_{hour}.csv".format(
-                    metric = metric,
-                    hour = now.hour
-                    )
-            output_filename1 = "logic1_{metric}_ad_{hour}.csv".format(
-                    metric = metric,
-                    hour = now.hour
-                    )
             paths0 = []
             paths1 = []
+            output_filename0 = H_Logic0_Filename.format(metric=metric, hour=now.hour)
+            output_filename1 = H_Logic1_Filename.format(metric=metric, hour=now.hour)
 
             for i in xrange(10, 70, Config["h_delay"]):
-                logic0_filename = src_filename0.format(minute=i, metric=metric)
-                logic1_filename = src_filename1.format(minute=i, metric=metric)
-                paths0.append(os.path.join(src_path, logic0_filename))
-                paths1.append(os.path.join(src_path, logic1_filename))
+                filename0 = M_Logic0_Filename.format(minute=i, metric=metric)
+                filename1 = M_Logic1_Filename.format(minute=i, metric=metric)
+
+                paths0.append(os.path.join(src_path, filename0))
+                paths1.append(os.path.join(src_path, filename1))
 
             logic0_src_paths.update({metric: paths0})
             logic1_src_paths.update({metric: paths1})
@@ -141,33 +147,42 @@ class AdMonitorRunner(object):
         return paths
         
     def _job_ready_by_day(self, now):
-        path = "{prefix}/{year}/{month}".format(
-                prefix = Config["data_prefix"],
-                year = now.year,
-                month = now.month,
-                day = now.day
-            )
+        output_path = D_Dir.format(prefix=Config["data_prefix"],
+                                year=now.year,
+                                month=now.month)
 
+        src_path = H_Dir.format(prefix=Config["data_prefix"],
+                                year=now.year,
+                                month=now.month,
+                                day=now.day-1)
         paths = {}
+        logic0_src_paths = {}
+        logic1_src_paths = {}
         logic0_output_paths = {}
         logic1_output_paths = {}
 
         for metric in METRICS:
-            filename0 = "{hour}_logic0_{metric}_ad.csv"
-            filename1 = "{hour}_logic1_{metric}_ad.csv"
             paths0 = []
             paths1 = []
+            output_filename0 = D_Logic0_Filename.format(metric=metric, day=now.day)
+            output_filename1 = D_Logic1_Filename.format(metric=metric, day=now.day)
 
             for i in xrange(24, Config["d_delay"]):
-                filename0.format(hour=i, metric=metric)
-                filename1.format(hour=i, metric=metric)
-                paths0.append(os.path.join(path, filename0))
-                paths1.append(os.path.join(path, filename1))
+                filename0 = H_Logic0_Filename.format(hour=i, metric=metric)
+                filename1 = H_Logic1_Filename.format(hour=i, metric=metric)
 
-            logic0_output_paths.update({metric: paths0})
-            logic1_output_paths.update({metric: paths1})
+                paths0.append(os.path.join(src_path, filename0))
+                paths1.append(os.path.join(src_path, filename1))
+
+            logic0_src_paths.update({metric: paths0})
+            logic1_src_paths.update({metric: paths1})
+
+            logic0_output_paths.update({metric: os.path.join(output_path, output_filename0)})
+            logic1_output_paths.update({metric: os.path.join(output_path, output_filename1)})
 
         paths.update({
+            'logic0_src_paths': logic0_src_paths,
+            'logic1_src_paths': logic1_src_paths,
             'logic0_output_paths': logic0_output_paths,
             'logic1_output_paths': logic1_output_paths
             })
