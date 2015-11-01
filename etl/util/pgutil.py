@@ -147,7 +147,7 @@ SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 class LoadUtils:
     
     @staticmethod
-    def fromCsvtodb(filepath,conn,tablename,cols=None,commit=False,bulkread_size=1000,split_char='\t'):
+    def fromCsvtodb(filepath,tablename,conn=pool.getconn(),cols=None,commit=False,bulkread_size=1000,split_char='\t'):
         '''
         commit = false 表示全部插入成功后在提交，否则表示每次插入都会提交
         cols = None 表示 columns从文件中读取，否则以给定list作为columns
@@ -186,7 +186,7 @@ class LoadUtils:
         _placeholders = ','.join(['%s']*len(cols))
         sql = SQL_INSERT_QUERY % (_quote(tablename),colnames,_placeholders)
         try:
-            DBUtils.bulkInsert(sql,table,conn, commit,30)
+            DBUtils.bulkInsert(sql,table,conn, commit)
         except Exception,e:
             LOGGER.error("insert to db error,message:'%s'"%e.message)
             raise e
