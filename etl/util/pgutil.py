@@ -6,7 +6,7 @@ import psycopg2
 from psycopg2.pool import ThreadedConnectionPool
 
 from etl.conf.settings import LOGGER
-from etl.conf.settings import AuditConfig as CONFIG
+from etl.conf.settings import Config as CONFIG
 
 
 class DBConfig:
@@ -14,7 +14,7 @@ class DBConfig:
     @staticmethod
     def defaultConfig():
         return {
-            'database':  'test2',
+            'database':  'postgres',
             'user': 'postgres',
             'password': 'adpg@150909',
             'host': '10.100.5.80',
@@ -67,8 +67,8 @@ class SafePoolManager:
             LOGGER.info("New id is %s, old id was %s" % (current_pid, self.last_seen_process_id))
             self.last_seen_process_id = current_pid
         return self._pool.getconn()
-
-
+    
+pool = SafePoolManager(config['minconn'], config['maxconn'])
 class DBUtils:
     """
     insert: DBUtils.insert('insert into [table] values(1,2,3)')
@@ -88,15 +88,23 @@ class DBUtils:
             return None
 
     @staticmethod
-    def bulkInsert(sql, vals=[]):
+    def bulkInsert(sql,vals=[],dbconn=None,commit=True,bulk_size=1000):
+        '''
+        bulkInsert: DBUtils.bulkInsert('insert into [table] values(%d, %d, %d)', [(1,2,3), (4,5,6)])
+        '''
         try:
-            conn = pool.getconn()
+            if dbconn:
+                conn = dbconn
+            else:
+                conn = pool.getconn()
+                
             cur = conn.cursor()
 
-            for i in xrange(0, len(vals), 1000):
-                cur.executemany(sql, vals[i:i+1000])
+            for i in xrange(0, len(vals), bulk_size):
+                cur.executemany(sql, vals[i:i+bulk_size])
+                
+            if commit:
                 conn.commit()
-
         except psycopg2.DatabaseError, e:
             LOGGER.error('pg bulk insert %d result error: %s' % (len(vals), e))
             if conn:
@@ -133,4 +141,60 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
-pool = SafePoolManager(config['minconn'], config['maxconn'],test=12232 )
+        
+SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
+
+class LoadUtils:
+    
+    @staticmethod
+    def fromCsvtodb(filepath,conn,tablename,cols=None,commit=False,bulkread_size=1000,split_char='\t'):
+        '''
+        commit = false 表示全部插入成功后在提交，否则表示每次插入都会提交
+        cols = None 表示 columns从文件中读取，否则以给定list作为columns
+        
+        '''
+        if not filepath or not os.path.exists(filepath):
+            LOGGER.error("file path not exists:'%s'"%filepath)
+            raise Exception("file path not exists:'%s'"%filepath)
+        try:
+            read_buffer=[]
+            with open(filepath,'rb') as fr:
+                for line in fr:
+                    row = [i.strip() for i in line.strip().split(split_char)]
+                    if not cols:
+                        cols=row
+                        continue
+                    read_buffer.append(row)
+                    if len(read_buffer) >= bulkread_size:
+                        LoadUtils.todb(read_buffer,conn,tablename,cols,commit)
+                        read_buffer=[]
+            LoadUtils.todb(read_buffer,conn,tablename,cols,commit)
+            if not commit:       
+                conn.commit()
+        except Exception,e:
+            LOGGER.error("load file to db error,message: %s"%e.message)
+            import traceback
+            ex = traceback.format_exc()
+            LOGGER.error(ex)
+            if conn:
+                conn.rollback()
+                    
+    @staticmethod
+    def todb(table,conn,tablename,cols,commit):
+        _cols = [_quote(col) for col in cols]
+        colnames = ','.join(_cols)
+        _placeholders = ','.join(['%s']*len(cols))
+        sql = SQL_INSERT_QUERY % (_quote(tablename),colnames,_placeholders)
+        try:
+            DBUtils.bulkInsert(sql,table,conn, commit,30)
+        except Exception,e:
+            LOGGER.error("insert to db error,message:'%s'"%e.message)
+            raise e
+        
+def _quote(s):
+    quotechar='"'
+    return quotechar + s + quotechar
+
+if __name__ == '__main__':
+    LoadUtils.fromCsvtodb("D:/tmp_file/testfile.csv", pool.getconn(), "test2", commit=False,bulkread_size=100, split_char=',')
+    
