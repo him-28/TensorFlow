@@ -20,12 +20,12 @@ METRICS = Config['metrics']
 M_Dir = "{prefix}/{year}/{month}/{day}/{hour}"
 H_Dir = "{prefix}/{year}/{month}/{day}"
 D_Dir = "{prefix}/{year}/{month}"
-M_Logic0_Filename = "logic0_{metric}_ad_{minute}"
-H_Logic0_Filename = "logic0_{metric}_ad_{hour}"
-D_Logic0_Filename = "logic0_{metric}_ad_{day}"
-M_Logic1_Filename = "logic1_{metric}_ad_{minute}"
-H_Logic1_Filename = "logic1_{metric}_ad_{hour}"
-D_Logic1_Filename = "logic1_{metric}_ad_{day}"
+M_Logic0_Filename = "logic0_{metric}_ad_{minute}.csv"
+H_Logic0_Filename = "logic0_{metric}_ad_{hour}.csv"
+D_Logic0_Filename = "logic0_{metric}_ad_{day}.csv"
+M_Logic1_Filename = "logic1_{metric}_ad_{minute}.csv"
+H_Logic1_Filename = "logic1_{metric}_ad_{hour}.csv"
+D_Logic1_Filename = "logic1_{metric}_ad_{day}.csv"
 
 class AdMonitorRunner(object):
 
@@ -167,7 +167,7 @@ class AdMonitorRunner(object):
             output_filename0 = D_Logic0_Filename.format(metric=metric, day=now.day)
             output_filename1 = D_Logic1_Filename.format(metric=metric, day=now.day)
 
-            for i in xrange(24, Config["d_delay"]):
+            for i in xrange(1, 24, Config["d_delay"]):
                 filename0 = H_Logic0_Filename.format(hour=i, metric=metric)
                 filename1 = H_Logic1_Filename.format(hour=i, metric=metric)
 
@@ -283,17 +283,26 @@ class AdMonitorRunner(object):
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
 
-            LOGGER.info("Job day paths: %s " % paths)
+            LOGGER.info("Job hour paths: \r\n \
+                    logic0_src_paths: %s \r\n \
+                    logic1_src_paths: %s \r\n \
+                    logic0_output_path: %s \r\n \
+                    logic1_output_path: %s \r\n \
+                    " % (paths['logic0_src_paths'],
+                        paths['logic1_src_paths'],
+                        paths['logic0_output_paths'],
+                        paths['logic1_output_paths']))
+
 
             # logic0 code
             start = time.clock()
-            merge_file(paths['logic0_output_paths'])
+            merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
             end = time.clock()
             LOGGER.info("logic0 hour agg spend: %f s" % (end-start))
 
             # logic1 code
             start = time.clock()
-            merge_file(paths['logic1_output_paths'])
+            merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 hour agg spend: %f s" % (end-start))
 
