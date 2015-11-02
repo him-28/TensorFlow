@@ -1,3 +1,4 @@
+#encoding=utf-8
 """
 
 This module provides some simple utilities for validating data contained in CSV
@@ -39,8 +40,7 @@ You can use the CSVValidator class to dynamically construct a validator, e.g.::
     validator.add_record_length_check('EX2', 'unexpected record length')
 
     # some simple value checks
-    validator.add_value_check('study_id', int,
-                              'EX3', 'study id must be an integer')
+    validator.add_value_check('study_id', int, 'EX3', 'study id must be an integer')
     validator.add_value_check('patient_id', int,
                               'EX4', 'patient id must be an integer')
     validator.add_value_check('gender', enumeration('M', 'F'),
@@ -970,6 +970,35 @@ def search_pattern(regex):
             raise ValueError(v)
     return checker
 
+def unsignedint_inclusive(clo):
+    """
+    检查正整数类型
+    """
+    def checker(v):
+        print clo
+        if type(v) !=int and int(v) <= 0:
+            print clo
+            raise ValueError(v)
+    return checker
+
+def str_len(len):
+    def checker(v):
+        if len(v) != len:
+            raise ValueError(v)
+    return checker
+
+def str_len_range(*args):
+    assert len(args) > 0, 'at least one argument is required'
+    if len(args) == 1:
+        # assume the first argument defines the membership
+        members = args[0]
+    else:
+        # assume the arguments are the members
+        members = args
+    def checker(value):
+        if len(value) not in members:
+            raise ValueError(value)
+    return checker
 
 def number_range_inclusive(min, max, type=float):
     """
@@ -1044,6 +1073,63 @@ def datetime_range_exclusive(min, max, format):
         if dv <= dmin or dv >= dmax:
             raise ValueError(v)
     return checker
+
+def emit_problems(problems, emiter, limit=0):
+    from pdb import set_trace as st
+
+    counts = dict()
+
+    total = set()
+
+    column_total = dict()
+
+    sample = list()
+
+    for i, p in enumerate(problems):
+        if limit and i>= limit:
+            break #bail out
+
+        code = p['code']
+        if code in counts:
+            counts[code] += 1
+        else:
+            counts[code] = 1
+
+        if p.has_key('row') and p.has_key('field'):
+
+            if len(sample) < 10:
+                m = "row: %d, field: %s, value: %s\r\nrecord: %s" %(
+                                p['row'],
+                                p['field'],
+                                p['value'],
+                                p['record']
+                            )
+
+
+                sample.append(m)
+
+            total.add(p['row'])
+        
+            field_count = column_total.get(p['field'], 0)
+            column_total.update({
+                    p['field']: field_count+1
+                })
+
+    msg = "%d rows record, found %d rows problem in total\r\n" % (
+                1,
+                len(total),
+            )
+
+    for column, t in column_total.items():
+        msg = msg + ("field: %s, problems: %s\r\n\r\n" % (column, t))
+
+    for s in sample:
+        msg = msg + s + "\r\n\r\n"
+
+            
+
+    emiter(msg, color='red')
+    return counts
 
 
 def write_problems(problems, file, summarize=False, limit=0):

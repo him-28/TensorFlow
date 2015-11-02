@@ -10,6 +10,7 @@ if 'amble' not in sys.modules and __name__ == '__main__':
 from etl.conf.settings import LOGGER, Config
 from etl.util import path_chk_or_create
 from etl.util.datautil import merge_file, transform_ngx_log
+from etl.audit.admonitor_audit import main
 from etl.logic2.calc import calc_ad_monitor
 from etl.logic1.ad_transform_pandas import AdTransformPandas
 from etl.logic0.ad_etl_transform import calc_etl
@@ -326,5 +327,6 @@ if __name__ == '__main__':
     '''
     args: python app.py ad_monitor m|h|d
     '''
-    run_cli(sys.argv)
+    #run_cli(sys.argv)
+    main('util/ad.csv')
     
