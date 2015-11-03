@@ -8,7 +8,6 @@ from etl.util import init_log
 LOG = init_log.init("util/logger.conf", 'mergeLogger')
 
 def transform_ngx_log(ngx_path, ngx_filename, path, filename):
-    ngx_fmt = r"%s"
     pass
 
 def merge_file(input_paths, output_files):
@@ -66,19 +65,3 @@ def merge_file(input_paths, output_files):
         df1 = df1.groupby(_group_item).sum()
         df1.to_csv(output_filename, sep="\t", na_rep=" ", header=False)
 
-if __name__ == "__main__":
-    merge_file({
-                "click":
-                [
-                    "F:\\data1\\ad\\2015\\10\\31\\16\\logic1_click_ad_38.csv",
-                    "F:\\data1\\ad\\2015\\10\\31\\16\\logic1_click_ad_45.csv"
-                ],
-                "display":
-                [
-                    "F:\\data1\\ad\\2015\\10\\31\\16\\logic1_display_ad_38.csv",
-                    "F:\\data1\\ad\\2015\\10\\31\\16\\logic1_display_ad_45.csv"
-                ]
-            }, {
-                "click":"F:\\data1\\ad\\2015\\10\\31\\16\\logic1_click_ad_merge.csv",
-                "display":"F:\\data1\\ad\\2015\\10\\31\\16\\logic1_display_ad_merge.csv"
-                })
