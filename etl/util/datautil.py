@@ -7,8 +7,44 @@ import pandas as pd
 from etl.util import init_log
 LOG = init_log.init("util/logger.conf", 'mergeLogger')
 
+def req_parser(dataframe):
+    #TODO: 转化两个地址下不同nginx日志到目标文件
+    #extract request, body fileds
+    ad_res_parser = ""
+    ad_event_parser = ""
+    return None
+
 def transform_ngx_log(ngx_path, ngx_filename, path, filename):
-    pass
+    """
+    nginx log 配置:
+    log_format post_tracking '$remote_addr^A$http_x_forwarded_for^A$host^A[$time_local]^A'
+                             '$request_time^A$http_referer^A$http_user_agent^A^A$server_addr^A$request_length^A'
+                             '$status^A$request^A$request_body';
+
+    示例：
+    curl http://centos/test\?a\=3\&b\=4 -v -d 'mac=dd:dd:ff:dd:dd&d=dfadfasdfas&p=s'
+    log:
+    10.211.55.2^A-^Acentos^A06/Sep/2015:06:25:31 -0400^A0.001^A-^Acurl/7.43.0^A-^A10.211.55.4^A188^A200^APOST /test?a=3&b=4 HTTP/1.1^Amac=dd:dd:ff:dd:dd&d=dfadfasdfas&p=s
+    """
+    f = os.path.join(ngx_path, ngx_filename)
+
+    assert os.path.exists(f)
+    
+    ngx_header = ['remote_addr', 'http_x_forwarded_for', 'host', 'time_local', 'request_time' \
+            'http_referer', 'http_user_agent', 'server_addr', 'request_length', 'status', \
+            'request', 'request_body']
+
+    dst_header = []
+
+    # read file from nginx path
+
+    df = pd.read_csv(names=ngx_header, sep="^A", encoding="utf-8", header=False)
+    df1 = req_parser(df)
+
+    #Store new columns file
+    t_f = os.path.join(path, filename)
+    path_chk_or_create(t_f)
+    df1.to_csv(t_f, sep="\t", na_rep=" ", header=True)
 
 def merge_file(input_paths, output_files):
     """
