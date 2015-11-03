@@ -1001,7 +1001,7 @@ class ADMonitorFactory(object):
             'request_res': results,
             'ad_list': ad_list,
             'time_delay': time_delay,
-            'reqest_str': reqs,
+            'request_str': reqs,
             'slot_id': slot_ids,
             'compaign_id': compaign_ids,
             'creator_id': creator_ids,
@@ -1024,7 +1024,7 @@ class ADMonitorFactory(object):
 
 
         df1 = df.reindex(columns=['ip', 'province','city','ad_event_type', 'url', 'video_id', 'playlist_id', 'board_id', 'request_res', 'ad_list', 'time_delay',
-                                   'reqest_str', 'slot_id', 'compaign_id', 'creator_id', 'video_play_time', 'order', 'group_id', 'play_event', 'pf', 'device_id',
+                                   'request_str', 'slot_id', 'compaign_id', 'creator_id', 'video_play_time', 'order', 'group_id', 'play_event', 'pf', 'device_id',
                                    'uid', 'net', 'os', 'manufacturer', 'model', 'app', 'timestamp', 'session_id','tag'])
 
         df1.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
