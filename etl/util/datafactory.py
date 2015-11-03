@@ -950,8 +950,8 @@ class ADMonitorFactory(object):
         si = []
         tags = []
 
-        ip_util=IP_Util(ipb_filepath="IPB(1).csv",
-                    city_filepath="city_province_2.csv")
+        ip_util=IP_Util(ipb_filepath="IPB.csv",
+                    city_filepath="city_province.csv")
         from pdb import set_trace as st
         for i in range(size):
             _ip = gen_ipaddr()
