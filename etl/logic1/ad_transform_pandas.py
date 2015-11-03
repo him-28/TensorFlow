@@ -7,13 +7,14 @@ import sys
 import logging
 import datetime as dt
 
-import yaml
 import numpy as np
 import pandas as pd
 
 from etl.util import init_log
+from etl.conf.settings import MONITOR_CONFIGS as CNF
 
 LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
+NA_REP = " "
 
 def split_header(names, header):
     '''转换配置里的数据类型、列名'''
@@ -26,6 +27,25 @@ def split_header(names, header):
             target_dtype[name] = np.string0
     return names, target_dtype
 
+
+def filter_chunk(dataframe, key, opt, val):
+    '''根据条件过滤数据集'''
+    LOG.info("filter column: " + key + opt + str(val))
+    if '==' == opt:
+        dataframe = dataframe[dataframe[key] == val]
+    elif '!=' == opt:
+        dataframe = dataframe[dataframe[key] != val]
+    elif "in" == opt:
+        dataframe = dataframe[dataframe[key].isin(val)]
+    elif "<" == opt:
+        dataframe = dataframe[dataframe[key] < val]
+    elif ">" == opt:
+        dataframe = dataframe[dataframe[key] > val]
+    elif "<=" == opt:
+        dataframe = dataframe[dataframe[key] <= val]
+    elif "<=" == opt:
+        dataframe = dataframe[dataframe[key] >= val]
+    return dataframe
 
 class AdTransformPandas(object):
     """使用Pandas处理CSV文件数据"""
@@ -43,9 +63,9 @@ class AdTransformPandas(object):
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据
-        @param alg_file: 统计指标、输出文件路径
         @param input_path: 输入路径
         @param input_filename: 输入文件名
+        @param alg_file: 统计指标、输出文件路径
         @return: -1 失败 0 成功
         '''
         exec_start_time = dt.datetime.now()  # 开始执行时间
@@ -122,15 +142,14 @@ class AdTransformPandas(object):
 
     def __configure(self, trans_type, output_file_path, input_path, input_filename):
         '''配置参数'''
-        cnf = yaml.load(file("logic1/ad_config.yml"))
         self.__put(("input_file_path", "output_file_path"), \
                     (input_path + input_filename, output_file_path))
-        self.__put("column_sep", cnf.get("column_sep"))
-        self.__put("output_column_sep", cnf.get("output_column_sep"))
-        self.__put(("names", "dtype"), split_header(cnf.get("names"), cnf.get("header")))
-        self.__put(("chunk", "db_chunk"), (cnf.get("read_csv_chunk"), cnf.get("db_commit_chunk")))
+        self.__put("input_column_sep", CNF.get("input_column_sep"))
+        self.__put("output_column_sep", CNF.get("output_column_sep"))
+        self.__put(("names", "dtype"), split_header(CNF.get("header"), CNF.get("header_type")))
+        self.__put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
         self.__put("tmp_file_path", output_file_path + ".tmp")
-        config_result = self.__configure_algorithm(trans_type, cnf)
+        config_result = self.__configure_algorithm(trans_type, CNF)
         LOG.info("configure complete, retrieve params:" + str(self.params))
         return config_result
 
@@ -148,6 +167,7 @@ class AdTransformPandas(object):
             sum_names.append(item)
         for key in self.__get('condition').keys():
             sum_names.append(key)
+            self.__get("dtype")[key] = np.int64
         self.__put("sum_names", sum_names)
         return True
 
@@ -157,14 +177,13 @@ class AdTransformPandas(object):
         LOG.info('load file:' + input_file_path)
         if os.path.exists(input_file_path):
             # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-            data_chunks = pd.read_csv(input_file_path, sep=self.__get('column_sep'), \
-                            names=self.__get('names'), dtype=self.__get('dtype'), \
-                            header=None, chunksize=self.__get('chunk'), index_col=False)
+            data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
+                            dtype=self.__get('dtype'), index_col=False, \
+                            chunksize=self.__get('chunk'))
             self.__transform_section(data_chunks)
         else:
             return False
         return True
-
 
     def __transform_section(self, data_chunks):
         '''分段转换数据'''
@@ -185,9 +204,9 @@ class AdTransformPandas(object):
             if not grouped is None:
                 groupframe = pd.DataFrame(grouped)
                 # 保存到临时CSV文件
-                groupframe.to_csv(self.__get('tmp_file_path'), \
-                                   sep=self.__get('output_column_sep'), \
-                                 header=False, na_rep='0', mode="a")
+                groupframe.to_csv(self.__get('tmp_file_path'), header=False, \
+                                 sep=self.__get('output_column_sep'), \
+                                 na_rep=NA_REP, mode="a", index=True)
             elif not os.path.exists(self.__get('tmp_file_path')):  # 创建一个空文件
                 tmp_file = os.open(self.__get('tmp_file_path'), os.O_CREAT)
                 os.close(tmp_file)
@@ -196,7 +215,7 @@ class AdTransformPandas(object):
 
         LOG.info("save to tmp file : " + self.__get('tmp_file_path'))
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
-        LOG.info ('transform!')
+        LOG.info('transform!')
 
     def __calculate_algorithm(self, grouped, column_name, relations, tmp_chunk):
         '''根据关系规则Group分段数据，把分段Group结果合并'''
@@ -205,21 +224,13 @@ class AdTransformPandas(object):
             key = rel[0]
             opt = rel[1]
             val = rel[2]
-            if '==' == opt:
-                LOG.info("filter column: " + key + "==" + str(val))
-                tmp_chunk = tmp_chunk[tmp_chunk[key] == val]
-            elif '!=' == opt:
-                LOG.info("filter column: " + key + "!=" + str(val))
-                tmp_chunk = tmp_chunk[tmp_chunk[key] != val]
-            elif "in" == opt:
-                LOG.info("filter column: " + key + " in " + str(val))
-                tmp_chunk = tmp_chunk[tmp_chunk[key].isin(val)]
+            tmp_chunk = filter_chunk(tmp_chunk, key, opt, val)
         LOG.info("merge column result: " + column_name)
 
         if len(tmp_chunk) == 0:
             return None
 
-        if column_name == 'count':
+        if column_name == 'total':
             if grouped is None:
                 grouped = tmp_chunk.groupby(self.__get('group_item')).size()
             else:
@@ -230,11 +241,12 @@ class AdTransformPandas(object):
             return None
         return grouped
 
+
     def __save_result_file(self, merge_result):
         '''保存计算结果到文件'''
         LOG.info("save result to csv file:" + self.__get('output_file_path'))
         merge_result.to_csv(self.__get('output_file_path'), sep=\
-                self.__get('output_column_sep'), header=False)
+                self.__get('output_column_sep'), header=True)
 
     def __insert(self, merge_result):
         '''处理数据插入数据库'''

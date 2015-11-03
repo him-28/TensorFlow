@@ -60,46 +60,48 @@ beta: #测试环境
             display_poss: #广告位展示机会
                 group_item: ['board_id','pf']
                 condition:
-                    count: [
+                    total: [
                         ['ad_event_type','==','e'],
                         ['request_res','in',['0','1']],
                         ['tag','<',100]
                     ]
-                display_sale: #售卖展示数
-                group_item: ['board_id','l[0]','pf']
+            display_sale: #售卖展示数
+                #group_item: ['board_id','l[0]','pf']
+                group_item: ['board_id','pf']
                 condition:
-                    count: [
+                    total: [
                         ['ad_event_type','==','e'],
                         ['tag','<',100]
                     ]
-                display: #广告次序实际展示数
-                group_item: ['board_id','pf','l[0].index']
+            display: #广告次序实际展示数
+                #group_item: ['board_id','pf','l[0].index']
+                group_item: ['board_id','pf']
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','e'],
                         ['request_res','==','0'],
                         ['tag','<',100]
                     ]
-                impression: #成功播放数
+            impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','s'],
                         ['tag','<',100]
                     ]
-                impression_end: #播放完成数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+            impression_end: #播放完成数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','e'],
                         ['tag','<',100]
                     ]
-                click: #广告点击数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+            click: #广告点击数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','c'],
                         ['tag','<',100]
@@ -168,49 +170,48 @@ release: #生产环境
             display_poss: #广告位展示机会
                 group_item: ['board_id','pf']
                 condition:
-                    count: [
+                    total: [
                         ['ad_event_type','==','e'],
                         ['request_res','in',['0','1']],
                         ['tag','<',100]
                     ]
-                display_sale: #售卖展示数
+            display_sale: #售卖展示数
                 group_item: ['board_id','l[0]','pf']
                 condition:
-                    count: [
+                    total: [
                         ['ad_event_type','==','e'],
                         ['tag','<',100]
                     ]
-                display: #广告次序实际展示数
+            display: #广告次序实际展示数
                 group_item: ['board_id','pf','l[0].index']
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','e'],
                         ['request_res','==','0'],
                         ['tag','<',100]
                     ]
-                impression: #成功播放数
+            impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','s'],
                         ['tag','<',100]
                     ]
-                impression_end: #播放完成数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+            impression_end: #播放完成数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','e'],
                         ['tag','<',100]
                     ]
-                click: #广告点击数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+            click: #广告点击数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'count': [
+                    'total': [
                         ['ad_event_type','==','p'],
                         ['play_event','==','c'],
                         ['tag','<',100]
                     ]
 
-                    
