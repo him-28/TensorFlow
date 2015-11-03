@@ -3,9 +3,10 @@ current_env: beta
 beta: #测试环境
     monitor: 
         ##########common config########################
-        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
+        na_rep: " "
         ##########petl config##########################
         chance_aggre_header: ['board_id']
         count_aggre_header: ['slot_id','compaign_id','creator_id']
@@ -28,6 +29,8 @@ beta: #测试环境
         header_type: {
             'ip':'string',
             'ad_event_type':'string',
+            'province':'string',
+            'city':'string',
             'url':'string',
             'video_id':'string',
             'playlist_id':'string',
@@ -66,7 +69,6 @@ beta: #测试环境
                         ['tag','<',100]
                     ]
             display_sale: #售卖展示数
-                #group_item: ['board_id','l[0]','pf']
                 group_item: ['board_id','pf']
                 condition:
                     total: [
@@ -110,9 +112,10 @@ beta: #测试环境
 release: #生产环境
     monitor: 
         ##########common config########################
-        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
+        na_rep: " "
         ##########petl config##########################
         chance_aggre_header: ['board_id']
         count_aggre_header: ['slot_id','compaign_id','creator_id']
@@ -135,6 +138,8 @@ release: #生产环境
         ##########pandas config##########################
         header_type: {
             'ip':'string',
+            'province':'string',
+            'city':'string',
             'ad_event_type':'string',
             'url':'string',
             'video_id':'string',
