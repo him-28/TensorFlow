@@ -9,6 +9,7 @@ import random
 import string
 import pandas
 
+from ip_convert import IP_Util
 __all__ = (
     'gen_alpha',
     'gen_alphanumeric',
@@ -949,12 +950,14 @@ class ADMonitorFactory(object):
         si = []
         tags = []
 
-
+        ip_util=IP_Util(ipb_filepath="IPB(1).csv",
+                    city_filepath="city_province_2.csv")
         from pdb import set_trace as st
         for i in range(size):
-            ips.append(gen_ipaddr())
-            provinces.append(gen_integer(1,34))
-            citys.append(gen_integer(1,600))
+            _ip = gen_ipaddr()
+            ips.append(_ip)
+            provinces.append(ip_util.get_cityInfo_from_ip(_ip, 2))
+            citys.append(ip_util.get_cityInfo_from_ip(_ip, 4))
             types.append(gen_choice(['e', 'p']))
             urls.append(gen_url(scheme='http', subdomain='hunantv', tlds='com'))
             vids.append(gen_integer(1,1000000))
