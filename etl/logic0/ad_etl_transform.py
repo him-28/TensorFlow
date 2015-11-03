@@ -9,7 +9,7 @@ import datetime
 import sys
 import os
 # from etl.util.data2postgresql import load
-from etl.conf.settings import APConfig as Config
+from etl.conf.settings import MONITOR_CONFIGS as Config
 from etl.conf.settings import LOGGER
 
 class ETL_Transform:
