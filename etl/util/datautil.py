@@ -3,6 +3,7 @@
 import pandas as pd
 
 def transform_ngx_log(ngx_path, ngx_filename, path, filename):
+    ngx_fmt = r"%s"
     pass
 
 def merge_file(filepath={}):
