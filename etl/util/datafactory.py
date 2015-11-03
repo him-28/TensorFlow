@@ -989,34 +989,6 @@ class ADMonitorFactory(object):
             tags.append(gen_integer(1,105))
 
 
-#         df = pandas.DataFrame({
-#             'ip': ips,
-#             'ty': types,
-#             'ur': urls,
-#             'v': vids,
-#             'ci': cids,
-#             'b': board_ids,
-#             'rs': results,
-#             'l': ad_list,
-#             'td': time_delay,
-#             'req': reqs,
-#             's': slot_ids,
-#             'cp': compaign_ids,
-#             'c': creator_ids,
-#             'ct': c_time,
-#             'o': order,
-#             'e': event,
-#             'pf': pf,
-#             'd': device_ids,
-#             'u': uids,
-#             'net': nets,
-#             'os': os,
-#             'mf': mf,
-#             'mod': mods,
-#             'app': apps,
-#             'ts': ts,
-#             'si': si
-#             })
         df = pandas.DataFrame({
             'ip': ips,
             'province':provinces,
@@ -1051,12 +1023,10 @@ class ADMonitorFactory(object):
             })
 
 
-#         df1 = df.reindex(columns=['ip', 'ty', 'ur', 'v', 'ci', 'b', 'rs', 'l', 'td', 'req', 's', 'cp', 'c', 'ct', 'o', 'e', 'pf', 'd', 'u', 'net', 'os', 'mf', 'mod', 'app', 'ts', 'si'])
         df1 = df.reindex(columns=['ip', 'province','city','ad_event_type', 'url', 'video_id', 'playlist_id', 'board_id', 'request_res', 'ad_list', 'time_delay',
                                    'reqest_str', 'slot_id', 'compaign_id', 'creator_id', 'video_play_time', 'order', 'group_id', 'play_event', 'pf', 'device_id',
                                    'uid', 'net', 'os', 'manufacturer', 'model', 'app', 'timestamp', 'session_id','tag'])
 
-        #df.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
         df1.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
 
 if __name__ == "__main__":
