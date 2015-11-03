@@ -8,6 +8,7 @@ from etl.util import init_log
 LOG = init_log.init("util/logger.conf", 'mergeLogger')
 
 def transform_ngx_log(ngx_path, ngx_filename, path, filename):
+    ngx_fmt = r"%s"
     pass
 
 def merge_file(input_paths, output_files):
