@@ -58,47 +58,47 @@ def admonitor_csv_validator():
     validator.add_value_check('ip', unsignedint_inclusive,
                               'EX3', 'invalid city')
     validator.add_value_check('province', unsignedint_inclusive,
-                              'EX3', 'invalid city')
+                              'EX4', 'invalid city')
     validator.add_value_check('city', unsignedint_inclusive,
-                              'EX3', 'invalid city')
+                              'EX5', 'invalid city')
     validator.add_value_check('ad_event_type', enumeration('e', 'p'),
-                              'EX3', 'invalid ad_event_type')
+                              'EX6', 'invalid ad_event_type')
     validator.add_value_check('url', match_pattern(r"^(http)$"),
-                              'EX3', 'invalid url')
+                              'EX7', 'invalid url')
     validator.add_value_check('video_id', unsignedint_inclusive,
-                              'EX3', 'invalid video_id')
+                              'EX8', 'invalid video_id')
     validator.add_value_check('playlist_id', unsignedint_inclusive,
-                              'EX4', 'invalid playlist_id')
+                              'EX9', 'invalid playlist_id')
     validator.add_value_check('board_id', unsignedint_inclusive,
-                              'EX5', 'invalid board_id')
+                              'EX10', 'invalid board_id')
     validator.add_value_check('time_delay', unsignedint_inclusive,
-                              'EX6', 'invalid time_delay')
+                              'EX11', 'invalid time_delay')
     validator.add_value_check('request_str', match_pattern(r"^(http)$"),
-                              'EX7', 'invalid request_str')
+                              'EX12', 'invalid request_str')
     validator.add_value_check('slot_id', unsignedint_inclusive,
-                              'EX8', 'invalid slot_id')
+                              'EX13', 'invalid slot_id')
     validator.add_value_check('compaign_id', unsignedint_inclusive,
-                              'EX9', 'invalid compaign_id')
+                              'EX14', 'invalid compaign_id')
     validator.add_value_check('creator_id', unsignedint_inclusive,
-                              'EX10', 'invalid creator_id')
+                              'EX15', 'invalid creator_id')
     validator.add_value_check('video_play_time', unsignedint_inclusive,
-                              'EX11', 'invalid video_play_time')
+                              'EX16', 'invalid video_play_time')
     validator.add_value_check('order', unsignedint_inclusive,
-                              'EX12', 'invalid order')
+                              'EX17', 'invalid order')
     validator.add_value_check('group_id', unsignedint_inclusive,
-                              'EX13', 'invalid group_id')
+                              'EX18', 'invalid group_id')
     validator.add_value_check('play_event', enumeration('s', 'e', 'c', 'sk', 'p', 'up', 'm', 'um'),
-                              'EX14', 'invalid play_event')
+                              'EX19', 'invalid play_event')
     validator.add_value_check('pf', enumeration('000100', '2'),
-                              'EX14', 'invalid pf')
+                              'EX20', 'invalid pf')
     validator.add_value_check('device_id', str_len_range(40, 48),
-                              'EX15', 'invalid device_id')
+                              'EX21', 'invalid device_id')
     validator.add_value_check('net', enumeration('WIFI', 'wifi', '3g', '4g', '2g', u'蜂窝'),
-                              'EX16', 'invalid net')
+                              'EX22', 'invalid net')
     validator.add_value_check('session_id', str_len(36),
-                              'EX17', 'invalid uuid')
+                              'EX23', 'invalid uuid')
     validator.add_value_check('tag', number_range_inclusive(0,1000, int),
-                              'EX18', 'invalid tag')
+                              'EX24', 'invalid tag')
 
     return validator
 
