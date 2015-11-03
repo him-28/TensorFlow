@@ -3,7 +3,7 @@ current_env: beta
 beta: #测试环境
     monitor: 
         ##########common config########################
-        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','rs','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
         ##########petl config##########################
@@ -32,7 +32,7 @@ beta: #测试环境
             'video_id':'string',
             'playlist_id':'string',
             'board_id':'string',
-            'rs':'string',
+            'request_res':'string',
             'ad_list':'string',
             'time_delay':'string',
             'reqest_str':'string',
@@ -62,7 +62,7 @@ beta: #测试环境
                 condition:
                     count: [
                         ['ad_event_type','==','e'],
-                        ['rs','in',['0','1']],
+                        ['request_res','in',['0','1']],
                         ['tag','<',100]
                     ]
                 display_sale: #售卖展示数
@@ -77,7 +77,7 @@ beta: #测试环境
                 condition:
                     'count': [
                         ['ad_event_type','==','e'],
-                        ['rs','==','0'],
+                        ['request_res','==','0'],
                         ['tag','<',100]
                     ]
                 impression: #成功播放数
@@ -108,7 +108,7 @@ beta: #测试环境
 release: #生产环境
     monitor: 
         ##########common config########################
-        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','rs','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
         ##########petl config##########################
@@ -138,7 +138,7 @@ release: #生产环境
             'video_id':'string',
             'playlist_id':'string',
             'board_id':'string',
-            'rs':'string',
+            'request_res':'string',
             'ad_list':'string',
             'time_delay':'string',
             'reqest_str':'string',
@@ -170,7 +170,7 @@ release: #生产环境
                 condition:
                     count: [
                         ['ad_event_type','==','e'],
-                        ['rs','in',['0','1']],
+                        ['request_res','in',['0','1']],
                         ['tag','<',100]
                     ]
                 display_sale: #售卖展示数
@@ -185,7 +185,7 @@ release: #生产环境
                 condition:
                     'count': [
                         ['ad_event_type','==','e'],
-                        ['rs','==','0'],
+                        ['request_res','==','0'],
                         ['tag','<',100]
                     ]
                 impression: #成功播放数
