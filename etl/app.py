@@ -11,6 +11,7 @@ from etl.conf.settings import LOGGER, Config
 from etl.util import path_chk_or_create
 from etl.util.datautil import merge_file, transform_ngx_log
 from etl.audit.admonitor_audit import main
+from etl.util.load_data import loadInDb_by_minute,loadInDb_by_hour,loadInDb_by_day
 from etl.logic2.calc import calc_ad_monitor
 from etl.logic1.ad_transform_pandas import AdTransformPandas
 from etl.logic0.ad_etl_transform import calc_etl
@@ -256,7 +257,10 @@ class AdMonitorRunner(object):
                     paths['logic0_output_paths'])
             end = time.clock()
             LOGGER.info("logic2 calc spent: %f s" % (end-start))
-
+            
+            # load minute file in db
+            loadInDb_by_minute(paths["logic0_output_paths"])
+            loadInDb_by_minute(paths["logic1_output_paths"])
         elif mode == 'h':
             paths = self._job_ready_by_hour(now)
 
@@ -280,7 +284,10 @@ class AdMonitorRunner(object):
             merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 hour agg spend: %f s" % (end-start))
-
+            
+            # load hour file in db
+            loadInDb_by_hour(paths["logic0_output_paths"])
+            loadInDb_by_hour(paths["logic1_output_paths"])
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
 
@@ -306,7 +313,10 @@ class AdMonitorRunner(object):
             merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 hour agg spend: %f s" % (end-start))
-
+            
+            # load day file in db
+            loadInDb_by_day(paths["logic0_output_paths"])
+            loadInDb_by_day(paths["logic1_output_paths"])
 
 def run_cli(arguments):
     try:

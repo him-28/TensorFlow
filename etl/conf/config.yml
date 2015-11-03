@@ -3,6 +3,10 @@ ngx_prefix: "/data1/ad"
 h_delay: 10
 d_delay: 1
 metrics: ['display_poss', 'display', 'impression', 'impression_end', 'click', 'up']
+metrics_db_tablename_minute: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
+metrics_db_tablename_hour: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
+metrics_db_tablename_day: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
+calc_file_split: ','
 column_sep: "\t"
 output_column_sep: ","
 pandas:
@@ -83,6 +87,8 @@ database:
     password: 'adpg@150909'
     host: 10.100.5.80
     port: 11921
+    minconn: 5
+    maxconn: 50
 db_table:
     Ad_Facts_By_Hour: 
          table_name: "AD_Facts_By_Hour"

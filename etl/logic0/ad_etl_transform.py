@@ -185,7 +185,8 @@ class ETL_Transform:
 def calc_etl(input_filePath,input_filename,output_dic):
     #check  param
     assert input_filePath,input_filename is not None
-    filePath = input_filePath+input_filename
+    
+    filePath = os.path.join(input_filePath,input_filename)
     etls=ETL_Transform(
                        header=Config['header'],
                        batch_read_size=Config["batch_read_size"],
