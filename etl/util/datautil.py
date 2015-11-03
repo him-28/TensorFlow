@@ -44,7 +44,7 @@ def transform_ngx_log(ngx_path, ngx_filename, path, filename):
     #Store new columns file
     t_f = os.path.join(path, filename)
     path_chk_or_create(t_f)
-    df1.to_csv(t_f, sep="\t", na_rep=" ", header=True)
+    df1.to_csv(t_f, index=False, sep="\t", na_rep=" ", header=True)
 
 def merge_file(input_paths, output_files):
     """
