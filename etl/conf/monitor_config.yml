@@ -1,0 +1,216 @@
+current_env: beta
+
+beta: #测试环境
+    monitor: 
+        ##########common config########################
+        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        input_column_sep: "\t"
+        output_column_sep: "\t"
+        ##########petl config##########################
+        chance_aggre_header: ['board_id']
+        count_aggre_header: ['slot_id','compaign_id','creator_id']
+        start_aggre_header: ['slot_id','compaign_id','creator_id']
+        end_aggre_header: ['slot_id','compaign_id','creator_id']
+        click_aggre_header: ['slot_id','compaign_id','creator_id']
+        aggre_header: ['slot_id','compaign_id','creator_id']
+        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and {pf} == '010101' "
+        count_select: "{ad_event_type} == 'e' and {request_res} == '0' and {pf} == '010101' "
+        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {pf} == '010101' "
+        end_select: "{ad_event_type} == 'e' and {play_event} == 'e' and {pf} == '010101' "
+        click_select: "{ad_event_type} == 'e' and {play_event} == 'c' and {pf} == '010101' "
+        batch_read_size: 1000005
+        display_pos: display_pos
+        display: display
+        impression: impression
+        impression_end: impression_end
+        click: click
+        ##########pandas config##########################
+        header_type: {
+            'ip':'string',
+            'ad_event_type':'string',
+            'url':'string',
+            'video_id':'string',
+            'playlist_id':'string',
+            'board_id':'string',
+            'request_res':'string',
+            'ad_list':'string',
+            'time_delay':'string',
+            'reqest_str':'string',
+            'slot_id':'string',
+            'compaign_id':'string',
+            'creator_id':'string',
+            'video_play_time':'string',
+            'order':'string',
+            'play_event':'string',
+            'pf':'string',
+            'device_id':'string',
+            'uid':'string',
+            'net':'string',
+            'os':'string',
+            'manufacturer':'string',
+            'model':'string',
+            'app':'string',
+            'timestamp':'string',
+            'session_id':'string',
+            'tag':'int'
+        }
+        read_csv_chunk: 100000
+        db_commit_chunk: 10000
+        algorithm: 
+            display_poss: #广告位展示机会
+                group_item: ['board_id','pf']
+                condition:
+                    count: [
+                        ['ad_event_type','==','e'],
+                        ['request_res','in',['0','1']],
+                        ['tag','<',100]
+                    ]
+                display_sale: #售卖展示数
+                group_item: ['board_id','l[0]','pf']
+                condition:
+                    count: [
+                        ['ad_event_type','==','e'],
+                        ['tag','<',100]
+                    ]
+                display: #广告次序实际展示数
+                group_item: ['board_id','pf','l[0].index']
+                condition:
+                    'count': [
+                        ['ad_event_type','==','e'],
+                        ['request_res','==','0'],
+                        ['tag','<',100]
+                    ]
+                impression: #成功播放数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','s'],
+                        ['tag','<',100]
+                    ]
+                impression_end: #播放完成数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','e'],
+                        ['tag','<',100]
+                    ]
+                click: #广告点击数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','c'],
+                        ['tag','<',100]
+                    ]
+
+release: #生产环境
+    monitor: 
+        ##########common config########################
+        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','tag']
+        input_column_sep: "\t"
+        output_column_sep: "\t"
+        ##########petl config##########################
+        chance_aggre_header: ['board_id']
+        count_aggre_header: ['slot_id','compaign_id','creator_id']
+        start_aggre_header: ['slot_id','compaign_id','creator_id']
+        end_aggre_header: ['slot_id','compaign_id','creator_id']
+        click_aggre_header: ['slot_id','compaign_id','creator_id']
+        aggre_header: ['slot_id','compaign_id','creator_id']
+        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and {pf} == '010101' "
+        count_select: "{ad_event_type} == 'e' and {request_res} == '0' and {pf} == '010101' "
+        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {pf} == '010101' "
+        end_select: "{ad_event_type} == 'e' and {play_event} == 'e' and {pf} == '010101' "
+        click_select: "{ad_event_type} == 'e' and {play_event} == 'c' and {pf} == '010101' "
+        batch_read_size: 1000005
+        display_pos: display_pos
+        display: display
+        impression: impression
+        impression_end: impression_end
+        click: click
+
+        ##########pandas config##########################
+        header_type: {
+            'ip':'string',
+            'ad_event_type':'string',
+            'url':'string',
+            'video_id':'string',
+            'playlist_id':'string',
+            'board_id':'string',
+            'request_res':'string',
+            'ad_list':'string',
+            'time_delay':'string',
+            'reqest_str':'string',
+            'slot_id':'string',
+            'compaign_id':'string',
+            'creator_id':'string',
+            'video_play_time':'string',
+            'order':'string',
+            'play_event':'string',
+            'pf':'string',
+            'device_id':'string',
+            'uid':'string',
+            'net':'string',
+            'os':'string',
+            'manufacturer':'string',
+            'model':'string',
+            'app':'string',
+            'timestamp':'string',
+            'session_id':'string',
+            'tag':'int'
+        }
+
+        read_csv_chunk: 100000
+        db_commit_chunk: 10000
+
+        algorithm: 
+            display_poss: #广告位展示机会
+                group_item: ['board_id','pf']
+                condition:
+                    count: [
+                        ['ad_event_type','==','e'],
+                        ['request_res','in',['0','1']],
+                        ['tag','<',100]
+                    ]
+                display_sale: #售卖展示数
+                group_item: ['board_id','l[0]','pf']
+                condition:
+                    count: [
+                        ['ad_event_type','==','e'],
+                        ['tag','<',100]
+                    ]
+                display: #广告次序实际展示数
+                group_item: ['board_id','pf','l[0].index']
+                condition:
+                    'count': [
+                        ['ad_event_type','==','e'],
+                        ['request_res','==','0'],
+                        ['tag','<',100]
+                    ]
+                impression: #成功播放数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','s'],
+                        ['tag','<',100]
+                    ]
+                impression_end: #播放完成数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','e'],
+                        ['tag','<',100]
+                    ]
+                click: #广告点击数
+                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ad_event_type','==','p'],
+                        ['play_event','==','c'],
+                        ['tag','<',100]
+                    ]
+
+                    
