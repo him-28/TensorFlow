@@ -916,10 +916,11 @@ def gen_datetime(min_date=None, max_date=None):
     return min_date + datetime.timedelta(seconds=seconds)
 
 class ADMonitorFactory(object):
-    def generate_android_phone(self):
-        out_dir = "ad.csv"
+    def generate_android_phone(self,out_dir):
         size = 100000
         ips = []
+        provinces= []
+        citys= []
         types = []
         urls = []
         vids = []
@@ -934,6 +935,7 @@ class ADMonitorFactory(object):
         creator_ids = []
         c_time = []
         order = []
+        group_ids = []
         event = []
         pf = []
         device_ids = []
@@ -945,18 +947,22 @@ class ADMonitorFactory(object):
         apps = []
         ts = []
         si = []
+        tags = []
 
 
         from pdb import set_trace as st
         for i in range(size):
             ips.append(gen_ipaddr())
+            provinces.append(gen_integer(1,34))
+            citys.append(gen_integer(1,600))
             types.append(gen_choice(['e', 'p']))
             urls.append(gen_url(scheme='http', subdomain='hunantv', tlds='com'))
             vids.append(gen_integer(1,1000000))
             cids.append(gen_integer(1,10000))
             board_ids.append(gen_integer(1,100))
             results.append(gen_choice([0,1]))
-            l = str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'
+            l = str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'\
+                    +str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) 
             ad_list.append(l)
             time_delay.append(gen_integer(1,10))
             reqs.append(gen_url(scheme='http', subdomain='x.da.hunantv', tlds='com'))
@@ -965,6 +971,7 @@ class ADMonitorFactory(object):
             creator_ids.append(gen_integer(1,10000))
             c_time.append(gen_integer(1,1000000))
             order.append(gen_choice([1,2,3,4,5]))
+            group_ids.append(gen_integer(1,100000))
             event.append(gen_choice(['s', 'e', 'c', 's', 'p', 'up', 'm', 'um']))
             pf.append(gen_choice(['000000', '000100', '000101', '010101']))
             device_ids.append(gen_mac())
@@ -976,43 +983,79 @@ class ADMonitorFactory(object):
             apps.append(gen_choice(['imgotv-aphone-4.1.2', 'imgotv-aphone-4.2.3', 'imgotv-iphone-4.2.3']))
             ts.append(gen_integer(1,10000000))
             si.append(gen_uuid())
+            tags.append(gen_integer(1,105))
 
 
+#         df = pandas.DataFrame({
+#             'ip': ips,
+#             'ty': types,
+#             'ur': urls,
+#             'v': vids,
+#             'ci': cids,
+#             'b': board_ids,
+#             'rs': results,
+#             'l': ad_list,
+#             'td': time_delay,
+#             'req': reqs,
+#             's': slot_ids,
+#             'cp': compaign_ids,
+#             'c': creator_ids,
+#             'ct': c_time,
+#             'o': order,
+#             'e': event,
+#             'pf': pf,
+#             'd': device_ids,
+#             'u': uids,
+#             'net': nets,
+#             'os': os,
+#             'mf': mf,
+#             'mod': mods,
+#             'app': apps,
+#             'ts': ts,
+#             'si': si
+#             })
         df = pandas.DataFrame({
             'ip': ips,
-            'ty': types,
-            'ur': urls,
-            'v': vids,
-            'ci': cids,
-            'b': board_ids,
-            'rs': results,
-            'l': ad_list,
-            'td': time_delay,
-            'req': reqs,
-            's': slot_ids,
-            'cp': compaign_ids,
-            'c': creator_ids,
-            'ct': c_time,
-            'o': order,
-            'e': event,
+            'province':provinces,
+            'city':citys,
+            'ad_event_type': types,
+            'url': urls,
+            'video_id': vids,
+            'playlist_id': cids,
+            'board_id': board_ids,
+            'request_res': results,
+            'ad_list': ad_list,
+            'time_delay': time_delay,
+            'reqest_str': reqs,
+            'slot_id': slot_ids,
+            'compaign_id': compaign_ids,
+            'creator_id': creator_ids,
+            'video_play_time': c_time,
+            'order': order,
+            'group_id':group_ids,
+            'play_event': event,
             'pf': pf,
-            'd': device_ids,
-            'u': uids,
+            'device_id': device_ids,
+            'uid': uids,
             'net': nets,
             'os': os,
-            'mf': mf,
-            'mod': mods,
+            'manufacturer': mf,
+            'model': mods,
             'app': apps,
-            'ts': ts,
-            'si': si
+            'timestamp': ts,
+            'session_id': si,
+            'tag':tags
             })
 
 
-        df1 = df.reindex(columns=['ip', 'ty', 'ur', 'v', 'ci', 'b', 'rs', 'l', 'td', 'req', 's', 'cp', 'c', 'ct', 'o', 'e', 'pf', 'd', 'u', 'net', 'os', 'mf', 'mod', 'app', 'ts', 'si'])
+#         df1 = df.reindex(columns=['ip', 'ty', 'ur', 'v', 'ci', 'b', 'rs', 'l', 'td', 'req', 's', 'cp', 'c', 'ct', 'o', 'e', 'pf', 'd', 'u', 'net', 'os', 'mf', 'mod', 'app', 'ts', 'si'])
+        df1 = df.reindex(columns=['ip', 'province','city','ad_event_type', 'url', 'video_id', 'playlist_id', 'board_id', 'request_res', 'ad_list', 'time_delay',
+                                   'reqest_str', 'slot_id', 'compaign_id', 'creator_id', 'video_play_time', 'order', 'group_id', 'play_event', 'pf', 'device_id',
+                                   'uid', 'net', 'os', 'manufacturer', 'model', 'app', 'timestamp', 'session_id','tag'])
 
         #df.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
         df1.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
 
 if __name__ == "__main__":
     gen = ADMonitorFactory()
-    gen.generate_android_phone()
+    gen.generate_android_phone("ad_test.csv")
