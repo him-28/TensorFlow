@@ -1,0 +1,216 @@
+current_env: debug
+
+debug: #测试环境
+    monitor: 
+        ##########common config########################
+        header: ['ip','ty','ur','v','ci','b','rs','l','td','req','s','cp','c','ct','o','e','pf','d','u','net','os','mf','mod','app','ts','si','tag']
+        input_column_sep: "\t"
+        output_column_sep: "\t"
+        ##########petl config##########################
+        chance_aggre_header: ['b']
+        count_aggre_header: ['s','cp','c']
+        start_aggre_header: ['s','cp','c']
+        end_aggre_header: ['s','cp','c']
+        click_aggre_header: ['s','cp','c']
+        aggre_header: ['s','cp','c']
+        chance_select: "{ty} == 'e' and ({rs} == '0' or {rs}== '1') and {pf} == '010101' "
+        count_select: "{ty} == 'e' and {rs} == '0' and {pf} == '010101' "
+        start_select: "{ty} == 'p' and {e} == 's' and {pf} == '010101' "
+        end_select: "{ty} == 'e' and {e} == 'e' and {pf} == '010101' "
+        click_select: "{ty} == 'e' and {e} == 'c' and {pf} == '010101' "
+        batch_read_size: 1000005
+        display_pos: display_pos
+        display: display
+        impression: impression
+        impression_end: impression_end
+        click: click
+        ##########pandas config##########################
+        header_type: {
+            'ip':'string',
+            'ty':'string',
+            'ur':'string',
+            'v':'string',
+            'ci':'string',
+            'b':'string',
+            'rs':'string',
+            'l':'string',
+            'td':'string',
+            'req':'string',
+            's':'string',
+            'cp':'string',
+            'c':'string',
+            'ct':'string',
+            'o':'string',
+            'e':'string',
+            'pf':'string',
+            'd':'string',
+            'u':'string',
+            'net':'string',
+            'os':'string',
+            'mf':'string',
+            'mod':'string',
+            'app':'string',
+            'ts':'string',
+            'si':'string',
+            'tag':'int'
+        }
+        read_csv_chunk: 100000
+        db_commit_chunk: 10000
+        algorithm: 
+            display_poss: #广告位展示机会
+                group_item: ['b','pf']
+                condition:
+                    count: [
+                        ['ty','==','e'],
+                        ['rs','in',['0','1']],
+                        ['tag','<',100]
+                    ]
+                display_sale: #售卖展示数
+                group_item: ['b','l[0]','pf']
+                condition:
+                    count: [
+                        ['ty','==','e'],
+                        ['tag','<',100]
+                    ]
+                display: #广告次序实际展示数
+                group_item: ['b','pf','l[0].index']
+                condition:
+                    'count': [
+                        ['ty','==','e'],
+                        ['rs','==','0'],
+                        ['tag','<',100]
+                    ]
+                impression: #成功播放数
+                group_item: ['s','cp','c','pf'] #广告位ID，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','s'],
+                        ['tag','<',100]
+                    ]
+                impression_end: #播放完成数
+                group_item: ['s','cp','c','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','e'],
+                        ['tag','<',100]
+                    ]
+                click: #广告点击数
+                group_item: ['s','cp','c','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','c'],
+                        ['tag','<',100]
+                    ]
+
+release: #生产环境
+    monitor: 
+        ##########common config########################
+        header: ['ip','ty','ur','v','ci','b','rs','l','td','req','s','cp','c','ct','o','e','pf','d','u','net','os','mf','mod','app','ts','si','tag']
+        input_column_sep: "\t"
+        output_column_sep: "\t"
+        ##########petl config##########################
+        chance_aggre_header: ['b']
+        count_aggre_header: ['s','cp','c']
+        start_aggre_header: ['s','cp','c']
+        end_aggre_header: ['s','cp','c']
+        click_aggre_header: ['s','cp','c']
+        aggre_header: ['s','cp','c']
+        chance_select: "{ty} == 'e' and ({rs} == '0' or {rs}== '1') and {pf} == '010101' "
+        count_select: "{ty} == 'e' and {rs} == '0' and {pf} == '010101' "
+        start_select: "{ty} == 'p' and {e} == 's' and {pf} == '010101' "
+        end_select: "{ty} == 'e' and {e} == 'e' and {pf} == '010101' "
+        click_select: "{ty} == 'e' and {e} == 'c' and {pf} == '010101' "
+        batch_read_size: 1000005
+        display_pos: display_pos
+        display: display
+        impression: impression
+        impression_end: impression_end
+        click: click
+
+        ##########pandas config##########################
+        header_type: {
+            'ip':'string',
+            'ty':'string',
+            'ur':'string',
+            'v':'string',
+            'ci':'string',
+            'b':'string',
+            'rs':'string',
+            'l':'string',
+            'td':'string',
+            'req':'string',
+            's':'string',
+            'cp':'string',
+            'c':'string',
+            'ct':'string',
+            'o':'string',
+            'e':'string',
+            'pf':'string',
+            'd':'string',
+            'u':'string',
+            'net':'string',
+            'os':'string',
+            'mf':'string',
+            'mod':'string',
+            'app':'string',
+            'ts':'string',
+            'si':'string',
+            'tag':'int'
+        }
+
+        read_csv_chunk: 100000
+        db_commit_chunk: 10000
+
+        algorithm: 
+            display_poss: #广告位展示机会
+                group_item: ['b','pf']
+                condition:
+                    count: [
+                        ['ty','==','e'],
+                        ['rs','in',['0','1']],
+                        ['tag','<',100]
+                    ]
+                display_sale: #售卖展示数
+                group_item: ['b','l[0]','pf']
+                condition:
+                    count: [
+                        ['ty','==','e'],
+                        ['tag','<',100]
+                    ]
+                display: #广告次序实际展示数
+                group_item: ['b','pf','l[0].index']
+                condition:
+                    'count': [
+                        ['ty','==','e'],
+                        ['rs','==','0'],
+                        ['tag','<',100]
+                    ]
+                impression: #成功播放数
+                group_item: ['s','cp','c','pf'] #广告位ID，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','s'],
+                        ['tag','<',100]
+                    ]
+                impression_end: #播放完成数
+                group_item: ['s','cp','c','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','e'],
+                        ['tag','<',100]
+                    ]
+                click: #广告点击数
+                group_item: ['s','cp','c','pf'] #广告位尖，投放ID，创意ID
+                condition:
+                    'count': [
+                        ['ty','==','p'],
+                        ['e','==','c'],
+                        ['tag','<',100]
+                    ]
+
+                    
