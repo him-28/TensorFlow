@@ -241,11 +241,11 @@ class AdMonitorRunner(object):
 
             start = time.clock()
             # logic1 code
-            atp = AdTransformPandas(True)
+            atp = AdTransformPandas()
             atp.calculate(
                     paths['ad_src_path'],
                     paths['ad_src_filename'],
-                    paths['logic0_output_paths'])
+                    paths['logic1_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 calc spent: %f s" % (end-start))
 
