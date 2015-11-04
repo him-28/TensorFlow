@@ -79,6 +79,7 @@ see the example.py and tests.py modules in the source code repository.
 
 
 import re
+import numpy as np
 from datetime import datetime
 
 
@@ -450,55 +451,55 @@ class CSVValidator(object):
         """
 
         unique_sets = self._init_unique_sets() # used for unique checks
-        for i, r in enumerate(data):
-            if expect_header_row and i == ignore_lines:
-                # r is the header row
-                for p in self._apply_header_checks(i, r, summarize, context):
+        #for i, r in enumerate(data):
+        if expect_header_row:
+            for p in self._apply_header_checks(0, data.columns, summarize, context):
+                yield p
+
+        for i, r in data.iterrows():
+            # r is a data row
+            skip = False
+            for p in self._apply_skips(i, r, summarize,
+                                                report_unexpected_exceptions,
+                                                context):
+                if p is True:
+                    skip = True
+                else:
                     yield p
-            elif i >= ignore_lines:
-                # r is a data row
-                skip = False
-                for p in self._apply_skips(i, r, summarize,
-                                                  report_unexpected_exceptions,
-                                                  context):
-                    if p is True:
-                        skip = True
-                    else:
-                        yield p
-                if not skip:
-                    for p in self._apply_each_methods(i, r, summarize,
-                                                      report_unexpected_exceptions,
-                                                      context):
-                        yield p # may yield a problem if an exception is raised
-                    for p in self._apply_value_checks(i, r, summarize,
-                                                      report_unexpected_exceptions,
-                                                      context):
-                        yield p
-                    for p in self._apply_record_length_checks(i, r, summarize,
-                                                              context):
-                        yield p
-                    for p in self._apply_value_predicates(i, r, summarize,
-                                                          report_unexpected_exceptions,
-                                                          context):
-                        yield p
-                    for p in self._apply_record_checks(i, r, summarize,
-                                                           report_unexpected_exceptions,
-                                                           context):
-                        yield p
-                    for p in self._apply_record_predicates(i, r, summarize,
-                                                           report_unexpected_exceptions,
-                                                           context):
-                        yield p
-                    for p in self._apply_unique_checks(i, r, unique_sets, summarize):
-                        yield p
-                    for p in self._apply_check_methods(i, r, summarize,
-                                                       report_unexpected_exceptions,
-                                                       context):
-                        yield p
-                    for p in self._apply_assert_methods(i, r, summarize,
+            if not skip:
+                for p in self._apply_each_methods(i, r, summarize,
+                                                    report_unexpected_exceptions,
+                                                    context):
+                    yield p # may yield a problem if an exception is raised
+                for p in self._apply_value_checks(i, r, summarize,
+                                                    report_unexpected_exceptions,
+                                                    context):
+                    yield p
+                for p in self._apply_record_length_checks(i, r, summarize,
+                                                            context):
+                    yield p
+                for p in self._apply_value_predicates(i, r, summarize,
                                                         report_unexpected_exceptions,
                                                         context):
-                        yield p
+                    yield p
+                for p in self._apply_record_checks(i, r, summarize,
+                                                        report_unexpected_exceptions,
+                                                        context):
+                    yield p
+                for p in self._apply_record_predicates(i, r, summarize,
+                                                        report_unexpected_exceptions,
+                                                        context):
+                    yield p
+                for p in self._apply_unique_checks(i, r, unique_sets, summarize):
+                    yield p
+                for p in self._apply_check_methods(i, r, summarize,
+                                                    report_unexpected_exceptions,
+                                                    context):
+                    yield p
+                for p in self._apply_assert_methods(i, r, summarize,
+                                                    report_unexpected_exceptions,
+                                                    context):
+                    yield p
         for p in self._apply_finally_assert_methods(summarize,
                                                     report_unexpected_exceptions,
                                                     context):
@@ -976,7 +977,7 @@ def unsignedint_inclusive(clo):
     """
     def checker(v):
         print clo
-        if type(v) !=int and int(v) <= 0:
+        if type(v) != np.int and int(v) <= 0:
             print clo
             raise ValueError(v)
     return checker
@@ -1098,11 +1099,10 @@ def emit_problems(problems, emiter, limit=0):
         if p.has_key('row') and p.has_key('field'):
 
             if len(sample) < 10:
-                m = "row: %d, field: %s, value: %s\r\nrecord: %s" %(
+                m = "row: %d, field: %s, value: %s\r\n" %(
                                 p['row'],
                                 p['field'],
-                                p['value'],
-                                p['record']
+                                p['value']
                             )
 
 
