@@ -48,6 +48,7 @@ def admonitor_csv_validator():
             u'app',
             u'timestamp',
             u'session_id',
+            u'seq',
             u'tag'
             )
 
@@ -101,8 +102,10 @@ def admonitor_csv_validator():
                               'EX22', 'invalid net')
     validator.add_value_check('session_id', str_len(36),
                               'EX23', 'invalid uuid')
+    validator.add_value_check('seq', enumeration(0,1,2,3,4,5,6,7,8,9,10),
+                              'EX24', 'invalid seq')
     validator.add_value_check('tag', number_range_inclusive(0,1000, int),
-                              'EX24', 'invalid tag')
+                              'EX25', 'invalid tag')
 
     return validator
 
