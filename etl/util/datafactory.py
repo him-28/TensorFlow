@@ -918,7 +918,7 @@ def gen_datetime(min_date=None, max_date=None):
 
 class ADMonitorFactory(object):
     def generate_android_phone(self,out_dir):
-        size = 100000
+        size = 50000
         ips = []
         provinces= []
         citys= []
@@ -949,44 +949,51 @@ class ADMonitorFactory(object):
         ts = []
         si = []
         tags = []
+        seq = []
 
         ip_util=IP_Util(ipb_filepath="IPB.csv",
                     city_filepath="city_province.csv")
         from pdb import set_trace as st
         for i in range(size):
+            
             _ip = gen_ipaddr()
-            ips.append(_ip)
-            provinces.append(ip_util.get_cityInfo_from_ip(_ip, 2))
-            citys.append(ip_util.get_cityInfo_from_ip(_ip, 4))
-            types.append(gen_choice(['e', 'p']))
-            urls.append(gen_url(scheme='http', subdomain='hunantv', tlds='com'))
-            vids.append(gen_integer(1,1000000))
-            cids.append(gen_integer(1,10000))
-            board_ids.append(gen_integer(1,100))
-            results.append(gen_choice([0,1]))
-            l = str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'\
-                    +str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) 
-            ad_list.append(l)
-            time_delay.append(gen_integer(1,10))
-            reqs.append(gen_url(scheme='http', subdomain='x.da.hunantv', tlds='com'))
-            slot_ids.append(gen_integer(1,100))
-            compaign_ids.append(gen_integer(1,100000))
-            creator_ids.append(gen_integer(1,10000))
-            c_time.append(gen_integer(1,1000000))
-            order.append(gen_choice([1,2,3,4,5]))
-            group_ids.append(gen_integer(1,100000))
-            event.append(gen_choice(['s', 'e', 'c', 's', 'p', 'up', 'm', 'um']))
-            pf.append(gen_choice(['000000', '000100', '000101', '010101']))
-            device_ids.append(gen_mac())
-            uids.append(gen_integer(1,10000000))
-            nets.append(gen_choice(['WIFI', '3G', '4G', '2G', u'蜂窝']))
-            os.append(gen_choice(['iPhone', 'android_phone', 'aphone-4.2.1']))
-            mf.append(gen_choice(['Samsung', 'TCL', 'CHONG']))
-            mods.append(gen_choice(['samsung.1.12', 'tcl2.0']))
-            apps.append(gen_choice(['imgotv-aphone-4.1.2', 'imgotv-aphone-4.2.3', 'imgotv-iphone-4.2.3']))
-            ts.append(gen_integer(1,10000000))
-            si.append(gen_uuid())
-            tags.append(gen_integer(1,105))
+            session_id = gen_uuid()
+            ty = gen_choice(['e', 'p'])
+            rs = gen_choice([0,1])
+            for j in range(3):
+                ips.append(_ip)
+                provinces.append(ip_util.get_cityInfo_from_ip(_ip, 2))
+                citys.append(ip_util.get_cityInfo_from_ip(_ip, 4))
+                types.append(ty)
+                urls.append(gen_url(scheme='http', subdomain='hunantv', tlds='com'))
+                vids.append(gen_integer(1,1000000))
+                cids.append(gen_integer(1,10000))
+                board_ids.append(gen_integer(1,100))
+                results.append(rs)
+                l = str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'\
+                        +str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) 
+                ad_list.append(l)
+                time_delay.append(gen_integer(1,10))
+                reqs.append(gen_url(scheme='http', subdomain='x.da.hunantv', tlds='com'))
+                slot_ids.append(gen_integer(1,100))
+                compaign_ids.append(gen_integer(1,100000))
+                creator_ids.append(gen_integer(1,10000))
+                c_time.append(gen_integer(1,1000000))
+                order.append(gen_choice([1,2,3,4,5]))
+                group_ids.append(gen_integer(1,100000))
+                event.append(gen_choice(['s', 'e', 'c', 's', 'p', 'up', 'm', 'um']))
+                pf.append(gen_choice(['000000', '000100', '000101', '010101']))
+                device_ids.append(gen_mac())
+                uids.append(gen_integer(1,10000000))
+                nets.append(gen_choice(['WIFI', '3G', '4G', '2G', u'蜂窝']))
+                os.append(gen_choice(['iPhone', 'android_phone', 'aphone-4.2.1']))
+                mf.append(gen_choice(['Samsung', 'TCL', 'CHONG']))
+                mods.append(gen_choice(['samsung.1.12', 'tcl2.0']))
+                apps.append(gen_choice(['imgotv-aphone-4.1.2', 'imgotv-aphone-4.2.3', 'imgotv-iphone-4.2.3']))
+                ts.append(gen_integer(1,10000000))
+                si.append(session_id)
+                seq.append(j+1)
+                tags.append(gen_integer(1,105))
 
 
         df = pandas.DataFrame({
@@ -1019,13 +1026,14 @@ class ADMonitorFactory(object):
             'app': apps,
             'timestamp': ts,
             'session_id': si,
+            'seq': seq,
             'tag':tags
             })
 
 
         df1 = df.reindex(columns=['ip', 'province','city','ad_event_type', 'url', 'video_id', 'playlist_id', 'board_id', 'request_res', 'ad_list', 'time_delay',
                                    'request_str', 'slot_id', 'compaign_id', 'creator_id', 'video_play_time', 'order', 'group_id', 'play_event', 'pf', 'device_id',
-                                   'uid', 'net', 'os', 'manufacturer', 'model', 'app', 'timestamp', 'session_id','tag'])
+                                   'uid', 'net', 'os', 'manufacturer', 'model', 'app', 'timestamp', 'session_id','seq','tag'])
 
         df1.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
 
