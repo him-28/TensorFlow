@@ -66,7 +66,7 @@ beta: #测试环境
                 group_item: ['board_id','pf','query-slot_id']
                 condition:
                     count: {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','in',['0','1']],
                             ['tag','<',100]
@@ -77,7 +77,7 @@ beta: #测试环境
                 group_item: ['board_id','pf','slot_id']
                 condition:
                     count: {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['tag','<',100]
                         ],
@@ -87,7 +87,7 @@ beta: #测试环境
                 group_item: ['board_id','pf','seq']
                 condition:
                     'count': {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','==','0'],
                             ['tag','<',100]
@@ -97,8 +97,8 @@ beta: #测试环境
             impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','s'],
                             ['tag','<',100]
@@ -108,8 +108,8 @@ beta: #测试环境
             impression_end: #播放完成数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','e'],
                             ['tag','<',100]
@@ -119,8 +119,8 @@ beta: #测试环境
             click: #广告点击数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','c'],
                             ['tag','<',100]
@@ -129,16 +129,17 @@ beta: #测试环境
                     }
             up: #升位数
                 group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
-                condition:
+                condition: 
                     total: {
-                        filter:[
+                        filter: [
                             ['ty','==','e'], 
                             ['rs','in',['0','1']],
                             ['tag','<',100],
                             ['query-seq', '!=', 'seq']
                         ],
                         output_name: 'total'
-            
+                    }
+
 release: #生产环境
     monitor: 
         ##########common config########################
@@ -205,7 +206,7 @@ release: #生产环境
                 group_item: ['board_id','pf','query-slot_id']
                 condition:
                     count: {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','in',['0','1']],
                             ['tag','<',100]
@@ -216,7 +217,7 @@ release: #生产环境
                 group_item: ['board_id','pf','slot_id']
                 condition:
                     count: {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['tag','<',100]
                         ],
@@ -226,7 +227,7 @@ release: #生产环境
                 group_item: ['board_id','pf','seq']
                 condition:
                     'count': {
-                        filter:[
+                        filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','==','0'],
                             ['tag','<',100]
@@ -236,8 +237,8 @@ release: #生产环境
             impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','s'],
                             ['tag','<',100]
@@ -247,8 +248,8 @@ release: #生产环境
             impression_end: #播放完成数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','e'],
                             ['tag','<',100]
@@ -258,8 +259,8 @@ release: #生产环境
             click: #广告点击数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    'total': {
-                        filter:[
+                    total: {
+                        filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','c'],
                             ['tag','<',100]
@@ -270,11 +271,12 @@ release: #生产环境
                 group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
                 condition:
                     total: {
-                        filter:[
+                        filter: [
                             ['ty','==','e'], 
                             ['rs','in',['0','1']],
                             ['tag','<',100],
                             ['query-seq', '!=', 'seq']
                         ],
                         output_name: 'total'
+                    }
 
