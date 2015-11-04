@@ -18,7 +18,7 @@ import httplib
 import urllib
 import json
 
-def new_send_message(text, margdown=True, channel=u'广告-数据', at_title='', at_text='', at_color='#ffa500'):
+def new_send_message(text, margdown=True, channel=u'广告-数据', at_title='', at_text='', at_color='#ffa500', images=[]):
     '''
     顶层字段
     text. 必须字段。支持 inline md 的文本内容。
@@ -32,8 +32,13 @@ def new_send_message(text, margdown=True, channel=u'广告-数据', at_title='',
     at_color. 可选。用于控制 attachment 在排版时左侧的竖线分隔符颜色
     title和text字段必须有一个。其他的随意组合。
     '''
-    params_dict = ({"text": text, "channel": channel, "margdown": margdown, "attachments": [{"title": at_title, "text":
-      at_text, "color":at_color}]})
+    params_dict = {}
+    if images:
+        params_dict = ({"text": text, "channel": channel, "margdown": margdown, "attachments": [{"title": at_title, "text":
+            at_text, "color":at_color, 'images': images }]})
+    else:
+        params_dict = ({"text": text, "channel": channel, "margdown": margdown, "attachments": [{"title": at_title, "text":
+        at_text, "color":at_color}]})
     params = json.JSONEncoder().encode(params_dict)
     return send_message_by_json(params)
 
