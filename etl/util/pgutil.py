@@ -26,7 +26,7 @@ class DBConfig:
     @staticmethod
     def Config():
         config = DBConfig.defaultConfig()
-        return config.update({
+        config.update({
             'database': CONFIG['database']['db_name'],
             'user': CONFIG['database']['user'],
             'password': CONFIG['database']['password'],
@@ -35,9 +35,10 @@ class DBConfig:
             'minconn': CONFIG['database']['minconn'],
             'maxconn': CONFIG['database']['maxconn']
             })
+        return config
 
 
-config = DBConfig.defaultConfig()
+config = DBConfig.Config()
 
 
 class SafePoolManager:
@@ -49,10 +50,9 @@ class SafePoolManager:
         self.last_seen_process_id = os.getpid()
         self.args = args
         self.kwargs = kwargs
-        self._init()
+        self._pool = None
 
     def _init(self):
-        #database=self.db, user=self.db_user, password=self.db_password, host=self.db_host, port=self.db_port
         self._pool = ThreadedConnectionPool(self.args[0],self.args[1],
                                             database=config.get('database'),
                                             user=config.get('user'),
@@ -66,6 +66,8 @@ class SafePoolManager:
             self._init()
             LOGGER.info("New id is %s, old id was %s" % (current_pid, self.last_seen_process_id))
             self.last_seen_process_id = current_pid
+        if self._pool is None:
+            self._init()
         return self._pool.getconn()
     
 pool = SafePoolManager(config['minconn'], config['maxconn'])
@@ -147,7 +149,7 @@ SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 class LoadUtils:
     
     @staticmethod
-    def fromCsvtodb(filepath,tablename,conn=pool.getconn(),cols=None,commit=False,bulkread_size=1000,split_char='\t'):
+    def fromCsvtodb(filepath,tablename,conn=None,cols=None,commit=False,bulkread_size=1000,split_char='\t'):
         '''
         commit = false 表示全部插入成功后在提交，否则表示每次插入都会提交
         cols = None 表示 columns从文件中读取，否则以给定list作为columns
@@ -156,6 +158,8 @@ class LoadUtils:
         if not filepath or not os.path.exists(filepath):
             LOGGER.error("file path not exists:'%s'"%filepath)
             raise Exception("file path not exists:'%s'"%filepath)
+        if conn is None:
+            conn = pool.getconn()
         try:
             read_buffer=[]
             with open(filepath,'rb') as fr:
@@ -172,7 +176,7 @@ class LoadUtils:
             if not commit:       
                 conn.commit()
         except Exception,e:
-            LOGGER.error("load file to db error,message: %s"%e.message)
+            LOGGER.error("load file to db error,filepath: %s ,message: %s"%(filepath,e.message))
             import traceback
             ex = traceback.format_exc()
             LOGGER.error(ex)
