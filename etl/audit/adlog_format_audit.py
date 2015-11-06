@@ -312,7 +312,7 @@ class AdlogFormatAudit:
                     for _k in self.demand_key_list:
                         if format_str != '':
                             format_str += '\t'
-                        format_str += str(log_dict.get(_k, "-1"))
+                        format_str += str(log_dict.get(_k, "-1").encode("utf-8"))
                     fw.write(format_str + '\n')
         end_time = time.time()
         self.excute_by_sql("INSERT INTO \"Data_Audit_Statistics\" VALUES (\'%s\', \'%s\', %d, %f)" % (demand_save_file, self.run_year_day + self.run_hour, check_total, self.get_probability(check_total, error_total)))  
