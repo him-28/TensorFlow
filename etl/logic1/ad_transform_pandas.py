@@ -12,9 +12,9 @@ import pandas as pd
 
 from etl.util import init_log
 from etl.conf.settings import MONITOR_CONFIGS as CNF
+from etl.util.playerutil import getplayerInfo
 
 LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
-NA_REP = " "
 
 def split_header(names, header):
     '''转换配置里的数据类型、列名'''
@@ -22,9 +22,13 @@ def split_header(names, header):
     for name in names:
         the_type = header[name]
         if the_type == 'int':
-            target_dtype[name] = np.int64
+            target_dtype[name] = int
         elif the_type == 'string':
-            target_dtype[name] = np.string0
+            target_dtype[name] = str
+        elif the_type == 'list':
+            target_dtype[name] = str
+        elif the_type == 'long':
+            target_dtype[name] = np.int64
     return names, target_dtype
 
 
@@ -51,6 +55,8 @@ class AdTransformPandas(object):
     """使用Pandas处理CSV文件数据"""
     def __init__(self, console_print=False):
         '''初始化'''
+        # 佛祖保佑，永无Bug
+        buddha_bless_me()
         LOG.info("Welcome to AdTransformPandas")
         if console_print:  # print debug info in console
             console_handler = logging.StreamHandler(sys.stdout)
@@ -60,6 +66,7 @@ class AdTransformPandas(object):
             LOG.addHandler(console_handler)
         # 参数
         self.params = {}
+        self.__player_id_cache = None
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据
@@ -87,8 +94,6 @@ class AdTransformPandas(object):
 
         LOG.info("all task process complete in [" + str(exec_takes.seconds) + "] seconds (" + \
                 str(exec_takes.seconds / 60) + " minutes)")
-        print "all task process complete in [" + str(exec_takes.seconds) + "] seconds (" + \
-                str(exec_takes.seconds / 60) + " minutes)"
         return 0
 
     def merge_section(self):
@@ -113,6 +118,7 @@ class AdTransformPandas(object):
 
     def __calculate(self, trans_type, output_file_path, input_path, input_filename):
         ''' 计算一个维度的数据 '''
+        LOG.info("prepare to calculate : " + trans_type)
         conf_result = self.__configure(trans_type, output_file_path, input_path, input_filename)
 
         if not conf_result:
@@ -149,6 +155,7 @@ class AdTransformPandas(object):
         self.__put(("names", "dtype"), split_header(CNF.get("header"), CNF.get("header_type")))
         self.__put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
         self.__put("tmp_file_path", output_file_path + ".tmp")
+        self.__put("trans_type",trans_type)
         config_result = self.__configure_algorithm(trans_type, CNF)
         LOG.info("configure complete, retrieve params:" + str(self.params))
         return config_result
@@ -166,8 +173,9 @@ class AdTransformPandas(object):
         for item in self.__get('group_item'):
             sum_names.append(item)
         for key in self.__get('condition').keys():
-            sum_names.append(key)
-            self.__get("dtype")[key] = np.int64
+            output_name = self.__get('condition')[key]["output_name"]
+            sum_names.append(output_name)
+            self.__get("dtype")[output_name] = np.int64
         self.__put("sum_names", sum_names)
         return True
 
@@ -176,15 +184,54 @@ class AdTransformPandas(object):
         input_file_path = self.__get("input_file_path")
         LOG.info('load file:' + input_file_path)
         if os.path.exists(input_file_path):
+            if "display_poss" == self.__get("trans_type"):
+                input_file_path = self.__transform_display_poss_file()
             # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
             data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
                             dtype=self.__get('dtype'), index_col=False, \
                             chunksize=self.__get('chunk'))
             self.__transform_section(data_chunks)
+            #if "display_poss" == self.__get("trans_type"):
+                #os.remove(input_file_path)
         else:
             return False
         return True
 
+    def __transform_display_poss_file(self):
+        '''展示机会需要把打平的日志反打平'''
+        LOG.info("merge display poss middle datas...")
+        input_file_path = self.__get("input_file_path")
+        tmp_trans_file = input_file_path + ".ttmp"
+        if os.path.exists(tmp_trans_file):
+            os.remove(tmp_trans_file)
+        LOG.info("read data from %s", input_file_path)
+        data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
+                        dtype=self.__get('dtype'), index_col=False, \
+                        chunksize=self.__get('chunk'))
+        groupby_list = ['board_id','session_id','pf',\
+                        'timestamp','ad_event_type','request_res','tag']
+        trunk_size = 0
+        for chunk in data_chunks:
+            need_header = trunk_size == 0
+            LOG.info("merge chunk %s:", trunk_size)
+            trunk_size = trunk_size + 1
+            tmp_df = chunk.groupby(groupby_list).size()
+            LOG.info("append chunk result to %s:", tmp_trans_file)
+            tmp_df.to_csv(tmp_trans_file, header=need_header, \
+                                 sep=self.__get('input_column_sep'), \
+                                 na_rep=CNF["na_rep"], mode="a", index=True)
+
+        if trunk_size > 1:
+            data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
+                            dtype=self.__get('dtype'), index_col=False)
+            LOG.info("merge all trunk results")
+            data_chunks = data_chunks.groupby(groupby_list).size()
+            LOG.info("save final result to: %s",tmp_trans_file)
+            data_chunks.to_csv(tmp_trans_file, header=True, \
+                                     sep=self.__get('input_column_sep'), \
+                                     na_rep=CNF["na_rep"], index=True)
+        LOG.info("merge display poss middle datas complete!")
+        return tmp_trans_file
     def __transform_section(self, data_chunks):
         '''分段转换数据'''
         LOG.info('transform...')
@@ -193,20 +240,22 @@ class AdTransformPandas(object):
         if os.path.exists(self.__get('tmp_file_path')):
             LOG.info("tmp_file exists,remove : " + self.__get('tmp_file_path'))
             os.remove(self.__get('tmp_file_path'))
-
+        section_index = 0
         for chunk in data_chunks:
+            LOG.info("group section " + str(section_index) + " ...")
+            section_index = section_index + 1
             chunk_len = len(chunk)  # 记录chunk长度
-            grouped = None
+            groupframe = None
             condition = self.__get("condition")
             for cdt_key in condition.iterkeys():
-                grouped = self.__calculate_algorithm(grouped, cdt_key, condition[cdt_key], chunk)
+                groupframe = self.__calculate_algorithm(groupframe\
+                                                        , cdt_key, condition[cdt_key], chunk)
 
-            if not grouped is None:
-                groupframe = pd.DataFrame(grouped)
+            if not groupframe is None:
                 # 保存到临时CSV文件
                 groupframe.to_csv(self.__get('tmp_file_path'), header=False, \
                                  sep=self.__get('output_column_sep'), \
-                                 na_rep=NA_REP, mode="a", index=True)
+                                 na_rep=CNF["na_rep"], mode="a", index=True)
             elif not os.path.exists(self.__get('tmp_file_path')):  # 创建一个空文件
                 tmp_file = os.open(self.__get('tmp_file_path'), os.O_CREAT)
                 os.close(tmp_file)
@@ -217,30 +266,148 @@ class AdTransformPandas(object):
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
         LOG.info('transform!')
 
-    def __calculate_algorithm(self, grouped, column_name, relations, tmp_chunk):
+    def __calculate_algorithm(self, grouped, cdt_key, relations, tmp_chunk):
         '''根据关系规则Group分段数据，把分段Group结果合并'''
-        LOG.info("filter column: " + column_name)
-        for rel in relations:
+        LOG.info("filter section columns:")
+        for rel in relations["filter"]:
             key = rel[0]
             opt = rel[1]
             val = rel[2]
             tmp_chunk = filter_chunk(tmp_chunk, key, opt, val)
-        LOG.info("merge column result: " + column_name)
+        LOG.info("filter section column result length: %d, result size: %d" \
+                 , len(tmp_chunk), tmp_chunk.size)
 
+        LOG.info("execute operator: " + cdt_key)
         if len(tmp_chunk) == 0:
             return None
 
-        if column_name == 'total':
-            if grouped is None:
-                grouped = tmp_chunk.groupby(self.__get('group_item')).size()
-            else:
-                grouped = pd.concat([grouped, tmp_chunk.\
-                                    groupby(self.__get('group_item')).size()], axis=1)
+        if cdt_key == 'count':  # 普通计数
+            grouped = pd.DataFrame(self.__merge_dataframe_group_count(grouped, tmp_chunk))
+        elif cdt_key == 'query-slot-count':  # 从接口中查询slot_id再计数-->用于计算展示机会
+            series_data_struct = self.__init_series_data_struct(True)
+            for row in tmp_chunk.iterrows():
+                self.__fill_relation_list(row[1], series_data_struct)
+            self.__dtype_series(series_data_struct)
+            dataf = pd.DataFrame(series_data_struct)
+            grouped = self.__merge_dataframe_group_count(grouped, dataf)
+
+        elif cdt_key == 'query-slot-compare':  # 从接口中查询slot_id比较顺序计算升位-->用于计算升位
+            dataf = self.__group_slot_compare(tmp_chunk)
+            grouped = self.__merge_dataframe_group_count(grouped, dataf)
         else:
-            LOG.error("unsupport operation:" + column_name)
+            LOG.error("unsupport operation:" + cdt_key)
             return None
         return grouped
 
+    def __merge_dataframe_group_count(self, grouped, dataframe):
+        """as u c: merge dataframe group count"""
+        if grouped is None:
+            if len(dataframe) > 0:
+                grouped = dataframe.groupby(self.__get('group_item')).size()
+        else:
+            grouped = pd.concat([grouped, dataframe.\
+                                groupby(self.__get('group_item')).size()], axis=1)
+        return grouped
+
+    def __group_slot_compare(self, chunk):
+        '''按slot_id group
+        @param chunk: 读取的CSV日志数据片段'''
+        #转换"query-"字段为原字段
+
+        self.__init_series_data_struct(False, "seq", "order")
+        #chunk["query-slot_id"] = "-1"#chunk["slot_id"]
+        _compare_slot_id_list = []
+        for row_data in chunk.iterrows():
+            row = row_data[1]
+            board_id = row["board_id"]
+            timestamp = row["timestamp"]
+            seq = row["seq"] #播放顺序
+            # 获取实际在按播放顺序的广告位ID
+            _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
+        chunk["query-slot_id"] = _compare_slot_id_list
+        chunk = chunk[chunk['query-slot_id'] != chunk['slot_id']]
+        #chunk.to_csv(r"C:\test2.csv",sep="\t")
+        return chunk
+
+    def __init_series_data_struct(self,remove_prefix, *addons):
+        '''初始化一个字段的Series空构造
+        NOTICE:这个方法会去掉group_item、sum_names里以query-开头字段的“query-”前缀还原字段'''
+        __struct = {}
+        group_item = self.__get("group_item")
+        sum_names = self.__get("sum_names")
+        for item in group_item:
+            if item.startswith("query-"):
+                redefine_item = item.replace("query-", "", 1)
+                __struct[redefine_item] = []
+                if remove_prefix:
+                    group_item[group_item.index(item)] = redefine_item
+                    sum_names[sum_names.index(item)] = redefine_item
+            else:
+                __struct[item] = []
+        if len(addons) > 0:
+            for addon in addons:
+                __struct[addon] = []
+        return __struct
+
+    def __dtype_series(self, series_data_struct):
+        '''给Series构造加上数据类型(dtype)'''
+        for item, arr in series_data_struct.iteritems():
+            series_data_struct[item] = np.array(arr, dtype=self.__get("dtype")[item])
+
+    def __fill_relation_list(self, row_data, series_data_struct):
+        '''把查询到的需要打平字段的列表分割、组成Series
+            ex.目前需要打平的字段有：slot_id
+         '''
+        board_id = row_data["board_id"]
+        timestamp = row_data["timestamp"]
+        slot_ids = self.__get_slot_ids(board_id, timestamp)
+        if slot_ids is None:
+            LOG.error("no slot data with the condition: board_id: %s, timestamp: %s"
+                       , board_id, timestamp)
+            return
+        for slot_id in slot_ids:
+            for item, item_data in series_data_struct.iteritems():
+                if item == "slot_id":
+                    item_data.append(slot_id)
+                else:
+                    item_data.append(row_data[item])
+
+    def __get_slot_ids(self, board_id, timestamp):
+        '''查询board_id下对应的slot_id'''
+        player_infos = self.__get_player_infos()
+
+        for group in player_infos.values():
+            start = group['starttime']
+            end = group['endtime']
+            if start <= timestamp and end > timestamp:
+                playerinfo = group["playerinfo"]
+                if playerinfo.has_key(board_id):
+                    return playerinfo[board_id].keys()
+        return None
+
+    def __get_store_slotid_by_seq(self, board_id, timestamp, seq):
+        '''获取一个广告位下的groupid、name和group中的排序'''
+        player_infos = self.__get_player_infos()
+
+        for group in player_infos.values():
+            start = group['starttime']
+            end = group['endtime']
+            if start <= timestamp and end > timestamp:
+                playerinfo = group["playerinfo"]
+                if playerinfo.has_key(board_id):
+                    slot_info = playerinfo[board_id]
+                    for slot_id, details in slot_info.iteritems():
+                        if details[2] == seq:
+                            return slot_id
+        LOG.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
+                  board_id, timestamp, seq)
+        return '-1'
+
+    def __get_player_infos(self):
+        '''获取播放器信息，如果已经获取过，从缓存中拿'''
+        if self.__player_id_cache is None:
+            self.__player_id_cache = getplayerInfo()
+        return self.__player_id_cache
 
     def __save_result_file(self, merge_result):
         '''保存计算结果到文件'''
@@ -267,3 +434,31 @@ class AdTransformPandas(object):
         '''获取self.params'''
         return self.params[key]
 
+
+def buddha_bless_me():
+    '''佛祖保佑'''
+    print r'''#########################################################'''
+    print r'''#########################################################'''
+    print r'''##                                                     ##'''
+    print r'''##                       _oo0oo_                       ##'''
+    print r'''##                      o8888888o                      ##'''
+    print r'''##                      88" . "88                      ##'''
+    print r'''##                      (| -_- |)                      ##'''
+    print r'''##                      0\  =  /0                      ##'''
+    print r'''##                   ___//`---'\\___                   ##'''
+    print r'''##                  .' \|       |/ '.                  ##'''
+    print r'''##                 /  \|||  :  |||/  \                 ##'''
+    print r'''##                / _||||| -:- |||||- \                ##'''
+    print r'''##               /  _||||| -:- |||||-  \               ##'''
+    print r'''##               | \_|  ''\---/''  |_/ |               ##'''
+    print r'''##               \  .-\__  '-'  ___/-. /               ##'''
+    print r'''##             ___'. .'  /--.--\  `. .'___             ##'''
+    print r'''##          ."" '<  `.___\_<|>_/___.' >' "".           ##'''
+    print r'''##         | | :  `- \`.;`\ _ /`;.`/ - ` : | |         ##'''
+    print r'''##         \  \ `_.   \_ __\ /__ _/   .-` / /          ##'''
+    print r'''##                       `=---='                       ##'''
+    print r'''##                                                     ##'''
+    print r'''##               Amituofo 佛祖保佑  永无BUG                ##'''
+    print r'''####@#######@#######@#######@#####@#####@#######@######@#'''
+    print r'''##@##@####@##@####@##@####@##@##@##@##@##@####@##@###@##@'''
+    print r'''@#####@#@#####@#@#####@#@#####@#####@#####@#@#####@#@####'''

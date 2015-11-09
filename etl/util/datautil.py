@@ -102,5 +102,5 @@ def merge_file(input_paths, output_files):
         LOG.info("sum merged datas")
         _group_item = CNF["algorithm"][metric]["group_item"]
         df1 = df1.groupby(_group_item).sum()
-        df1.to_csv(output_filename, sep=output_column_sep, na_rep=" ", header=True)
+        df1.to_csv(output_filename, sep=output_column_sep, na_rep=CNF.get("na_rep"), header=True)
 

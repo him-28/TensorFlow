@@ -3,28 +3,44 @@ current_env: beta
 beta: #测试环境
     monitor: 
         ##########common config########################
-        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
+        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
         ##########petl config##########################
-        chance_aggre_header: ['board_id']
-        count_aggre_header: ['slot_id','compaign_id','creator_id']
-        start_aggre_header: ['slot_id','compaign_id','creator_id']
-        end_aggre_header: ['slot_id','compaign_id','creator_id']
-        click_aggre_header: ['slot_id','compaign_id','creator_id']
+        with_header: True
+        chance_aggre_header: ['board_id','slot_id','pf']
+        count_aggre_header: ['board_id','slot_id','pf']
+        seq_aggre_header: ['seq','board_id','group_id','pf']
+        up_aggre_header: ['realslotid','pf']
+        start_aggre_header: ['slot_id','compaign_id','creator_id','pf']
+        end_aggre_header: ['slot_id','compaign_id','creator_id','pf']
+        click_aggre_header: ['slot_id','compaign_id','creator_id','pf']
         aggre_header: ['slot_id','compaign_id','creator_id']
-        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and {pf} == '010101' "
-        count_select: "{ad_event_type} == 'e' and {request_res} == '0' and {pf} == '010101' "
-        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {pf} == '010101' "
-        end_select: "{ad_event_type} == 'e' and {play_event} == 'e' and {pf} == '010101' "
-        click_select: "{ad_event_type} == 'e' and {play_event} == 'c' and {pf} == '010101' "
-        batch_read_size: 1000005
-        display_pos: display_pos
+        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
+        count_select: "{ad_event_type} == 'e'  and {tag} < 100"
+        up_select: "{ad_event_type} == 'e' and {tag} < 100 "
+        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 "
+        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {tag} < 100 "
+        end_select: "{ad_event_type} == 'p' and {play_event} == 'e'  and {tag} < 100 "
+        click_select: "{ad_event_type} == 'p' and {play_event} == 'c' and {tag} < 100 "
+        common_select:
+        batch_read_size: 100000
+        display_pos: display_poss
         display: display
         impression: impression
         impression_end: impression_end
         click: click
+        up: up
+        ad_list: ad_list
+        slotid: slot_id
+        mediabuyid: compaign_id
+        creativeid: creator_id
+        player_id: board_id
+        group_id: group_id      #group_id 对应header中名称
+        seq: seq                # seq 对应header中的名称
+        tag: tag
+        addslotid: realslotid   # 添加的列名称
         ##########pandas config##########################
         header_type: {
             'ip':'string',
@@ -34,12 +50,13 @@ beta: #测试环境
             'url':'string',
             'video_id':'string',
             'playlist_id':'string',
-            'board_id':'string',
+            'board_id':'int',
             'request_res':'string',
             'ad_list':'list',
             'time_delay':'string',
-            'reqest_str':'string',
-            'slot_id':'string',
+            'request_str':'string',
+            'slot_id':'int',
+            'query-slot_id':'int',
             'compaign_id':'string',
             'creator_id':'string',
             'video_play_time':'string',
@@ -54,7 +71,7 @@ beta: #测试环境
             'manufacturer':'string',
             'model':'string',
             'app':'string',
-            'timestamp':'string',
+            'timestamp':'long',
             'session_id':'string',
             'seq':'int',
             'tag':'int'
@@ -65,7 +82,7 @@ beta: #测试环境
             display_poss: #广告位展示机会
                 group_item: ['board_id','pf','query-slot_id']
                 condition:
-                    count: {
+                    query-slot-count: {
                         filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','in',['0','1']],
@@ -84,7 +101,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             display: #广告次序实际展示数
-                group_item: ['board_id','pf','seq']
+                group_item: ['board_id','pf','seq','group_id']
                 condition:
                     'count': {
                         filter: [
@@ -97,7 +114,7 @@ beta: #测试环境
             impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','s'],
@@ -108,7 +125,7 @@ beta: #测试环境
             impression_end: #播放完成数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','e'],
@@ -119,7 +136,7 @@ beta: #测试环境
             click: #广告点击数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','c'],
@@ -128,14 +145,13 @@ beta: #测试环境
                         output_name: 'total'
                     }
             up: #升位数
-                group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
+                group_item: ['board_id','query-slot_id','pf','group_id'] #播放器ID、广告位ID
                 condition: 
-                    total: {
+                    query-slot-compare: {
                         filter: [
-                            ['ty','==','e'], 
-                            ['rs','in',['0','1']],
-                            ['tag','<',100],
-                            ['query-seq', '!=', 'seq']
+                            ['ad_event_type','==','e'], 
+                            ['request_res','in',['0','1']],
+                            ['tag','<',100]
                         ],
                         output_name: 'total'
                     }
@@ -143,28 +159,44 @@ beta: #测试环境
 release: #生产环境
     monitor: 
         ##########common config########################
-        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','reqest_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
+        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
         ##########petl config##########################
-        chance_aggre_header: ['board_id']
-        count_aggre_header: ['slot_id','compaign_id','creator_id']
-        start_aggre_header: ['slot_id','compaign_id','creator_id']
-        end_aggre_header: ['slot_id','compaign_id','creator_id']
-        click_aggre_header: ['slot_id','compaign_id','creator_id']
+        with_header: True
+        chance_aggre_header: ['board_id','slot_id','pf']
+        count_aggre_header: ['board_id','slot_id','pf']
+        seq_aggre_header: ['seq','board_id','group_id','pf']
+        up_aggre_header: ['realslotid','pf']
+        start_aggre_header: ['slot_id','compaign_id','creator_id','pf']
+        end_aggre_header: ['slot_id','compaign_id','creator_id','pf']
+        click_aggre_header: ['slot_id','compaign_id','creator_id','pf']
         aggre_header: ['slot_id','compaign_id','creator_id']
-        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and {pf} == '010101' "
-        count_select: "{ad_event_type} == 'e' and {request_res} == '0' and {pf} == '010101' "
-        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {pf} == '010101' "
-        end_select: "{ad_event_type} == 'e' and {play_event} == 'e' and {pf} == '010101' "
-        click_select: "{ad_event_type} == 'e' and {play_event} == 'c' and {pf} == '010101' "
-        batch_read_size: 1000005
-        display_pos: display_pos
+        chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
+        count_select: "{ad_event_type} == 'e'  and {tag} < 100"
+        up_select: "{ad_event_type} == 'e' and {tag} < 100 "
+        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 "
+        start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {tag} < 100 "
+        end_select: "{ad_event_type} == 'p' and {play_event} == 'e'  and {tag} < 100 "
+        click_select: "{ad_event_type} == 'p' and {play_event} == 'c' and {tag} < 100 "
+        common_select:
+        batch_read_size: 100000
+        display_pos: display_poss
         display: display
         impression: impression
         impression_end: impression_end
         click: click
+        up: up
+        ad_list: ad_list
+        slotid: slot_id
+        mediabuyid: compaign_id
+        creativeid: creator_id
+        player_id: board_id
+        group_id: group_id      #group_id 对应header中名称
+        seq: seq                # seq 对应header中的名称
+        tag: tag
+        addslotid: realslotid   # 添加的列名称
         ##########pandas config##########################
         header_type: {
             'ip':'string',
@@ -174,12 +206,13 @@ release: #生产环境
             'url':'string',
             'video_id':'string',
             'playlist_id':'string',
-            'board_id':'string',
+            'board_id':'int',
             'request_res':'string',
             'ad_list':'list',
             'time_delay':'string',
-            'reqest_str':'string',
-            'slot_id':'string',
+            'request_str':'string',
+            'slot_id':'int',
+            'query-slot_id':'int',
             'compaign_id':'string',
             'creator_id':'string',
             'video_play_time':'string',
@@ -194,18 +227,18 @@ release: #生产环境
             'manufacturer':'string',
             'model':'string',
             'app':'string',
-            'timestamp':'string',
+            'timestamp':'long',
             'session_id':'string',
             'seq':'int',
             'tag':'int'
         }
-        read_csv_chunk: 100000
+        read_csv_chunk: 1000000
         db_commit_chunk: 10000
         algorithm: 
             display_poss: #广告位展示机会
                 group_item: ['board_id','pf','query-slot_id']
                 condition:
-                    count: {
+                    query-slot-count: {
                         filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','in',['0','1']],
@@ -224,7 +257,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             display: #广告次序实际展示数
-                group_item: ['board_id','pf','seq']
+                group_item: ['board_id','pf','seq','group_id']
                 condition:
                     'count': {
                         filter: [
@@ -237,7 +270,7 @@ release: #生产环境
             impression: #成功播放数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','s'],
@@ -248,7 +281,7 @@ release: #生产环境
             impression_end: #播放完成数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','e'],
@@ -259,7 +292,7 @@ release: #生产环境
             click: #广告点击数
                 group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
-                    total: {
+                    count: {
                         filter: [
                             ['ad_event_type','==','p'],
                             ['play_event','==','c'],
@@ -268,14 +301,13 @@ release: #生产环境
                         output_name: 'total'
                     }
             up: #升位数
-                group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
-                condition:
-                    total: {
+                group_item: ['board_id','query-slot_id','pf','group_id'] #播放器ID、广告位ID
+                condition: 
+                    query-slot-compare: {
                         filter: [
-                            ['ty','==','e'], 
-                            ['rs','in',['0','1']],
-                            ['tag','<',100],
-                            ['query-seq', '!=', 'seq']
+                            ['ad_event_type','==','e'], 
+                            ['request_res','in',['0','1']],
+                            ['tag','<',100]
                         ],
                         output_name: 'total'
                     }
