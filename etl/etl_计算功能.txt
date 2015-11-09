@@ -1,9 +1,0 @@
- pg中的事实表的数据得由supply demand计算而来。故有两部分需要计算统计，统计完成后插入到pg中。
-    统计部分：
-    1统计需统计supply（按时间，区域，内容，操作系统，广告位id，创意id，投放id）中的pv 和展示数  对应pg表中的reqs_total 和hit_total
-    2统计demand中的开始播放数、结束播放数、点击数  对应pg中impressions_start_total、impressions_finish_total、click
- 
-  insert部分
-    第一种方法：supply和demand的统计数据合并后insert到pg中
-  第二种方法：先insert supply或者demand的统计数据，另外一张表的数据则采用update的方式
-  看哪种方法好点

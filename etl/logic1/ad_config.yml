@@ -1,0 +1,82 @@
+column_sep: "\t"
+output_column_sep: "\t"
+names: ['ip','ty','ur','v','ci','b','rs','l','td','req','s','cp','c','ct','o','e','pf','d','u','net','os','mf','mod','app','ts','si']
+
+header: {
+    'ip':'string',
+    'ty':'string',
+    'ur':'string',
+    'v':'string',
+    'ci':'string',
+    'b':'string',
+    'rs':'string',
+    'l':'string',
+    'td':'string',
+    'req':'string',
+    's':'string',
+    'cp':'string',
+    'c':'string',
+    'ct':'string',
+    'o':'string',
+    'e':'string',
+    'pf':'string',
+    'd':'string',
+    'u':'string',
+    'net':'string',
+    'os':'string',
+    'mf':'string',
+    'mod':'string',
+    'app':'string',
+    'ts':'string',
+    'si':'string'
+}
+
+read_csv_chunk: 100000
+db_commit_chunk: 10000
+
+algorithm: 
+    display_poss: #展示机会
+        group_item: 'b' #播放器ID
+        condition:
+            count: [
+                ['ty','==','e'],
+                ['rs','in',['0','1']],
+                ['pf','==','010101']
+            ]
+
+    display: #实际展示数
+        group_item: ['s','cp','c'] #广告位尖，投放ID，创意ID
+        condition:
+            'count': [
+                ['ty','==','e'],
+                ['rs','==','0'],
+                ['pf','==','010101']
+            ]
+
+    impression: #成功播放数
+        group_item: ['s','cp','c'] #广告位尖，投放ID，创意ID
+        condition:
+            'count': [
+                ['ty','==','p'],
+                ['e','==','s'],
+                ['pf','==','010101']
+            ]
+
+    impression_end: #播放完成数
+        group_item: ['s','cp','c'] #广告位尖，投放ID，创意ID
+        condition:
+            'count': [
+                ['ty','==','p'],
+                ['e','==','e'],
+                ['pf','==','010101']
+            ]
+
+    click: #广告点击数
+        group_item: ['s','cp','c'] #广告位尖，投放ID，创意ID
+        condition:
+            'count': [
+                ['ty','==','p'],
+                ['e','==','c'],
+                ['pf','==','010101']
+            ]
+
