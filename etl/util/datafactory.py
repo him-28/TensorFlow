@@ -918,7 +918,7 @@ def gen_datetime(min_date=None, max_date=None):
 
 class ADMonitorFactory(object):
     def generate_android_phone(self,out_dir):
-        size = 50000
+        size = 20000
         ips = []
         provinces= []
         citys= []
@@ -960,6 +960,17 @@ class ADMonitorFactory(object):
             session_id = gen_uuid()
             ty = gen_choice(['e', 'p'])
             rs = gen_choice([0,1])
+            slotco = ['100929','98179','98189','98187','102857','98185','106309']
+            slot1 = gen_choice(slotco)
+            slotco.remove(slot1)
+            slot2 = gen_choice(slotco)
+            slotco.remove(slot2)
+            slot3 = gen_choice(slotco)
+            slots= []
+            slots.append(slot1)
+            slots.append(slot2)
+            slots.append(slot3)
+            tag = gen_integer(1,105)
             for j in range(3):
                 ips.append(_ip)
                 provinces.append(ip_util.get_cityInfo_from_ip(_ip, 2))
@@ -968,19 +979,20 @@ class ADMonitorFactory(object):
                 urls.append(gen_url(scheme='http', subdomain='hunantv', tlds='com'))
                 vids.append(gen_integer(1,1000000))
                 cids.append(gen_integer(1,10000))
-                board_ids.append(gen_integer(1,100))
+                board_ids.append(gen_choice([4580]))
                 results.append(rs)
-                l = str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'\
-                        +str(gen_integer(1,100)) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) 
+                l = str(slot1) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) + '|'\
+                        +str(slot2) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000)) +'|'\
+                        +str(slot3) + ',' + str(gen_integer(1,10000)) + ',' + str(gen_integer(1,1000))
                 ad_list.append(l)
                 time_delay.append(gen_integer(1,10))
                 reqs.append(gen_url(scheme='http', subdomain='x.da.hunantv', tlds='com'))
-                slot_ids.append(gen_integer(1,100))
+                slot_ids.append(slots[j])
                 compaign_ids.append(gen_integer(1,100000))
                 creator_ids.append(gen_integer(1,10000))
                 c_time.append(gen_integer(1,1000000))
                 order.append(gen_choice([1,2,3,4,5]))
-                group_ids.append(gen_integer(1,100000))
+                group_ids.append(gen_choice([11114580]))
                 event.append(gen_choice(['s', 'e', 'c', 's', 'p', 'up', 'm', 'um']))
                 pf.append(gen_choice(['000000', '000100', '000101', '010101']))
                 device_ids.append(gen_mac())
@@ -993,7 +1005,7 @@ class ADMonitorFactory(object):
                 ts.append(gen_integer(1,10000000))
                 si.append(session_id)
                 seq.append(j+1)
-                tags.append(gen_integer(1,105))
+                tags.append(tag)
 
 
         df = pandas.DataFrame({
