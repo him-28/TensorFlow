@@ -155,6 +155,7 @@ class AdTransformPandas(object):
         self.__put(("names", "dtype"), split_header(CNF.get("header"), CNF.get("header_type")))
         self.__put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
         self.__put("tmp_file_path", output_file_path + ".tmp")
+        self.__put("trans_type",trans_type)
         config_result = self.__configure_algorithm(trans_type, CNF)
         LOG.info("configure complete, retrieve params:" + str(self.params))
         return config_result
@@ -183,15 +184,54 @@ class AdTransformPandas(object):
         input_file_path = self.__get("input_file_path")
         LOG.info('load file:' + input_file_path)
         if os.path.exists(input_file_path):
+            if "display_poss" == self.__get("trans_type"):
+                input_file_path = self.__transform_display_poss_file()
             # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
             data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
                             dtype=self.__get('dtype'), index_col=False, \
                             chunksize=self.__get('chunk'))
             self.__transform_section(data_chunks)
+            #if "display_poss" == self.__get("trans_type"):
+                #os.remove(input_file_path)
         else:
             return False
         return True
 
+    def __transform_display_poss_file(self):
+        '''展示机会需要把打平的日志反打平'''
+        LOG.info("merge display poss middle datas...")
+        input_file_path = self.__get("input_file_path")
+        tmp_trans_file = input_file_path + ".ttmp"
+        if os.path.exists(tmp_trans_file):
+            os.remove(tmp_trans_file)
+        LOG.info("read data from %s", input_file_path)
+        data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
+                        dtype=self.__get('dtype'), index_col=False, \
+                        chunksize=self.__get('chunk'))
+        groupby_list = ['board_id','session_id','pf',\
+                        'timestamp','ad_event_type','request_res','tag']
+        trunk_size = 0
+        for chunk in data_chunks:
+            need_header = trunk_size == 0
+            LOG.info("merge chunk %s:", trunk_size)
+            trunk_size = trunk_size + 1
+            tmp_df = chunk.groupby(groupby_list).size()
+            LOG.info("append chunk result to %s:", tmp_trans_file)
+            tmp_df.to_csv(tmp_trans_file, header=need_header, \
+                                 sep=self.__get('input_column_sep'), \
+                                 na_rep=CNF["na_rep"], mode="a", index=True)
+
+        if trunk_size > 1:
+            data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
+                            dtype=self.__get('dtype'), index_col=False)
+            LOG.info("merge all trunk results")
+            data_chunks = data_chunks.groupby(groupby_list).size()
+            LOG.info("save final result to: %s",tmp_trans_file)
+            data_chunks.to_csv(tmp_trans_file, header=True, \
+                                     sep=self.__get('input_column_sep'), \
+                                     na_rep=CNF["na_rep"], index=True)
+        LOG.info("merge display poss middle datas complete!")
+        return tmp_trans_file
     def __transform_section(self, data_chunks):
         '''分段转换数据'''
         LOG.info('transform...')
@@ -242,15 +282,16 @@ class AdTransformPandas(object):
             return None
 
         if cdt_key == 'count':  # 普通计数
-            grouped = pd.DataFrame(self.__merge_dataframe_group_count(grouped,tmp_chunk))
-        elif cdt_key == 'query-slot-count':  # 从接口中查询slot_id再计数
-            series_data_struct = self.__init_series_data_struct()
+            grouped = pd.DataFrame(self.__merge_dataframe_group_count(grouped, tmp_chunk))
+        elif cdt_key == 'query-slot-count':  # 从接口中查询slot_id再计数-->用于计算展示机会
+            series_data_struct = self.__init_series_data_struct(True)
             for row in tmp_chunk.iterrows():
                 self.__fill_relation_list(row[1], series_data_struct)
             self.__dtype_series(series_data_struct)
             dataf = pd.DataFrame(series_data_struct)
             grouped = self.__merge_dataframe_group_count(grouped, dataf)
-        elif cdt_key == 'query-slot-compare':  # 从接口中查询slot_id比较顺序计算升位
+
+        elif cdt_key == 'query-slot-compare':  # 从接口中查询slot_id比较顺序计算升位-->用于计算升位
             dataf = self.__group_slot_compare(tmp_chunk)
             grouped = self.__merge_dataframe_group_count(grouped, dataf)
         else:
@@ -258,46 +299,39 @@ class AdTransformPandas(object):
             return None
         return grouped
 
-    def __merge_dataframe_group_count(self,grouped,df):
+    def __merge_dataframe_group_count(self, grouped, dataframe):
         """as u c: merge dataframe group count"""
         if grouped is None:
-            grouped = df.groupby(self.__get('group_item')).size()
+            if len(dataframe) > 0:
+                grouped = dataframe.groupby(self.__get('group_item')).size()
         else:
-            grouped = pd.concat([grouped, df.\
+            grouped = pd.concat([grouped, dataframe.\
                                 groupby(self.__get('group_item')).size()], axis=1)
         return grouped
 
     def __group_slot_compare(self, chunk):
-        '''按slot_id group'''
-        series_data_struct = self.__init_series_data_struct("seq", "order")
+        '''按slot_id group
+        @param chunk: 读取的CSV日志数据片段'''
+        #转换"query-"字段为原字段
+
+        self.__init_series_data_struct(False, "seq", "order")
+        #chunk["query-slot_id"] = "-1"#chunk["slot_id"]
+        _compare_slot_id_list = []
         for row_data in chunk.iterrows():
             row = row_data[1]
             board_id = row["board_id"]
             timestamp = row["timestamp"]
-            slot_ids = self.__get_slotid_groupid_seq(board_id, timestamp)
-            if slot_ids is None:
-                LOG.error("no slot data with the condition: board_id: %s, timestamp: %s"
-                           , board_id, timestamp)
-                continue
+            seq = row["seq"] #播放顺序
+            # 获取实际在按播放顺序的广告位ID
+            _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
+        chunk["query-slot_id"] = _compare_slot_id_list
+        chunk = chunk[chunk['query-slot_id'] != chunk['slot_id']]
+        #chunk.to_csv(r"C:\test2.csv",sep="\t")
+        return chunk
 
-            for slot_id, infos in slot_ids.iteritems():
-                for item, item_data in series_data_struct.iteritems():
-                    if item == "slot_id":
-                        item_data.append(slot_id)
-                    elif item == "group_id":
-                        item_data.append(infos[0])
-                    elif item == "seq":
-                        item_data.append(infos[2])
-                    elif item == "order":
-                        item_data.append(row["order"])
-                    else:
-                        item_data.append(row[item])
-        self.__dtype_series(series_data_struct)
-        _tmp_dataframe = pd.DataFrame(series_data_struct)
-        _tmp_dataframe = _tmp_dataframe[_tmp_dataframe['seq'] == _tmp_dataframe['order']]
-        return _tmp_dataframe
-    def __init_series_data_struct(self, *addons):
-        '''初始化一个字段的Series空构造'''
+    def __init_series_data_struct(self,remove_prefix, *addons):
+        '''初始化一个字段的Series空构造
+        NOTICE:这个方法会去掉group_item、sum_names里以query-开头字段的“query-”前缀还原字段'''
         __struct = {}
         group_item = self.__get("group_item")
         sum_names = self.__get("sum_names")
@@ -305,8 +339,9 @@ class AdTransformPandas(object):
             if item.startswith("query-"):
                 redefine_item = item.replace("query-", "", 1)
                 __struct[redefine_item] = []
-                group_item[group_item.index(item)] = redefine_item
-                sum_names[sum_names.index(item)] = redefine_item
+                if remove_prefix:
+                    group_item[group_item.index(item)] = redefine_item
+                    sum_names[sum_names.index(item)] = redefine_item
             else:
                 __struct[item] = []
         if len(addons) > 0:
@@ -322,7 +357,7 @@ class AdTransformPandas(object):
     def __fill_relation_list(self, row_data, series_data_struct):
         '''把查询到的需要打平字段的列表分割、组成Series
             ex.目前需要打平的字段有：slot_id
-        '''
+         '''
         board_id = row_data["board_id"]
         timestamp = row_data["timestamp"]
         slot_ids = self.__get_slot_ids(board_id, timestamp)
@@ -338,10 +373,9 @@ class AdTransformPandas(object):
                     item_data.append(row_data[item])
 
     def __get_slot_ids(self, board_id, timestamp):
-        '''查询board_id下对就的slot_id TODO FIXME'''
+        '''查询board_id下对应的slot_id'''
         player_infos = self.__get_player_infos()
 
-        #for index, group in player_infos.iteritems():
         for group in player_infos.values():
             start = group['starttime']
             end = group['endtime']
@@ -351,19 +385,23 @@ class AdTransformPandas(object):
                     return playerinfo[board_id].keys()
         return None
 
-    def __get_slotid_groupid_seq(self, board_id, timestamp):
-        '''获取一个播放器下的广告位ID、groupid和在group中的排序'''
+    def __get_store_slotid_by_seq(self, board_id, timestamp, seq):
+        '''获取一个广告位下的groupid、name和group中的排序'''
         player_infos = self.__get_player_infos()
 
-        # for index, group in player_infos.iteritems():
         for group in player_infos.values():
             start = group['starttime']
             end = group['endtime']
             if start <= timestamp and end > timestamp:
                 playerinfo = group["playerinfo"]
                 if playerinfo.has_key(board_id):
-                    return playerinfo[board_id]
-        return None
+                    slot_info = playerinfo[board_id]
+                    for slot_id, details in slot_info.iteritems():
+                        if details[2] == seq:
+                            return slot_id
+        LOG.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
+                  board_id, timestamp, seq)
+        return '-1'
 
     def __get_player_infos(self):
         '''获取播放器信息，如果已经获取过，从缓存中拿'''
