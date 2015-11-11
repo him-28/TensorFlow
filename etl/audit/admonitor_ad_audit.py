@@ -61,9 +61,13 @@ class AdMonitor_audit:
         
     def audit(self):
         start_time = time.time()
+        first_row = True
         with open(self.filepath,'rb') as fr:
             for line in fr:
                 if not line or not line.strip():
+                    continue
+                if first_row:
+                    first_row = False
                     continue
                 row=[i.strip() for i in line.strip().split(Config["file_split"])]
         #                 print row
