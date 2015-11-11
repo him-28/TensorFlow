@@ -9,6 +9,7 @@ from etl.util import init_log
 Config = yaml.load(file("conf/config.yml"))
 AuditConfig = yaml.load(file("conf/admonitor_audit_config.yml"))
 APConfig=yaml.load(file("logic0/config.yml"))
+FlatConfig = yaml.load(file("conf/flat_config.yml"))
 LOGGER = init_log.init("util/logger.conf", 'petlLogger')
 
 ENV_CONF = yaml.load(file("conf/monitor_config.yml"))
