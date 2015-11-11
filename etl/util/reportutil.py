@@ -91,6 +91,11 @@ class ReportUtil(object):
                 result_text .append(board_result)
         return result_text
 
+    def send_text(self, text_result):
+        '''发送到Bearychat'''
+        for title, text in text_result:
+            bc.new_send_message(None, at_title=title, at_text=text)
+
     def __statistics_board(self, board_id, slot_data):
         '''统计一个播放器的数据，并返回统计结果'''
         format_title = "播放器【%s】展示广告位（%s~%s）统计结果：" \
@@ -194,5 +199,4 @@ if __name__ == "__main__":
             }
     RU = ReportUtil('20151010 12:12:00', '20151010 12:13:00', DATA)
     TEXT_RESULT = RU.report_text()
-    for title,text in TEXT_RESULT:
-        bc.new_send_message(None, at_title=title, channel=u'Test-Dico', at_text=text)
+    RU.send_text(TEXT_RESULT)
