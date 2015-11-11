@@ -32,7 +32,10 @@ class ADMonitorAuditRobot(object):
     def report(self):
         m_title = u'%s 数据审计完成' % datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         content = u"总共%d纪录, 发现%d行错误,共耗时%d秒\r\n" % (self.total, self.problems.get('total', 0), self.spent)
-
+        
+        column_total = self.problems["column_total"]
+        for k,v in column_total.items():
+            content += u"字段: %s, 错误次数: %d\r\n" % (k, v)
         sample = self.problems['sample']
 
         content += u"错误抽样样本%d条\r\n" % len(sample)
@@ -53,6 +56,7 @@ class AdMonitor_audit:
         self.sample_error_size = Config["sample_error_size"]
         self.header = Config["header"]
         self.problems = []
+        self.columns_errors = {}
         self.spent = 0
         
     def audit(self):
@@ -75,7 +79,8 @@ class AdMonitor_audit:
             max_s = self.error_rows
         for i in range(0,max_s):
             sample.append(self.problems[i])
-        total_problems = {'total': len(self.problems), 'sample': sample}
+            
+        total_problems = {'column_total': self.columns_errors,'total': len(self.problems), 'sample': sample}
         robot = ADMonitorAuditRobot(self.count_rows, total_problems, self.spent)
         robot.report()
             
@@ -167,6 +172,9 @@ class AdMonitor_audit:
         self.error_rows = self.error_rows + 1
         problem = "行%s,列：%s 值：%s 错误信息：%s"%(str(index),field_name,value,result)
         self.problems.append(problem)
+        c = self.columns_errors.get(field_name,0)
+        c = c + 1
+        self.columns_errors.update({field_name:c})
         return False
         
     def _validate_value(self,row,value,scenes):
