@@ -6,7 +6,8 @@ Created on 2015年9月10日
 '''
 import socket,struct
 import init_log
-LOGGER = init_log.init("logger.conf", 'petlLogger')
+# LOGGER = init_log.init("logger.conf", 'petlLogger')
+from etl.conf.settings import LOGGER
 
 class IP_Util:
     ipb_arr=[]
