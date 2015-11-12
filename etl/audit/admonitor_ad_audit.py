@@ -4,6 +4,11 @@ Created on 2015年11月10日
 
 @author: Administrator
 '''
+import sys
+import os
+reload(sys)
+sys.setdefaultencoding('utf8')
+
 import time
 from datetime import datetime
 
@@ -62,6 +67,17 @@ class AdMonitor_audit:
     def audit(self):
         start_time = time.time()
         first_row = True
+        tmp_file_path = self.filepath + ".tmp"
+        if os.path.exists(tmp_file_path):
+            os.remove(tmp_file_path)
+        tmp_file = open(tmp_file_path,"w+")
+        for idx in range(0,len(Config["header"])):
+            if idx != 0:
+                tmp_file.write(Config["file_split"])
+            tmp_file.write(Config["header"][idx])
+        tmp_file.write("\n")
+        tag_index = Config["header"].index("tag")
+        file_split = Config["file_split"]
         with open(self.filepath,'rb') as fr:
             for line in fr:
                 if not line or not line.strip():
@@ -69,13 +85,24 @@ class AdMonitor_audit:
                 if first_row:
                     first_row = False
                     continue
-                row=[i.strip() for i in line.strip().split(Config["file_split"])]
-        #                 print row
+                row=[i.strip() for i in line.strip().split(file_split)]
                 self.count_rows = self.count_rows + 1
-                self.validator(row,self.count_rows)
+                res = self.validator(row,self.count_rows)
+                tag = 0
+                if not res:
+                    tag = 101
+                row[tag_index] = tag
+                for idx in range(0,len(row)):
+                    if idx != 0:
+                        tmp_file.write(file_split)
+                    tmp_file.write(str(row[idx]))
+                tmp_file.write("\n")
+        tmp_file.close()
+        os.remove(self.filepath)
+        os.rename(tmp_file_path,self.filepath)
         end_time = time.time()
         self.spent = end_time - start_time
-                
+
     def report(self):
         sample = []
         max_s = self.sample_error_size
@@ -164,7 +191,7 @@ class AdMonitor_audit:
         result = self.validate_field(index,row,Config["session_id"])
         if not result:
             return False
-        
+        return True
     def validate_field(self,index,row,field_name):       
         _index = self.header.index(field_name)
 #         print row
@@ -235,7 +262,6 @@ class AdMonitor_audit:
         return True
     
 def ad_audit(filepath):
-    filepath = r"C:\Users\Administrator\Desktop\ad_test_xx.csv"
     ad = AdMonitor_audit(filepath)
     ad.audit()
     ad.report()

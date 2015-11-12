@@ -103,9 +103,8 @@ class AdTransformPandas(object):
         # 输出结果到文件
         dataframe = pd.read_csv(self.__get('tmp_file_path'), sep=self.__get('output_column_sep'), \
                          names=self.__get("sum_names"), header=None, dtype=self.__get('dtype'))
-        dataframe.dropna()  # 去除NaN行
         total_grouped = dataframe.groupby(self.__get('group_item')).sum()
-
+        del dataframe
         # merge info
         LOG.info("merge result size:" + str(len(total_grouped)))
         total_groupframe = pd.DataFrame(total_grouped)
@@ -155,9 +154,10 @@ class AdTransformPandas(object):
         self.__put(("names", "dtype"), split_header(CNF.get("header"), CNF.get("header_type")))
         self.__put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
         self.__put("tmp_file_path", output_file_path + ".tmp")
-        self.__put("trans_type",trans_type)
+        self.__put("trans_type", trans_type)
         config_result = self.__configure_algorithm(trans_type, CNF)
-        LOG.info("configure complete, retrieve params:" + str(self.params))
+        LOG.info("configure complete, retrieve params:%s" ,
+                  str(self.params))
         return config_result
 
     def __configure_algorithm(self, trans_type, cnf):
@@ -184,15 +184,18 @@ class AdTransformPandas(object):
         input_file_path = self.__get("input_file_path")
         LOG.info('load file:' + input_file_path)
         if os.path.exists(input_file_path):
+            do_filter = True
             if "display_poss" == self.__get("trans_type"):
                 input_file_path = self.__transform_display_poss_file()
+                do_filter = False
             # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
             data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
                             dtype=self.__get('dtype'), index_col=False, \
                             chunksize=self.__get('chunk'))
-            self.__transform_section(data_chunks)
-            #if "display_poss" == self.__get("trans_type"):
-                #os.remove(input_file_path)
+            self.__transform_section(data_chunks,do_filter)
+            del data_chunks
+            if "display_poss" == self.__get("trans_type"):
+                os.remove(input_file_path)
         else:
             return False
         return True
@@ -208,31 +211,41 @@ class AdTransformPandas(object):
         data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
                         dtype=self.__get('dtype'), index_col=False, \
                         chunksize=self.__get('chunk'))
-        groupby_list = ['board_id','session_id','pf',\
-                        'timestamp','ad_event_type','request_res','tag']
+        groupby_list = ['board_id', 'session_id', 'pf', \
+                        'server_timestamp', 'ad_event_type', 'request_res', 'tag']
         trunk_size = 0
         for chunk in data_chunks:
             need_header = trunk_size == 0
             LOG.info("merge chunk %s:", trunk_size)
             trunk_size = trunk_size + 1
+
+            # 选过滤条件，减少计算数
+            condition = self.__get("condition")
+            for cdt_key in condition.iterkeys():
+                for rel in condition[cdt_key]["filter"]:
+                    key = rel[0]
+                    opt = rel[1]
+                    val = rel[2]
+                    chunk = filter_chunk(chunk, key, opt, val)
+
             tmp_df = chunk.groupby(groupby_list).size()
             LOG.info("append chunk result to %s:", tmp_trans_file)
             tmp_df.to_csv(tmp_trans_file, header=need_header, \
                                  sep=self.__get('input_column_sep'), \
                                  na_rep=CNF["na_rep"], mode="a", index=True)
-
+        del data_chunks
         if trunk_size > 1:
             data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
                             dtype=self.__get('dtype'), index_col=False)
             LOG.info("merge all trunk results")
             data_chunks = data_chunks.groupby(groupby_list).size()
-            LOG.info("save final result to: %s",tmp_trans_file)
+            LOG.info("save final result to: %s", tmp_trans_file)
             data_chunks.to_csv(tmp_trans_file, header=True, \
                                      sep=self.__get('input_column_sep'), \
                                      na_rep=CNF["na_rep"], index=True)
         LOG.info("merge display poss middle datas complete!")
         return tmp_trans_file
-    def __transform_section(self, data_chunks):
+    def __transform_section(self, data_chunks,do_filter):
         '''分段转换数据'''
         LOG.info('transform...')
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件#############
@@ -241,6 +254,7 @@ class AdTransformPandas(object):
             LOG.info("tmp_file exists,remove : " + self.__get('tmp_file_path'))
             os.remove(self.__get('tmp_file_path'))
         section_index = 0
+
         for chunk in data_chunks:
             LOG.info("group section " + str(section_index) + " ...")
             section_index = section_index + 1
@@ -249,7 +263,7 @@ class AdTransformPandas(object):
             condition = self.__get("condition")
             for cdt_key in condition.iterkeys():
                 groupframe = self.__calculate_algorithm(groupframe\
-                                                        , cdt_key, condition[cdt_key], chunk)
+                                    , cdt_key, condition[cdt_key], chunk, do_filter)
 
             if not groupframe is None:
                 # 保存到临时CSV文件
@@ -266,16 +280,17 @@ class AdTransformPandas(object):
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
         LOG.info('transform!')
 
-    def __calculate_algorithm(self, grouped, cdt_key, relations, tmp_chunk):
+    def __calculate_algorithm(self, grouped, cdt_key, relations, tmp_chunk, do_filter):
         '''根据关系规则Group分段数据，把分段Group结果合并'''
         LOG.info("filter section columns:")
-        for rel in relations["filter"]:
-            key = rel[0]
-            opt = rel[1]
-            val = rel[2]
-            tmp_chunk = filter_chunk(tmp_chunk, key, opt, val)
-        LOG.info("filter section column result length: %d, result size: %d" \
-                 , len(tmp_chunk), tmp_chunk.size)
+        if do_filter:
+            for rel in relations["filter"]:
+                key = rel[0]
+                opt = rel[1]
+                val = rel[2]
+                tmp_chunk = filter_chunk(tmp_chunk, key, opt, val)
+            LOG.info("filter section column result length: %d, result size: %d" \
+                     , len(tmp_chunk), tmp_chunk.size)
 
         LOG.info("execute operator: " + cdt_key)
         if len(tmp_chunk) == 0:
@@ -312,24 +327,21 @@ class AdTransformPandas(object):
     def __group_slot_compare(self, chunk):
         '''按slot_id group
         @param chunk: 读取的CSV日志数据片段'''
-        #转换"query-"字段为原字段
-
-        self.__init_series_data_struct(False, "seq", "order")
-        #chunk["query-slot_id"] = "-1"#chunk["slot_id"]
+        self.__init_series_data_struct(True, "seq", "order")
         _compare_slot_id_list = []
         for row_data in chunk.iterrows():
             row = row_data[1]
             board_id = row["board_id"]
-            timestamp = row["timestamp"]
-            seq = row["seq"] #播放顺序
+            timestamp = row["server_timestamp"]
+            seq = row["seq"]  # 播放顺序
             # 获取实际在按播放顺序的广告位ID
             _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
-        chunk["query-slot_id"] = _compare_slot_id_list
+        chunk["query-slot_id"] = chunk['slot_id']
+        chunk['slot_id'] = _compare_slot_id_list
         chunk = chunk[chunk['query-slot_id'] != chunk['slot_id']]
-        #chunk.to_csv(r"C:\test2.csv",sep="\t")
         return chunk
 
-    def __init_series_data_struct(self,remove_prefix, *addons):
+    def __init_series_data_struct(self, remove_prefix, *addons):
         '''初始化一个字段的Series空构造
         NOTICE:这个方法会去掉group_item、sum_names里以query-开头字段的“query-”前缀还原字段'''
         __struct = {}
@@ -359,7 +371,7 @@ class AdTransformPandas(object):
             ex.目前需要打平的字段有：slot_id
          '''
         board_id = row_data["board_id"]
-        timestamp = row_data["timestamp"]
+        timestamp = row_data["server_timestamp"]
         slot_ids = self.__get_slot_ids(board_id, timestamp)
         if slot_ids is None:
             LOG.error("no slot data with the condition: board_id: %s, timestamp: %s"
@@ -437,7 +449,8 @@ class AdTransformPandas(object):
 
 def buddha_bless_me():
     '''佛祖保佑'''
-    print r'''#########################################################'''
+    print r'''  ###################################################  '''
+    print r''' ####################################################### '''
     print r'''#########################################################'''
     print r'''##                                                     ##'''
     print r'''##                       _oo0oo_                       ##'''
@@ -458,7 +471,7 @@ def buddha_bless_me():
     print r'''##         \  \ `_.   \_ __\ /__ _/   .-` / /          ##'''
     print r'''##                       `=---='                       ##'''
     print r'''##                                                     ##'''
-    print r'''##               Amituofo 佛祖保佑  永无BUG                ##'''
+    print r'''##     Amituofo, buddha bless me, never have bug       ##'''
     print r'''####@#######@#######@#######@#####@#####@#######@######@#'''
-    print r'''##@##@####@##@####@##@####@##@##@##@##@##@####@##@###@##@'''
-    print r'''@#####@#@#####@#@#####@#@#####@#####@#####@#@#####@#@####'''
+    print r''' #@##@####@##@####@##@####@##@##@##@##@##@####@##@###@## '''
+    print r'''  ####@#@#####@#@#####@#@#####@#####@#####@#@#####@#@## '''

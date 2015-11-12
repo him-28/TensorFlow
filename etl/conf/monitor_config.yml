@@ -3,7 +3,7 @@ current_env: beta
 beta: #测试环境
     monitor: 
         ##########common config########################
-        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
+        header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag','province','city','seq','group_id']
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
@@ -13,10 +13,10 @@ beta: #测试环境
         count_aggre_header: ['board_id','slot_id','pf']
         seq_aggre_header: ['seq','board_id','group_id','pf']
         up_aggre_header: ['realslotid','pf']
-        start_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        end_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        click_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        aggre_header: ['slot_id','compaign_id','creator_id']
+        start_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        end_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        click_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        aggre_header: ['slot_id','mediabuy_id','creator_id']
         chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
         count_select: "{ad_event_type} == 'e'  and {tag} < 100"
         up_select: "{ad_event_type} == 'e' and {tag} < 100 "
@@ -34,7 +34,7 @@ beta: #测试环境
         up: up
         ad_list: ad_list
         slotid: slot_id
-        mediabuyid: compaign_id
+        mediabuyid: mediabuy_id
         creativeid: creator_id
         player_id: board_id
         group_id: group_id      #group_id 对应header中名称
@@ -57,7 +57,7 @@ beta: #测试环境
             'request_str':'string',
             'slot_id':'int',
             'query-slot_id':'int',
-            'compaign_id':'string',
+            'mediabuy_id':'string',
             'creator_id':'string',
             'video_play_time':'string',
             'order':'int',
@@ -72,11 +72,12 @@ beta: #测试环境
             'model':'string',
             'app':'string',
             'timestamp':'long',
+            'server_timestamp':'long',
             'session_id':'string',
             'seq':'int',
             'tag':'int'
         }
-        read_csv_chunk: 100000
+        read_csv_chunk: 500000
         db_commit_chunk: 10000
         algorithm: 
             display_poss: #广告位展示机会
@@ -112,7 +113,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             impression: #成功播放数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -123,7 +124,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             impression_end: #播放完成数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -134,7 +135,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             click: #广告点击数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -159,7 +160,7 @@ beta: #测试环境
 release: #生产环境
     monitor: 
         ##########common config########################
-        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','compaign_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
+        header: ['ip','province','city','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','group_id','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id','seq','tag']
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
@@ -169,10 +170,10 @@ release: #生产环境
         count_aggre_header: ['board_id','slot_id','pf']
         seq_aggre_header: ['seq','board_id','group_id','pf']
         up_aggre_header: ['realslotid','pf']
-        start_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        end_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        click_aggre_header: ['slot_id','compaign_id','creator_id','pf']
-        aggre_header: ['slot_id','compaign_id','creator_id']
+        start_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        end_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        click_aggre_header: ['slot_id','mediabuy_id','creator_id','pf']
+        aggre_header: ['slot_id','mediabuy_id','creator_id']
         chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
         count_select: "{ad_event_type} == 'e'  and {tag} < 100"
         up_select: "{ad_event_type} == 'e' and {tag} < 100 "
@@ -190,7 +191,7 @@ release: #生产环境
         up: up
         ad_list: ad_list
         slotid: slot_id
-        mediabuyid: compaign_id
+        mediabuyid: mediabuy_id
         creativeid: creator_id
         player_id: board_id
         group_id: group_id      #group_id 对应header中名称
@@ -213,7 +214,7 @@ release: #生产环境
             'request_str':'string',
             'slot_id':'int',
             'query-slot_id':'int',
-            'compaign_id':'string',
+            'mediabuy_id':'string',
             'creator_id':'string',
             'video_play_time':'string',
             'order':'int',
@@ -232,7 +233,7 @@ release: #生产环境
             'seq':'int',
             'tag':'int'
         }
-        read_csv_chunk: 1000000
+        read_csv_chunk: 10000000
         db_commit_chunk: 10000
         algorithm: 
             display_poss: #广告位展示机会
@@ -268,7 +269,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             impression: #成功播放数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -279,7 +280,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             impression_end: #播放完成数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -290,7 +291,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             click: #广告点击数
-                group_item: ['slot_id','compaign_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [

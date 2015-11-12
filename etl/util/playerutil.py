@@ -171,5 +171,5 @@ def _update_player_info(playerinfo,row):
         _slotid = []
         _player[row[1]]=_slotid
     _slotid.append(row[2])
-    _slotid.append(row[3].decode("string_escape").encode('utf8'))
+    _slotid.append(row[3])
     _slotid.append(row[4])
