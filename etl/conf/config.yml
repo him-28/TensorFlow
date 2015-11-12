@@ -2,7 +2,7 @@ data_prefix: "/data1/ad"
 ngx_prefix: "/data1/ad"
 h_delay: 10
 d_delay: 1
-metrics: ['display_poss', 'display', 'impression', 'impression_end', 'click', 'up']
+metrics: ['display_poss', 'display', 'impression', 'impression_end', 'click', 'up', 'display_sale']
 metrics_db_tablename_minute: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
 metrics_db_tablename_hour: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
 metrics_db_tablename_day: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}

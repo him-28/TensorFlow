@@ -314,10 +314,6 @@ class DataReader(object):
         return self.data_struct
 
     def __get_data_frame(self, data_file_path):
-        # @TODO FIXME debug code -----------start
-        import os
-        data_file_path = "F:" + data_file_path.replace("/", os.sep)
-        # @TODO FIXME debug code -----------end
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
         print data_file_path
