@@ -42,7 +42,7 @@ class FlatData:
         self.time_playerinfo = get_time_playerinfo(self.playerInfo)
         if os.path.exists(self.output_path):
             os.remove(self.output_path)
-        first_row = True
+        first_row = Config["with_header"]
         self.flat_buffer.append(self.flat_header)
         with open(self.input_path,'rb') as fr:
             for line in fr:
@@ -51,7 +51,7 @@ class FlatData:
                 if first_row:
                     first_row = False
                     continue
-                row = [i.strip() for i in line.strip().split(Config["file_split"])]
+                row = [i.strip() for i in line.strip().strip(Config["strip_char"]).split(Config["file_split"])]
                 self.flat_in_buffer(row)
         self.write_buffer_in_file()
         self.flat_buffer = []
@@ -81,11 +81,16 @@ class FlatData:
         '''
         if not new_list:
             new_list=[]
-        if not old_row or not len(old_row) or not ad_list or not len(ad_list):
+        if not old_row or not len(old_row):
             return new_list
         
         city_row = get_list(old_row)
         self.generate_area_info(city_row)
+        if len(ad_list) == 0:
+            city_row.append("") #seq
+            city_row.append("") #groupid
+            new_list.append(city_row)
+            return new_list
         seq = 1
         current_groupid = ""
         for i in ad_list:

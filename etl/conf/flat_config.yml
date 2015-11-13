@@ -1,8 +1,11 @@
-file_split: "\t"
+file_split: ","
 ad_split: ","
+strip_char: \"
 adlist_split: "|"
+with_header: False
 batch_write_size: 100000
 header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag']             #原日志文件header（追加了tag的）
+#header: [ip,ty,ur,v,ci,b,rs,l,td,req,s,cp,c,ct,o,e,pf,d,u,net,os,mf,mod,app,ts,s_ts,si,tag]
 flat_header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag','province','city','seq','group_id']#最终打平文件的header
 slotid: slot_id
 mediabuyid: mediabuy_id

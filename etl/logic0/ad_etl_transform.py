@@ -113,6 +113,8 @@ class ETL_Transform:
         self.start_merge_table = etl.rename(self.start_merge_table,'value','total')
         self.end_merge_table = etl.rename(self.end_merge_table,'value','total')
         self.click_merge_table = etl.rename(self.click_merge_table,'value','total')
+        self.seq_merge_table = etl.rename(self.seq_merge_table,'value','total')
+        self.up_merge_table = etl.rename(self.up_merge_table,{REAL_SLOTID:'slot_id','value':'total'})
         
     def getnewestPlayerInfo(self):    
         maxk = 0
@@ -343,9 +345,9 @@ class ETL_Transform:
             
         chance_file=self.output_dic.get(Config["display_pos"])
         # TODO FIXME 临时修改
-        sale_file=self.output_dic.get("display")
+        seq_file=self.output_dic.get(Config["display"])
         # TODO FIXME 临时修改
-        count_file=self.output_dic.get("display_sale")
+        sale_file=self.output_dic.get(Config["display_sale"])
         up_file = self.output_dic.get(Config["up"])
         start_file=self.output_dic.get(Config["impression"])
         end_file=self.output_dic.get(Config["impression_end"])
@@ -354,16 +356,13 @@ class ETL_Transform:
         LOGGER.info("generate "+chance_file)
         etl.tocsv(self.chance_merge_table,chance_file,encoding="utf-8",write_header=True,delimiter="\t")
 
-        LOGGER.info("generate "+count_file)
-        etl.tocsv(self.count_merge_table,count_file,encoding="utf-8",write_header=True,delimiter="\t")
+        LOGGER.info("generate "+seq_file)
+        etl.tocsv(self.count_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter="\t")
 
-        # TODO FIXME 临时修改
         LOGGER.info("generate "+sale_file)
         etl.tocsv(self.seq_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter="\t")
 
         LOGGER.info("generate "+up_file)
-        # TODO FIXME 临时修改
-        self.up_merge_table = etl.rename(self.up_merge_table,{'realslotid':'slot_id','value':'total'})
         etl.tocsv(self.up_merge_table,up_file,encoding="utf-8",write_header=True,delimiter="\t")
         
         LOGGER.info("generate "+start_file)

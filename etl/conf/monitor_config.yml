@@ -186,6 +186,7 @@ release: #生产环境
         batch_read_size: 100000
         display_pos: display_poss
         display: display
+        display_sale: display_sale
         impression: impression
         impression_end: impression_end
         click: click
