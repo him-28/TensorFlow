@@ -36,7 +36,10 @@ class ADMonitorAuditRobot(object):
 
     def report(self):
         m_title = u'%s 数据审计完成' % datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        content = u"总共%d纪录, 发现%d行错误,共耗时%d秒\r\n" % (self.total, self.problems.get('total', 0), self.spent)
+        filename = self.problems["filename"]
+        filesize = self.problems["filesize"]
+        content = u"文件名{%s}, 大小%s\r\n" % (filename,filesize)
+        content += u"总共%d纪录, 发现%d行错误,共耗时%d秒\r\n" % (self.total, self.problems.get('total', 0), self.spent)
         
         column_total = self.problems["column_total"]
         for k,v in column_total.items():
@@ -54,8 +57,10 @@ class ADMonitorAuditRobot(object):
             new_send_message(self.title , True, self.channel, m_title, content, self.success)
             
 class AdMonitor_audit:
-    def __init__(self,filepath):
-        self.filepath = filepath
+    def __init__(self,fpath,filename):
+        self.fpath = fpath
+        self.filepath = os.path.join(fpath,filename)
+        self.filename = filename
         self.error_rows = 0
         self.count_rows = 0
         self.sample_error_size = Config["sample_error_size"]
@@ -111,7 +116,8 @@ class AdMonitor_audit:
         for i in range(0,max_s):
             sample.append(self.problems[i])
             
-        total_problems = {'column_total': self.columns_errors,'total': len(self.problems), 'sample': sample}
+        filesize = self.getfilesize()
+        total_problems = {'column_total': self.columns_errors,'total': len(self.problems), 'sample': sample,'filename':self.filename,'filesize':filesize}
         robot = ADMonitorAuditRobot(self.count_rows, total_problems, self.spent)
         robot.report()
             
@@ -260,9 +266,14 @@ class AdMonitor_audit:
     def match_reg(self,value,reg):
         #TODO 根据正则匹配
         return True
+    def getfilesize(self):
+        psize = os.path.getsize(self.filepath)
+        filesize = '%0.3f' % (psize/1024/1024)
+        return str(filesize)+"MB"
     
-def ad_audit(filepath):
-    ad = AdMonitor_audit(filepath)
+def ad_audit(filepath,filename):
+    
+    ad = AdMonitor_audit(filepath,filename)
     ad.audit()
     ad.report()
         
