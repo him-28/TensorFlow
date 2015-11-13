@@ -1,5 +1,8 @@
-data_prefix: "/data1/ad"
-ngx_prefix: "/data1/ad"
+#data_prefix: "/data1/ad"
+#ngx_prefix: "/data1/ad"
+data_prefix: "F:\\data1\\ad\\ct"
+ngx_prefix: "F:\\data1\\ad"
+
 h_delay: 10
 d_delay: 1
 metrics: ['display_poss', 'display', 'impression', 'impression_end', 'click', 'up', 'display_sale']
