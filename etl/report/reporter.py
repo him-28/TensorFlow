@@ -274,15 +274,16 @@ class Reportor(object):
 
     def __seqs(self, _pf, board_id, slot_data):
         '''statistics'''
-        seq_display = slot_data["seq_display"]
-        if len(seq_display) == 0:
+
+        if (not slot_data.has_key("seq_display")) or len(slot_data["seq_display"]) == 0:
             return "播放器ID【%s】" % board_id, "没有顺序位展示数据"
-        else:
-            format_title = "播放器ID【%s】" % board_id
-            seq_str = ""
-            for seq, data in seq_display.iteritems():
-                seq_str += "广告位顺序【%s】实际展示数：｛logic0: %s｝｛logic1: %s｝ \n"\
-                    % (seq, data["logic0"], data["logic1"])
+
+        seq_display = slot_data["seq_display"]
+        format_title = "播放器ID【%s】" % board_id
+        seq_str = ""
+        for seq, data in seq_display.iteritems():
+            seq_str += "广告位顺序【%s】实际展示数：｛logic0: %s｝｛logic1: %s｝ \n"\
+                % (seq, data["logic0"], data["logic1"])
         return [(format_title, seq_str)]
 
     def __get(self, _pf , total_key):
@@ -367,14 +368,14 @@ class DataReader(object):
     def __get_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
-        if len(dataf) < 1:
+        if dataf.empty:
             return None
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
 
     def __get_seq_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
-        if len(dataf) < 1:
+        if dataf.empty:
             return None
         return dataf.groupby(['board_id', 'pf', 'seq']).sum()
 
