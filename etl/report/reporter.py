@@ -55,13 +55,17 @@ __init__ method need 3 parameters witch format as bellow example:
                         },
                         ...
                     ],
-                "seq_display": [{
-                                "logic0":111,
-                                "logic1":222,
-                            },{
-                                "logic0":111,
-                                "logic1":222,
-                            },...] # 广告次序实际展示数，展示数顺序按广告位的seq升序排列
+                "seq_display": {
+                            1:
+                                {
+                                    "logic0":111,
+                                    "logic1":222,
+                                },
+                            2：
+                                {
+                                    "logic0":111,
+                                    "logic1":222,
+                                },...} # 广告次序实际展示数
             },
         border_id2:
             {
@@ -94,27 +98,34 @@ def is_num(obj):
     return isinstance(obj, int) or isinstance(obj, long)\
          or isinstance(obj, float)
 
-PFENUM=collections.namedtuple('PF',\
-        ('IOS', 'ANDROID','IOS_NAME', 'ANDROID_NAME', 'UNKNOW'))
-PF=PFENUM('010100','010101',"IOS","Android","Unknow")
+PF = {
+        "000000":"PC Web", "000100":"PC Client for Mac", \
+        "000101":"PC Client for Windows", "010000":" iPad App", \
+        "010001":"Android Pad App", "010100":"iPhone App", \
+        "010101":"Android Phone App", "010200":"Mobile Web for Phone", \
+        "010201":"Mobile Web for Pad", "020000":"OTT TV"
+}
 
 def get_pf_name(pf_code):
     '''get pf name by code'''
-    if PF.IOS == str(pf_code):
-        return PF.IOS_NAME
-    elif PF.ANDROID == str(pf_code):
-        return PF.ANDROID_NAME
-    else:
-        return PF.UNKNOW
+    pf_code = str(pf_code)
+    if PF.has_key(pf_code):
+        return PF[pf_code]
+    return "Unknow"
 
 class Reportor(object):
     '''Report ETL result'''
-    def __init__(self, the_time, data):
-        if is_num(the_time):
-            self.the_time = dt.datetime.\
-                fromtimestamp(the_time).strptime("%Y%m%d %H:%M:%S")
+    def __init__(self, start_time, end_time, data):
+        if is_num(end_time):
+            self.end_time = dt.datetime.\
+                fromtimestamp(end_time).strptime("%Y%m%d %H:%M:%S")
         else:
-            self.the_time = the_time
+            self.end_time = end_time
+        if is_num(start_time):
+            self.start_time = dt.datetime.\
+                fromtimestamp(start_time).strptime("%Y%m%d %H:%M:%S")
+        else:
+            self.start_time = start_time
         self.data = data
         self.total = {}
         for _pf in data.keys():
@@ -124,9 +135,10 @@ class Reportor(object):
                         "impression_rate0", "impression_rate1", \
                         "click_rate0", "click_rate1", \
                         "display_sale0", "display_sale1", \
+                        "display0", "display1", \
                         "impression_end0", "impression_end1", \
                         "up0", "up1"), \
-                       (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+                       (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 
     def report_text(self):
         '''Report ETL result data in text format
@@ -136,7 +148,8 @@ class Reportor(object):
         for _pf, pf_data in data.iteritems():
             _pf_result_text = []
             for board_id, slot_data in pf_data.iteritems():
-                _pf_result_text = self.__statistics(_pf, board_id, slot_data)
+                _pf_result_text.extend(self.__statistics(_pf, board_id, slot_data))
+                _pf_result_text.extend(self.__seqs(_pf, board_id, slot_data))
             _pf_result_text.insert(0, self.__report_total_text(_pf))
             result_text.append((_pf, _pf_result_text))
 
@@ -147,8 +160,9 @@ class Reportor(object):
                 msg += title + "\n"
                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            bc.new_send_message(text=get_pf_name(_pf), at_title=self.the_time\
-                                + "数据审计完成", channel=REPORT_CHANNEL , at_text=msg)
+            time_title = "%s~%s数据审计完成" % (self.start_time,self.end_time)
+            bc.new_send_message(text=get_pf_name(_pf), at_title=time_title,\
+                                channel=REPORT_CHANNEL , at_text=msg)
         return result_text
 
     def __report_total_text(self, _pf):
@@ -177,9 +191,9 @@ class Reportor(object):
             click_rate0 = click0 / impression0
         if not impression1 == 0:
             click_rate1 = click1 / impression1
-        slot_title = "展示机会：%s，\n售卖展示机会：%s，\n播放：%s，\n\
-播放结束：%s，\n点击：%s，\n升位：%s，\n曝光率：%s，\n点击率：%s\n"
-        l0_1 = "{logic0:%s} {logic1:%s}"
+        slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
+播放结束数：%s，\n点击播放数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
+        l0_1 = "｛logic0:%s｝ ｛logic1:%s｝"
         slot_value = (l0_1 % (display_poss0, display_poss1), \
                       l0_1 % (display_sale0, display_sale1), \
                       l0_1 % (impression0, impression1), \
@@ -216,8 +230,8 @@ class Reportor(object):
                 impression0 = self.__get_metric_data("impression", "logic0", data)
                 impression1 = self.__get_metric_data("impression", "logic1", data)
                 self.__sum_put(_pf, ("impression0", "impression1"), (impression0, impression1))
-                slot_title = "展示机会：%s，\n售卖展示机会：%s，\n播放：%s，\n\
-播放结束：%s，\n点击：%s，\n升位：%s，\n曝光率：%s，\n点击率：%s\n"
+                slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
+播放结束数：%s，\n点击播放数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
                 impression_rate0 = 0
                 impression_rate1 = 0
                 click_rate0 = 0
@@ -254,6 +268,19 @@ class Reportor(object):
                 format_title = "播放器ID【%s】，展示广告位：【%s】 " % (board_id, data["slot_name"])
                 result.append((format_title, slot_str))
         return result
+
+    def __seqs(self, _pf, board_id, slot_data):
+        '''statistics'''
+        seq_display = slot_data["seq_display"]
+        if len(seq_display) == 0:
+            return "播放器ID【%s】" % board_id, "没有顺序位展示数据"
+        else:
+            format_title = "播放器ID【%s】" % board_id
+            seq_str = ""
+            for seq, data in seq_display.iteritems():
+                seq_str += "广告位顺序【%s】实际展示数：｛logic0: %s｝｛logic1: %s｝ \n"\
+                    % (seq, data["logic0"], data["logic1"])
+        return [(format_title, seq_str)]
 
     def __get(self, _pf , total_key):
         '''get'''
@@ -315,21 +342,42 @@ class DataReader(object):
         '''按小时计的结果'''
         for key, path in paths0.iteritems():
             if key == "display":
-                continue
-            dataf = self.__get_data_frame(path)
-            self.__handle_metric_data(key, dataf, "logic0")
+                dataf = self.__get_seq_data_frame(path)
+                self.__handle_seq_data(dataf, "logic0")
+            else:
+                dataf = self.__get_data_frame(path)
+                self.__handle_metric_data(key, dataf, "logic0")
 
         for key, path in paths1.iteritems():
             if key == "display":
-                continue
-            dataf = self.__get_data_frame(path)
-            self.__handle_metric_data(key, dataf, "logic1")
+                dataf = self.__get_seq_data_frame(path)
+                self.__handle_seq_data(dataf, "logic1")
+            else:
+                dataf = self.__get_data_frame(path)
+                self.__handle_metric_data(key, dataf, "logic1")
         return self.data_struct
 
     def __get_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
+
+    def __get_seq_data_frame(self, data_file_path):
+        dataf = pd.read_csv(data_file_path, sep=self.sep, \
+                            dtype=self.dtype, index_col=False)
+        return dataf.groupby(['board_id', 'pf', 'seq']).sum()
+
+    def __handle_seq_data(self, dataf, logic):
+        for row in dataf.iterrows():
+            board_id = str(row[0][0])
+            _pf = str(row[0][1])
+            seq = str(row[0][2])
+            total = row[1]["total"]
+            seq_displays = self.__get_seq_display(_pf, board_id)
+            if seq_displays.has_key(seq):
+                seq_displays[seq][logic] = total
+            else:
+                seq_displays[seq] = {logic:total}
 
     def __handle_metric_data(self, metric, dataf, logic):
         for row in dataf.iterrows():
@@ -365,6 +413,15 @@ class DataReader(object):
             self.data_struct[_pf][board_id]["slot_statistics"] = []
         return self.data_struct[_pf][board_id]["slot_statistics"]
 
+    def __get_seq_display(self, _pf, board_id):
+        if not self.data_struct.has_key(_pf):
+            self.data_struct[_pf] = {}
+        if not self.data_struct[_pf].has_key(board_id):
+            self.data_struct[_pf][board_id] = {}
+        if not self.data_struct[_pf][board_id].has_key("seq_display"):
+            self.data_struct[_pf][board_id]["seq_display"] = {}
+        return self.data_struct[_pf][board_id]["seq_display"]
+
 
     def __get_player_infos(self):
         '''获取播放器信息，如果已经获取过，从缓存中拿'''
@@ -379,8 +436,8 @@ class DataReader(object):
             pinfo = self.__get_player_infos()
             for item in pinfo.values():
                 playerinfo = item["playerinfo"]
-                for group_id,slot_infos in playerinfo.iteritems():
-                    for _id,slot_info in slot_infos.iteritems():
+                for group_id, slot_infos in playerinfo.iteritems():
+                    for _id, slot_info in slot_infos.iteritems():
                         if str(_id) == str(slot_id):
                             res = slot_info[1]
                             self.__slot_id_cache[slot_id] = res

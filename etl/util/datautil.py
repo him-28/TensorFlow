@@ -6,6 +6,8 @@ import yaml
 import pandas as pd
 
 from etl.util import init_log
+from etl.util import path_chk_or_create
+from etl.logic1.ad_transform_pandas import split_header
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 
 LOG = init_log.init("util/logger.conf", 'mergeLogger')
@@ -73,6 +75,8 @@ def merge_file(input_paths, output_files):
     df2 = None
     df3 = None
 
+    dtype = split_header(CNF.get("header"), CNF.get("header_type"))[1]
+
     for metric, input_list in input_paths.iteritems():
 
         LOG.info("merge metric: %s" % metric)
@@ -89,10 +93,10 @@ def merge_file(input_paths, output_files):
             if i == 1:
                 LOG.info("load file: %s " % input_list[0])
                 df1 = pd.read_csv(input_list[0], sep=output_column_sep, \
-                                  encoding="utf8", index_col=False)
+                                  encoding="utf8", index_col=False, dtype=dtype)
             LOG.info("merge file: %s " % input_list[i])
             df2 = pd.read_csv(input_list[i], sep=output_column_sep, \
-                               encoding="utf8", index_col=False)
+                               encoding="utf8", index_col=False, dtype=dtype)
             df3 = pd.concat([df1, df2])
 
             del df1, df2
@@ -101,6 +105,9 @@ def merge_file(input_paths, output_files):
 
         LOG.info("sum merged datas")
         _group_item = CNF["algorithm"][metric]["group_item"]
+        for _gi in _group_item:
+            if _gi.startswith("query-"):
+                 _group_item[_group_item.index(_gi)] = _gi.replace("query-","")
         df1 = df1.groupby(_group_item).sum()
         df1.to_csv(output_filename, sep=output_column_sep, na_rep=CNF.get("na_rep"), header=True)
 

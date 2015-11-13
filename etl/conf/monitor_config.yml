@@ -147,7 +147,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             up: #升位数
-                group_item: ['board_id','query-slot_id','pf','group_id'] #播放器ID、广告位ID
+                group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
                 condition: 
                     query-slot-compare: {
                         filter: [
@@ -306,7 +306,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             up: #升位数
-                group_item: ['board_id','query-slot_id','pf','group_id'] #播放器ID、广告位ID
+                group_item: ['board_id','query-slot_id','pf'] #播放器ID、广告位ID
                 condition: 
                     query-slot-compare: {
                         filter: [
