@@ -122,7 +122,7 @@ class AdMonitorRunner(object):
             )
         path_chk_or_create(ngx_src_path)
 
-        ngx_src_filename = "ad_{hour}.csv".format(hour=now.hour)
+        ngx_src_filename = "ad_{hour}.log".format(hour=now.hour)
 
         ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
                 prefix=Config["data_prefix"],
@@ -305,7 +305,8 @@ class AdMonitorRunner(object):
                     paths['ad_src_filename'],
                     paths['logic0_output_paths'])
             end = time.clock()
-            LOGGER.info("logic0 calc spent: %f s" , (end - start))
+            logic0_sptime = '%0.2f'%(end - start)
+            LOGGER.info("logic0 calc spent: %s s" , logic0_sptime)
 
             start = time.clock()
             # logic1 code
@@ -315,14 +316,16 @@ class AdMonitorRunner(object):
                     paths['ad_src_filename'],
                     paths['logic1_output_paths'])
             end = time.clock()
-            LOGGER.info("logic1 calc spent: %f s" , (end - start))
+            logic1_sptime = '%0.2f'%(end - start)
+            LOGGER.info("logic1 calc spent: %s s" , logic1_sptime)
 
             # 读取计算结果
             d_reader = DataReader().hour_data(\
                                     paths['logic0_output_paths'], \
                                     paths['logic1_output_paths'])
             # 报告结果
-            Reportor(now.strftime("%Y-%m-%d %H:00:00"),now.strftime("%Y-%m-%d %H:59:59"),\
+            filesize = getfilesize(ad_src_path)
+            Reportor(paths["ad_src_filename"],filesize,logic0_sptime,logic1_sptime,now.strftime("%Y-%m-%d %H:00:00"),now.strftime("%Y-%m-%d %H:59:59"),\
                       d_reader).report_text()
 
         elif mode == 'd':
@@ -355,9 +358,13 @@ class AdMonitorRunner(object):
                                     paths['logic0_output_paths'], \
                                     paths['logic1_output_paths'])
             # 报告结果
-            Reportor(now.strftime("%Y-%m-%d 00:00:00"),now.strftime("%Y-%m-%d 23:59:59"),\
-                      d_reader).report_text()
+#             Reportor(now.strftime("%Y-%m-%d 00:00:00"),now.strftime("%Y-%m-%d 23:59:59"),\
+#                       d_reader).report_text()
 
+def getfilesize(filepath):
+    psize = os.path.getsize(filepath)
+    filesize = '%0.3f' % (psize/1024.0/1024.0)
+    return str(filesize)+"MB"
 def run_cli(arguments):
     try:
         run_type = arguments[1]
