@@ -115,12 +115,17 @@ def get_pf_name(pf_code):
 
 class Reportor(object):
     '''Report ETL result'''
-    def __init__(self, the_time, data):
-        if is_num(the_time):
-            self.the_time = dt.datetime.\
-                fromtimestamp(the_time).strptime("%Y%m%d %H:%M:%S")
+    def __init__(self, start_time, end_time, data):
+        if is_num(end_time):
+            self.end_time = dt.datetime.\
+                fromtimestamp(end_time).strptime("%Y%m%d %H:%M:%S")
         else:
-            self.the_time = the_time
+            self.end_time = end_time
+        if is_num(start_time):
+            self.start_time = dt.datetime.\
+                fromtimestamp(start_time).strptime("%Y%m%d %H:%M:%S")
+        else:
+            self.start_time = start_time
         self.data = data
         self.total = {}
         for _pf in data.keys():
@@ -155,8 +160,9 @@ class Reportor(object):
                 msg += title + "\n"
                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            bc.new_send_message(text=get_pf_name(_pf), at_title=self.the_time\
-                                + "数据审计完成", channel=REPORT_CHANNEL , at_text=msg)
+            time_title = "%s~%s数据审计完成" % (self.start_time,self.end_time)
+            bc.new_send_message(text=get_pf_name(_pf), at_title=time_title,\
+                                channel=REPORT_CHANNEL , at_text=msg)
         return result_text
 
     def __report_total_text(self, _pf):
