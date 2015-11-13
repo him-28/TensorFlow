@@ -115,7 +115,7 @@ def get_pf_name(pf_code):
 
 class Reportor(object):
     '''Report ETL result'''
-    def __init__(self, start_time, end_time, data):
+    def __init__(self, filename,filesize,logic0_sptime,logic1_sptime,start_time, end_time, data):
         if is_num(end_time):
             self.end_time = dt.datetime.\
                 fromtimestamp(end_time).strptime("%Y%m%d %H:%M:%S")
@@ -126,6 +126,10 @@ class Reportor(object):
                 fromtimestamp(start_time).strptime("%Y%m%d %H:%M:%S")
         else:
             self.start_time = start_time
+        self.logic0_sptime = logic0_sptime
+        self.logic1_sptime = logic1_sptime
+        self.filename = filename
+        self.filesize = filesize
         self.data = data
         self.total = {}
         for _pf in data.keys():
@@ -206,7 +210,10 @@ class Reportor(object):
                       l0_1 % (impression_rate0, impression_rate1), \
                       l0_1 % (click_rate0, click_rate1))
         slot_str = slot_title % slot_value
-        return "【汇总报告】", slot_str
+        fnssp = ""
+        fnssp += "文件名{%s}, 大小%s \r\n" % (self.filename,self.filesize)
+        fnssp += "[logic0] 耗时 %s秒，[logic1] 耗时 %s秒 \r\n" % (str(self.logic0_sptime),str(self.logic1_sptime))
+        return fnssp+"【汇总报告】", slot_str
 
     def __get_metric_data(self, metric, logic, data):
         '''get data in each metric'''
@@ -217,9 +224,13 @@ class Reportor(object):
 
     def __statistics(self, _pf, board_id, slot_data):
         '''statistics'''
+        
+        if not slot_data.has_key("slot_statistics"):
+            return [("播放器ID【%s】" % board_id, "没有广告位数据")]
+        
         slot_statistics = slot_data["slot_statistics"]
         if len(slot_statistics) == 0:
-            return "播放器ID【%s】" % board_id, "没有广告位数据"
+            return [("播放器ID【%s】" % board_id, "没有广告位数据")]
         else:
             result = []
             for data in slot_statistics:
@@ -276,7 +287,7 @@ class Reportor(object):
         '''statistics'''
 
         if (not slot_data.has_key("seq_display")) or len(slot_data["seq_display"]) == 0:
-            return "播放器ID【%s】" % board_id, "没有顺序位展示数据"
+            return [("播放器ID【%s】" % board_id, "没有顺序位展示数据")]
 
         seq_display = slot_data["seq_display"]
         format_title = "播放器ID【%s】" % board_id
