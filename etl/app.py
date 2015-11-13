@@ -3,6 +3,7 @@ import sys
 import os
 import time
 from datetime import datetime
+from datetime import timedelta
 
 if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
@@ -165,7 +166,7 @@ class AdMonitorRunner(object):
                                 year=now.year,
                                 sep=os.sep,
                                 month=now.month,
-                                day=now.day - 1)
+                                day=now.day)
         paths = {}
         logic0_src_paths = {}
         logic1_src_paths = {}
@@ -178,7 +179,7 @@ class AdMonitorRunner(object):
             output_filename0 = D_Logic0_Filename.format(metric=metric, day=now.day)
             output_filename1 = D_Logic1_Filename.format(metric=metric, day=now.day)
 
-            for i in xrange(1, 24, Config["d_delay"]):
+            for i in range(0, 24):
                 filename0 = H_Logic0_Filename.format(hour=i, metric=metric)
                 filename1 = H_Logic1_Filename.format(hour=i, metric=metric)
 
@@ -321,11 +322,9 @@ class AdMonitorRunner(object):
                                     paths['logic0_output_paths'], \
                                     paths['logic1_output_paths'])
             # 报告结果
-            Reportor(now.strftime("%Y-%m-%d.%H"), d_reader).report_text()
+            Reportor(now.strftime("%Y-%m-%d %H:00:00"),now.strftime("%Y-%m-%d %H:59:59"),\
+                      d_reader).report_text()
 
-            # load hour file in db
-            # loadInDb_by_hour(paths["logic0_output_paths"])
-            # loadInDb_by_hour(paths["logic1_output_paths"])
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
 
@@ -351,22 +350,23 @@ class AdMonitorRunner(object):
             end = time.clock()
             LOGGER.info("logic1 hour agg spend: %f s" % (end - start))
 
-            # load day file in db
-            # loadInDb_by_day(paths["logic0_output_paths"])
-            # loadInDb_by_day(paths["logic1_output_paths"])
+            # 读取计算结果
+            d_reader = DataReader().hour_data(\
+                                    paths['logic0_output_paths'], \
+                                    paths['logic1_output_paths'])
+            # 报告结果
+            Reportor(now.strftime("%Y-%m-%d 00:00:00"),now.strftime("%Y-%m-%d 23:59:59"),\
+                      d_reader).report_text()
 
 def run_cli(arguments):
     try:
-        run_type = arguments[1]
-        args = arguments[2:]
-        if run_type == 'admonitor':
-            now = datetime.now()
-            for i in range(1, 25):
-                now = datetime(2015, 11, 13, i, 1, 1)
-                AdMonitorRunner().run(now, args[0])
-        else:
-            LOGGER.error("app run_type [{0}] is wrong".format(run_type))
-            sys.exit(-1)
+        args = arguments[1:]
+        now = datetime.now()
+        if 'h' == args[0]:
+            now = now - timedelta(hours=1)
+        elif 'd' == args[0]:
+            now = now - timedelta(days=1)
+        AdMonitorRunner().run(now, args[0])
     except Exception, e:
         import traceback
         print traceback.format_exc()
