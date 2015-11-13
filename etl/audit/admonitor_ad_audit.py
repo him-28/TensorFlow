@@ -268,7 +268,7 @@ class AdMonitor_audit:
         return True
     def getfilesize(self):
         psize = os.path.getsize(self.filepath)
-        filesize = '%0.3f' % (psize/1024/1024)
+        filesize = '%0.3f' % (psize/1024.0/1024.0)
         return str(filesize)+"MB"
     
 def ad_audit(filepath,filename):
