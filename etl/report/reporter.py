@@ -82,10 +82,10 @@ __init__ method need 3 parameters witch format as bellow example:
 '''
 
 import datetime as dt
+import collections
 
 from etl.util import bearychat as bc
 from etl.util.playerutil import getplayerInfo
-from Canvas import Group
 
 REPORT_CHANNEL = None
 
@@ -93,6 +93,19 @@ def is_num(obj):
     '''is number'''
     return isinstance(obj, int) or isinstance(obj, long)\
          or isinstance(obj, float)
+
+PFENUM=collections.namedtuple('PF',\
+        ('IOS', 'ANDROID','IOS_NAME', 'ANDROID_NAME', 'UNKNOW'))
+PF=PFENUM('010100','010101',"IOS","Android","Unknow")
+
+def get_pf_name(pf_code):
+    '''get pf name by code'''
+    if PF.IOS == str(pf_code):
+        return PF.IOS_NAME
+    elif PF.ANDROID == str(pf_code):
+        return PF.ANDROID_NAME
+    else:
+        return PF.UNKNOW
 
 class Reportor(object):
     '''Report ETL result'''
@@ -134,7 +147,7 @@ class Reportor(object):
                 msg += title + "\n"
                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            bc.new_send_message(text=_pf, at_title=self.the_time\
+            bc.new_send_message(text=get_pf_name(_pf), at_title=self.the_time\
                                 + "数据审计完成", channel=REPORT_CHANNEL , at_text=msg)
         return result_text
 
@@ -316,7 +329,6 @@ class DataReader(object):
     def __get_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
-        print data_file_path
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
 
     def __handle_metric_data(self, metric, dataf, logic):
