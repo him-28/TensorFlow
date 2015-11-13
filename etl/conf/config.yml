@@ -1,7 +1,7 @@
 #data_prefix: "/data1/ad"
 #ngx_prefix: "/data1/ad"
-data_prefix: "F:\\data1\\ad\\ct"
-ngx_prefix: "F:\\data1\\ad"
+data_prefix: "/data2/ad"
+ngx_prefix: "/data3/ngx"
 
 h_delay: 10
 d_delay: 1
