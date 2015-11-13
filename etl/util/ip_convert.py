@@ -19,7 +19,8 @@ class IP_Util:
     def convert_value_to_ip(self,long_value):
         ''' convert 192.168.1.1 to 3232235777 '''
         try:
-            ip=socket.inet_ntoa(struct.pack("!L",long(long_value))) if long_value else None
+#             ip=socket.inet_ntoa(struct.pack("!L",long(long_value))) if long_value else None
+            ip = self.numToDottedQuad(long_value)
             return ip
         except Exception,e:
             LOGGER.error("ERROR:convert_ip error:"+e.message)
@@ -28,7 +29,8 @@ class IP_Util:
     def convert_ip_to_value(self,ip):
         ''' convert 3232235777 to 192.168.1.1 '''
         try:
-            int_s = socket.ntohl(struct.unpack("L",socket.inet_aton(str(ip)))[0])
+#             int_s = socket.ntohl(struct.unpack("L",socket.inet_aton(str(ip)))[0])
+            int_s = self.ip2long(ip)
             return int_s
         except Exception,e:
             LOGGER.error("ERROR:convert_ip error:"+e.message)
@@ -121,7 +123,19 @@ class IP_Util:
             return self.ipb_arr[mid][1]
         else:
             return None
-
+    def ip2long(self,ip):
+        hexn = ''.join(["%02X" % long(i) for i in ip.split('.')])
+        return long(hexn, 16)
+    def numToDottedQuad(self,n):
+        "convert long int to dotted quad string"
+        d = 256 * 256 * 256
+        q = []
+        while d > 0:
+            m,n = divmod(n,d)
+            q.append(str(m))
+            d = d/256
+        return '.'.join(q)
+    
 if __name__ == "__main__":
     ip_util=IP_Util(ipb_filepath="C:\Users\Administrator\Desktop\IPB(1).csv",
                     city_filepath="C:\Users\Administrator\Desktop\city_province_2.csv")
