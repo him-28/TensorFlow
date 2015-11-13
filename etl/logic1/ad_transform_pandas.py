@@ -130,7 +130,7 @@ class AdTransformPandas(object):
                 self.__save_result_file(merge_result)
                 self.__insert(merge_result)
             else:
-                LOG.error("load file failed,the file may not exists,exit.")
+                LOG.error("load file failed,the file may not exists or have none data,exit.")
                 return -1
         except Exception, exce:
             import traceback
@@ -188,14 +188,20 @@ class AdTransformPandas(object):
             if "display_poss" == self.__get("trans_type"):
                 input_file_path = self.__transform_display_poss_file()
                 do_filter = False
-            # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-            data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
-                            dtype=self.__get('dtype'), index_col=False, \
-                            chunksize=self.__get('chunk'))
-            self.__transform_section(data_chunks,do_filter)
-            del data_chunks
-            if "display_poss" == self.__get("trans_type"):
-                os.remove(input_file_path)
+            if os.path.exists(input_file_path):
+                # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
+                data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
+                                dtype=self.__get('dtype'), index_col=False, \
+                                chunksize=self.__get('chunk'))
+                self.__transform_section(data_chunks,do_filter)
+                del data_chunks
+                if "display_poss" == self.__get("trans_type"):
+                    os.remove(input_file_path)
+            else:
+                with open(self.__get('output_file_path'),"wb") as fr:
+                     title = self.__get("output_column_sep").join(s for s in self.__get("group_item"))
+                     fr.write(title + "\n")
+                return False
         else:
             return False
         return True
@@ -228,21 +234,23 @@ class AdTransformPandas(object):
                     val = rel[2]
                     chunk = filter_chunk(chunk, key, opt, val)
 
-            tmp_df = chunk.groupby(groupby_list).size()
-            LOG.info("append chunk result to %s:", tmp_trans_file)
-            tmp_df.to_csv(tmp_trans_file, header=need_header, \
+            if len(chunk) > 0:
+                tmp_df = chunk.groupby(groupby_list).size()
+                LOG.info("append chunk result to %s:", tmp_trans_file)
+                tmp_df.to_csv(tmp_trans_file, header=need_header, \
                                  sep=self.__get('input_column_sep'), \
                                  na_rep=CNF["na_rep"], mode="a", index=True)
         del data_chunks
         if trunk_size > 1:
-            data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
-                            dtype=self.__get('dtype'), index_col=False)
-            LOG.info("merge all trunk results")
-            data_chunks = data_chunks.groupby(groupby_list).size()
-            LOG.info("save final result to: %s", tmp_trans_file)
-            data_chunks.to_csv(tmp_trans_file, header=True, \
-                                     sep=self.__get('input_column_sep'), \
-                                     na_rep=CNF["na_rep"], index=True)
+            if os.path.exists(tmp_trans_file):
+                data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
+                                dtype=self.__get('dtype'), index_col=False)
+                LOG.info("merge all trunk results")
+                data_chunks = data_chunks.groupby(groupby_list).size()
+                LOG.info("save final result to: %s", tmp_trans_file)
+                data_chunks.to_csv(tmp_trans_file, header=True, \
+                                         sep=self.__get('input_column_sep'), \
+                                         na_rep=CNF["na_rep"], index=True)
         LOG.info("merge display poss middle datas complete!")
         return tmp_trans_file
     def __transform_section(self, data_chunks,do_filter):

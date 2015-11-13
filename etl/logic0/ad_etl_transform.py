@@ -96,7 +96,7 @@ class ETL_Transform:
             for line in fr:
                 if not line or not line.strip():
                     continue
-                row=[i.strip() for i in line.strip().split('\t')]
+                row=[i.strip() for i in line.strip().split(Config["input_column_sep"])]
                 if first_row and with_header:
                     self.header = row
                     first_row = False
@@ -354,25 +354,25 @@ class ETL_Transform:
         click_file=self.output_dic.get(Config["click"])
 
         LOGGER.info("generate "+chance_file)
-        etl.tocsv(self.chance_merge_table,chance_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.chance_merge_table,chance_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+seq_file)
-        etl.tocsv(self.count_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.count_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+sale_file)
-        etl.tocsv(self.seq_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.seq_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+up_file)
-        etl.tocsv(self.up_merge_table,up_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.up_merge_table,up_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
         
         LOGGER.info("generate "+start_file)
-        etl.tocsv(self.start_merge_table,start_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.start_merge_table,start_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
         
         LOGGER.info("generate "+end_file)
-        etl.tocsv(self.end_merge_table,end_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.end_merge_table,end_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
         
         LOGGER.info("generate "+click_file)
-        etl.tocsv(self.click_merge_table,click_file,encoding="utf-8",write_header=True,delimiter="\t")
+        etl.tocsv(self.click_merge_table,click_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
         
         
 def calc_etl(input_filePath,input_filename,output_dic):
