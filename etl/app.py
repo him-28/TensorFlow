@@ -22,9 +22,9 @@ from etl.report.reporter import DataReader
 from etl.report.reporter import Reportor
 
 METRICS = Config['metrics']
-M_Dir = "{prefix}/{year}/{month}/{day}/{hour}"
-H_Dir = "{prefix}/{year}/{month}/{day}"
-D_Dir = "{prefix}/{year}/{month}"
+M_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}"
+H_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}"
+D_Dir = "{prefix}{sep}{year}{sep}{month}"
 M_Logic0_Filename = "logic0_{metric}_ad_{minute}.csv"
 H_Logic0_Filename = "logic0_{metric}_ad_{hour}.csv"
 D_Logic0_Filename = "logic0_{metric}_ad_{day}.csv"
@@ -50,12 +50,13 @@ class AdMonitorRunner(object):
 
     def _job_ready_by_minute(self, now):
         paths = {}
-        ad_src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
+        ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}".format(
                 prefix=Config["data_prefix"],
                 year=now.year,
                 month=now.month,
                 day=now.day,
-                hour=now.hour
+                hour=now.hour,
+                sep=os.sep
             )
 
         path_chk_or_create(ad_src_path)
@@ -67,12 +68,13 @@ class AdMonitorRunner(object):
             'ad_src_filename': ad_src_filename
             })
 
-        ngx_src_path = "{prefix}/{year}/{month}/{day}/{hour}".format(
+        ngx_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}".format(
                 prefix=Config["ngx_prefix"],
                 year=now.year,
                 month=now.month,
                 day=now.day,
-                hour=now.hour
+                hour=now.hour,
+                sep=os.sep
             )
         ngx_src_filename = "ad_{minute}.csv".format(minute=now.minute)
 
@@ -105,35 +107,40 @@ class AdMonitorRunner(object):
 
         return paths
 
-    def job_ready_by_chour(self, now):
+    def _job_ready_by_hour(self, now):
+        '''计算当前小时'''
         paths = {}
-        ad_src_path = "{prefix}/{year}/{month}/{day}".format(
+
+        # Nginx 收集服务器存储的日志文件
+        ngx_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
+                prefix=Config["ngx_prefix"],
+                year=now.year,
+                month=now.month,
+                day=now.day,
+                sep=os.sep
+            )
+        path_chk_or_create(ngx_src_path)
+
+        ngx_src_filename = "ad_{hour}.csv".format(hour=now.hour)
+
+        ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
                 prefix=Config["data_prefix"],
                 year=now.year,
                 month=now.month,
                 day=now.day,
-                hour=now.hour
+                sep=os.sep
             )
-
         path_chk_or_create(ad_src_path)
+        ad_src_filename = "src_ad_{hour}.csv".format(hour=now.hour)
 
-        ad_src_filename = "{year}{month}{day}.{hour}.csv".format(year=now.year,
-                month=now.month,
-                day=now.day,
-                hour=now.hour)
-
-        ad_src_flat_filename = "{year}{month}{day}.{hour}.flat.csv".format(year=now.year,
-                month=now.month,
-                day=now.day,
-                hour=now.hour)
 
         paths.update({
+            'ngx_src_path': ngx_src_path,
+            'ngx_src_filename': ngx_src_filename,
             'ad_src_path': ad_src_path,
-            'ad_src_filename': ad_src_filename,
-            'ad_src_flat_filename': ad_src_flat_filename
+            'ad_src_filename': ad_src_filename
             })
 
-        # ## logic0 path
         output_paths = self.concat_output_path(ad_src_path, 0, now.hour)
 
         paths.update({
@@ -146,69 +153,17 @@ class AdMonitorRunner(object):
         paths.update({
             'logic1_output_paths': output_paths
             })
-
-        # ## logic2 path
-        output_paths = self.concat_output_path(ad_src_path, 2, now.hour)
-
-        paths.update({
-            'logic2_output_paths': output_paths
-            })
-
         return paths
 
-    def _job_ready_by_hour(self, now):
-        output_path = H_Dir.format(prefix=Config["data_prefix"],
-                                year=now.year,
-                                month=now.month,
-                                day=now.day)
-
-        src_path = M_Dir.format(prefix=Config["data_prefix"],
-                                year=now.year,
-                                month=now.month,
-                                day=now.day,
-                                hour=now.hour - 1)
-
-        paths = {}
-        logic0_src_paths = {}
-        logic1_src_paths = {}
-        logic0_output_paths = {}
-        logic1_output_paths = {}
-
-        for metric in METRICS:
-            paths0 = []
-            paths1 = []
-            output_filename0 = H_Logic0_Filename.format(metric=metric, hour=now.hour)
-            output_filename1 = H_Logic1_Filename.format(metric=metric, hour=now.hour)
-
-            for i in xrange(10, 70, Config["h_delay"]):
-                filename0 = M_Logic0_Filename.format(minute=i, metric=metric)
-                filename1 = M_Logic1_Filename.format(minute=i, metric=metric)
-
-                paths0.append(os.path.join(src_path, filename0))
-                paths1.append(os.path.join(src_path, filename1))
-
-            logic0_src_paths.update({metric: paths0})
-            logic1_src_paths.update({metric: paths1})
-
-            logic0_output_paths.update({metric: os.path.join(output_path, output_filename0)})
-            logic1_output_paths.update({metric: os.path.join(output_path, output_filename1)})
-
-        paths.update({
-            'logic0_src_paths': logic0_src_paths,
-            'logic1_src_paths': logic1_src_paths,
-            'logic0_output_paths': logic0_output_paths,
-            'logic1_output_paths': logic1_output_paths
-            })
-
-        return paths
-        
     def _job_ready_by_day(self, now):
         output_path = D_Dir.format(prefix=Config["data_prefix"],
                                 year=now.year,
+                                sep=os.sep,
                                 month=now.month)
 
         src_path = H_Dir.format(prefix=Config["data_prefix"],
                                 year=now.year,
+                                sep=os.sep,
                                 month=now.month,
                                 day=now.day - 1)
         paths = {}
@@ -253,7 +208,7 @@ class AdMonitorRunner(object):
         LOGGER.info("begin running etl job")
 
         assert type(now) == datetime
-        assert mode in ['m', 'h', 'ch', 'd']
+        assert mode in ['m', 'h', 'd']
 
         if mode == 'm':
             paths = self._job_ready_by_minute(now)
@@ -319,75 +274,58 @@ class AdMonitorRunner(object):
             paths = self._job_ready_by_hour(now)
 
             LOGGER.info("Job hour paths: \r\n \
-                    logic0_src_paths: %s \r\n \
-                    logic1_src_paths: %s \r\n \
-                    logic0_output_path: %s \r\n \
-                    logic1_output_path: %s \r\n \
-                    " % (paths['logic0_src_paths'],
-                        paths['logic1_src_paths'],
-                        paths['logic0_output_paths'],
-                        paths['logic1_output_paths']))
-            # logic0 code
-            start = time.clock()
-            merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
-            end = time.clock()
-            LOGGER.info("logic0 hour agg spent: %f s" % (end - start))
-
-            # logic1 code
-            start = time.clock()
-            merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
-            end = time.clock()
-            LOGGER.info("logic1 hour agg spend: %f s" % (end - start))
-            
-            # load hour file in db
-            loadInDb_by_hour(paths["logic0_output_paths"])
-            loadInDb_by_hour(paths["logic1_output_paths"])
-        elif mode == 'ch':
-            paths = self.job_ready_by_chour(now)
-
-            LOGGER.info("Job cHour paths: \r\n \
+                    ngx_src_path: %s \r\n \
+                    ngx_src_filename: %s \r\n \
                     ad_src_path: %s \r\n \
                     ad_src_filename: %s \r\n \
                     logic0_output_paths: %s \r\n \
-                    logic1_output_paths: %s \r\n \
-                    logic2_output_paths: %s \r\n" ,
+                    logic1_output_paths: %s \r\n ",
+                        paths['ngx_src_path'],
+                        paths['ngx_src_filename'],
                         paths['ad_src_path'],
                         paths['ad_src_filename'],
                         paths['logic0_output_paths'],
-                        paths['logic1_output_paths'],
-                        paths['logic2_output_paths'])
+                        paths['logic1_output_paths'])
+
+            ngx_src_path = os.path.join(paths["ngx_src_path"], paths["ngx_src_filename"])
             ad_src_path = os.path.join(paths["ad_src_path"], paths["ad_src_filename"])
-            ad_src_flat_path = os.path.join(paths["ad_src_path"], paths["ad_src_flat_filename"])
 
-            #Audit data files:
-            admonitor_ad_audit.ad_audit(ad_src_path)
-            #Flat data files:
-            admonitor_flat_data.flat_data(ad_src_path, ad_src_flat_path)
 
-            # Calc File
+            # 审计:
+            admonitor_ad_audit.ad_audit(ngx_src_path)
+            # 打平:
+            admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
+
+            # 计算
             start = time.clock()
-            #  logic0
+            # logic0
             calc_etl(
                     paths['ad_src_path'],
-                    paths['ad_src_flat_filename'],
+                    paths['ad_src_filename'],
                     paths['logic0_output_paths'])
             end = time.clock()
-            LOGGER.info("logic0 calc spent: %f s" % (end - start))
+            LOGGER.info("logic0 calc spent: %f s" , (end - start))
 
             start = time.clock()
             # logic1 code
-            atp = AdTransformPandas(True)
+            atp = AdTransformPandas()
             atp.calculate(
                     paths['ad_src_path'],
-                    paths['ad_src_flat_filename'],
+                    paths['ad_src_filename'],
                     paths['logic1_output_paths'])
             end = time.clock()
-            LOGGER.info("logic1 calc spent: %f s" % (end-start))
+            LOGGER.info("logic1 calc spent: %f s" , (end - start))
 
-            # report the result
-            dr = DataReader().hour_data(paths['logic0_output_paths'], paths['logic1_output_paths'])
-            Reportor(now.strftime("%Y-%m-%d.%H"), dr).report_text()
+            # 读取计算结果
+            d_reader = DataReader().hour_data(\
+                                    paths['logic0_output_paths'], \
+                                    paths['logic1_output_paths'])
+            # 报告结果
+            Reportor(now.strftime("%Y-%m-%d.%H"), d_reader).report_text()
 
+            # load hour file in db
+            # loadInDb_by_hour(paths["logic0_output_paths"])
+            # loadInDb_by_hour(paths["logic1_output_paths"])
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
 
@@ -401,7 +339,6 @@ class AdMonitorRunner(object):
                         paths['logic0_output_paths'],
                         paths['logic1_output_paths']))
 
-
             # logic0 code
             start = time.clock()
             merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
@@ -413,10 +350,10 @@ class AdMonitorRunner(object):
             merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
             LOGGER.info("logic1 hour agg spend: %f s" % (end - start))
-            
+
             # load day file in db
-            loadInDb_by_day(paths["logic0_output_paths"])
-            loadInDb_by_day(paths["logic1_output_paths"])
+            # loadInDb_by_day(paths["logic0_output_paths"])
+            # loadInDb_by_day(paths["logic1_output_paths"])
 
 def run_cli(arguments):
     try:
@@ -424,8 +361,10 @@ def run_cli(arguments):
         args = arguments[2:]
         if run_type == 'admonitor':
             now = datetime.now()
-            AdMonitorRunner().run(now, args[0])
-        else:    
+            for i in range(1, 25):
+                now = datetime(2015, 11, 13, i, 1, 1)
+                AdMonitorRunner().run(now, args[0])
+        else:
             LOGGER.error("app run_type [{0}] is wrong".format(run_type))
             sys.exit(-1)
     except Exception, e:
@@ -437,13 +376,7 @@ def run_cli(arguments):
 
 if __name__ == '__main__':
     '''
-    args: python app.py ad_monitor m|h|d|ch
+    args: python app.py ad_monitor m|h|d
     '''
-    # 传入参数为：  ad_monitor ch
-    try:
-        run_cli(sys.argv)
-    except:
-        import traceback
-        print traceback.format_exc()
-    # main('util/ad.csv')
-    
+    run_cli(sys.argv)
+
