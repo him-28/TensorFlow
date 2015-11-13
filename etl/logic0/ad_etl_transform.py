@@ -342,24 +342,28 @@ class ETL_Transform:
             os.makedirs(self.filePath)
             
         chance_file=self.output_dic.get(Config["display_pos"])
-        count_file=self.output_dic.get(Config["display"])
+        # TODO FIXME 临时修改
+        sale_file=self.output_dic.get("display")
+        # TODO FIXME 临时修改
+        count_file=self.output_dic.get("display_sale")
         up_file = self.output_dic.get(Config["up"])
         start_file=self.output_dic.get(Config["impression"])
         end_file=self.output_dic.get(Config["impression_end"])
         click_file=self.output_dic.get(Config["click"])
-            
+
         LOGGER.info("generate "+chance_file)
         etl.tocsv(self.chance_merge_table,chance_file,encoding="utf-8",write_header=True,delimiter="\t")
-        
+
         LOGGER.info("generate "+count_file)
         etl.tocsv(self.count_merge_table,count_file,encoding="utf-8",write_header=True,delimiter="\t")
-        
-        #TODO generate seq
-        seq_file = count_file+".seq"
-        LOGGER.info("generate "+seq_file)
-        etl.tocsv(self.seq_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter="\t")
-        #TODO generate up, 更改realslotid 名称为slotid
+
+        # TODO FIXME 临时修改
+        LOGGER.info("generate "+sale_file)
+        etl.tocsv(self.seq_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter="\t")
+
         LOGGER.info("generate "+up_file)
+        # TODO FIXME 临时修改
+        self.up_merge_table = etl.rename(self.up_merge_table,{'realslotid':'slot_id','value':'total'})
         etl.tocsv(self.up_merge_table,up_file,encoding="utf-8",write_header=True,delimiter="\t")
         
         LOGGER.info("generate "+start_file)
@@ -375,7 +379,7 @@ class ETL_Transform:
 def calc_etl(input_filePath,input_filename,output_dic):
     #check  param
     assert input_filePath,input_filename is not None
-    
+
     filePath = os.path.join(input_filePath,input_filename)
 #     filePath=r"C:\Users\Administrator\Desktop\ad_test_xx.csv"
     etls=ETL_Transform(
@@ -390,6 +394,7 @@ def calc_etl(input_filePath,input_filename,output_dic):
         import traceback
         ex=traceback.format_exc()
         LOGGER.error(ex)
+        print ex
         sys.exit(-1)
 def get_list(row_list):
     if not row_list or not len(row_list):

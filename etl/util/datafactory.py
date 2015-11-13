@@ -917,7 +917,7 @@ def gen_datetime(min_date=None, max_date=None):
 
 class ADMonitorFactory(object):
     def generate_android_phone(self,out_dir):
-        size = 100000
+        size = 1000
         ips = []
         provinces= []
         citys= []
@@ -971,7 +971,7 @@ class ADMonitorFactory(object):
             slots.append(slot1)
             slots.append(slot2)
             slots.append(slot3)
-            pf_data = gen_choice(['000000', '000100', '000101', '010101'])
+            pf_data = gen_choice(['010101', '010100'])
 
             ips.append(_ip)
             provinces.append(" ")
@@ -1053,13 +1053,14 @@ class ADMonitorFactory(object):
                  'model','app','timestamp','server_timestamp','session_id','tag'
         ]
         df1 = df.reindex(columns=columns)
-        df1.to_csv(out_dir, encoding='utf-8', mode="a", sep="\t", header=True, index=False)
+        df1.to_csv(out_dir, encoding='utf-8', sep="\t", header=True, index=False)
 
 if __name__ == "__main__":
     gen = ADMonitorFactory()
     import  os
-    if os.path.exists("ad.csv"):
-        os.remove("ad.csv")
-        
-    for idx in range(0,1):
-        gen.generate_android_phone("ad.csv")
+
+    for idx in range(1,25):
+        path = r"F:\data1\ad\2015\11\12\ad_%s.csv" % idx
+        if os.path.exists(path):
+            os.remove(path)
+        gen.generate_android_phone(path)
