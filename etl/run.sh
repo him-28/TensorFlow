@@ -3,7 +3,6 @@
 #!/bin/bash
 src_path="/data2/amble/etl"
 fluentd_dir="/data2/ad/track"
-ngx_ad_dir="/data3/ngx"
 
 year=$1
 month=$2
@@ -29,13 +28,16 @@ fi
 echo "==>${year}${month}${day}${hour}"
 
 ## move file
+ngx_ad_dir="/data3/ngx/${year}/${month}/${day}/"
 fluentd_ad_path="${fluentd_dir}/ad_track.${year}${month}${day}${hour}.log"
-ngx_ad_path="${ngx_ad_dir}/${year}/${month}/${day}/ad_${hour}.log"
+ngx_ad_path="${ngx_ad_dir}ad_${hour}.log"
 
 echo "==>fluentd log path:${fluentd_ad_path}"
 echo "==>nginx log path:${ngx_ad_path}"
 
-if [ ! -a ${fluentd_ad_path} ];then
+mkdir -p ${ngx_ad_dir}
+
+if [ ! -f ${fluentd_ad_path} ];then
     echo "fluentd source file not exists"
     sh send_mail.sh ${year}${month}${day} ${hour} fluentd source file not exists
     exit
