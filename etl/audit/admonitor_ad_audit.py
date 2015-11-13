@@ -117,7 +117,7 @@ class AdMonitor_audit:
             sample.append(self.problems[i])
             
         filesize = self.getfilesize()
-        total_problems = {'column_total': self.columns_errors,'total': len(self.problems), 'sample': sample,'filename':self.filename,'filesize':filesize}
+        total_problems = {'column_total': self.columns_errors,'total': self.error_rows, 'sample': sample,'filename':self.filename,'filesize':filesize}
         robot = ADMonitorAuditRobot(self.count_rows, total_problems, self.spent)
         robot.report()
             
