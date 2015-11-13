@@ -39,7 +39,7 @@ class AdMonitorRunner(object):
     def concat_output_path(self, path, num, minute):
         output_paths = {}
         for metric in METRICS:
-            filename = "logic{num}_{metric}_ad_{minute}.csv".format(
+            filename = "logic{num}_{metric}_ad_{minute:02d}.csv".format(
                     num=num,
                     metric=metric,
                     minute=minute)
