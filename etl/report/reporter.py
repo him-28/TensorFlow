@@ -145,13 +145,16 @@ class Reportor(object):
         '''
         data = self.data
         result_text = []
-        for _pf, pf_data in data.iteritems():
-            _pf_result_text = []
-            for board_id, slot_data in pf_data.iteritems():
-                _pf_result_text.extend(self.__statistics(_pf, board_id, slot_data))
-                _pf_result_text.extend(self.__seqs(_pf, board_id, slot_data))
-            _pf_result_text.insert(0, self.__report_total_text(_pf))
-            result_text.append((_pf, _pf_result_text))
+        if data:
+            for _pf, pf_data in data.iteritems():
+                _pf_result_text = []
+                for board_id, slot_data in pf_data.iteritems():
+                    _pf_result_text.extend(self.__statistics(_pf, board_id, slot_data))
+                    _pf_result_text.extend(self.__seqs(_pf, board_id, slot_data))
+                _pf_result_text.insert(0, self.__report_total_text(_pf))
+                result_text.append((_pf, _pf_result_text))
+        else:
+            result_text = [("WARNING",[("没有数据","审计结果是空")])]
 
         # 发送到Bearychat
         for _pf, t_r in result_text:
@@ -343,28 +346,36 @@ class DataReader(object):
         for key, path in paths0.iteritems():
             if key == "display":
                 dataf = self.__get_seq_data_frame(path)
-                self.__handle_seq_data(dataf, "logic0")
+                if not dataf is None:
+                    self.__handle_seq_data(dataf, "logic0")
             else:
                 dataf = self.__get_data_frame(path)
-                self.__handle_metric_data(key, dataf, "logic0")
+                if not dataf is None:
+                    self.__handle_metric_data(key, dataf, "logic0")
 
         for key, path in paths1.iteritems():
             if key == "display":
                 dataf = self.__get_seq_data_frame(path)
-                self.__handle_seq_data(dataf, "logic1")
+                if not dataf is None:
+                    self.__handle_seq_data(dataf, "logic1")
             else:
                 dataf = self.__get_data_frame(path)
-                self.__handle_metric_data(key, dataf, "logic1")
+                if not dataf is None:
+                    self.__handle_metric_data(key, dataf, "logic1")
         return self.data_struct
 
     def __get_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
+        if len(dataf) < 1:
+            return None
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
 
     def __get_seq_data_frame(self, data_file_path):
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
+        if len(dataf) < 1:
+            return None
         return dataf.groupby(['board_id', 'pf', 'seq']).sum()
 
     def __handle_seq_data(self, dataf, logic):
