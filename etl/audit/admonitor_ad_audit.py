@@ -90,7 +90,7 @@ class AdMonitor_audit:
                 if first_row:
                     first_row = False
                     continue
-                row=[i.strip() for i in line.strip().split(file_split)]
+                row=[i.strip() for i in line.strip().strip(Config["strip_char"]).split(file_split)]
                 self.count_rows = self.count_rows + 1
                 res = self.validator(row,self.count_rows)
                 tag = 0
