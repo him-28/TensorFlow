@@ -197,10 +197,12 @@ class AdTransformPandas(object):
                 del data_chunks
                 if "display_poss" == self.__get("trans_type"):
                     os.remove(input_file_path)
+                return True
             else:
-                with open(self.__get('output_file_path'),"wb") as fr:
-                     title = self.__get("output_column_sep").join(s for s in self.__get("group_item"))
-                     fr.write(title + "\n")
+                with open(self.__get('output_file_path'),"wb") as fread:
+                    title = self.__get("output_column_sep")\
+                        .join(s for s in self.__get("group_item"))
+                    fread.write(title + "\n")
                 return False
         else:
             return False
@@ -234,7 +236,7 @@ class AdTransformPandas(object):
                     val = rel[2]
                     chunk = filter_chunk(chunk, key, opt, val)
 
-            if len(chunk) > 0:
+            if not chunk.empty:
                 tmp_df = chunk.groupby(groupby_list).size()
                 LOG.info("append chunk result to %s:", tmp_trans_file)
                 tmp_df.to_csv(tmp_trans_file, header=need_header, \
@@ -301,7 +303,7 @@ class AdTransformPandas(object):
                      , len(tmp_chunk), tmp_chunk.size)
 
         LOG.info("execute operator: " + cdt_key)
-        if len(tmp_chunk) == 0:
+        if tmp_chunk.empty:
             return None
 
         if cdt_key == 'count':  # 普通计数
@@ -457,29 +459,29 @@ class AdTransformPandas(object):
 
 def buddha_bless_me():
     '''佛祖保佑'''
-    print r'''  ###################################################  '''
-    print r''' ####################################################### '''
-    print r'''#########################################################'''
-    print r'''##                                                     ##'''
-    print r'''##                       _oo0oo_                       ##'''
-    print r'''##                      o8888888o                      ##'''
-    print r'''##                      88" . "88                      ##'''
-    print r'''##                      (| -_- |)                      ##'''
-    print r'''##                      0\  =  /0                      ##'''
-    print r'''##                   ___//`---'\\___                   ##'''
-    print r'''##                  .' \|       |/ '.                  ##'''
-    print r'''##                 /  \|||  :  |||/  \                 ##'''
-    print r'''##                / _||||| -:- |||||- \                ##'''
-    print r'''##               /  _||||| -:- |||||-  \               ##'''
-    print r'''##               | \_|  ''\---/''  |_/ |               ##'''
-    print r'''##               \  .-\__  '-'  ___/-. /               ##'''
-    print r'''##             ___'. .'  /--.--\  `. .'___             ##'''
-    print r'''##          ."" '<  `.___\_<|>_/___.' >' "".           ##'''
-    print r'''##         | | :  `- \`.;`\ _ /`;.`/ - ` : | |         ##'''
-    print r'''##         \  \ `_.   \_ __\ /__ _/   .-` / /          ##'''
-    print r'''##                       `=---='                       ##'''
-    print r'''##                                                     ##'''
-    print r'''##     Amituofo, buddha bless me, never have bug       ##'''
-    print r'''####@#######@#######@#######@#####@#####@#######@######@#'''
-    print r''' #@##@####@##@####@##@####@##@##@##@##@##@####@##@###@## '''
-    print r'''  ####@#@#####@#@#####@#@#####@#####@#####@#@#####@#@## '''
+    print r'''      #####################################################'''
+    print r'''     ####################################################### '''
+    print r'''    #########################################################'''
+    print r'''    ##                                                     ##'''
+    print r'''    ##                       _oo0oo_                       ##'''
+    print r'''    ##                      o8888888o                      ##'''
+    print r'''    ##                      88" . "88                      ##'''
+    print r'''    ##                      (| -_- |)                      ##'''
+    print r'''    ##                      0\  =  /0                      ##'''
+    print r'''    ##                   ___//`---'\\___                   ##'''
+    print r'''    ##                  .' \|       |/ '.                  ##'''
+    print r'''    ##                 /  \|||  :  |||/  \                 ##'''
+    print r'''    ##                / _||||| -:- |||||- \                ##'''
+    print r'''    ##               /  _||||| -:- |||||-  \               ##'''
+    print r'''    ##               | \_|  ''\---/''  |_/ |               ##'''
+    print r'''    ##               \  .-\__  '-'  ___/-. /               ##'''
+    print r'''    ##             ___'. .'  /--.--\  `. .'___             ##'''
+    print r'''    ##          ."" '<  `.___\_<|>_/___.' >' "".           ##'''
+    print r'''    ##         | | :  `- \`.;`\ _ /`;.`/ - ` : | |         ##'''
+    print r'''    ##         \  \ `_.   \_ __\ /__ _/   .-` / /          ##'''
+    print r'''    ##                       `=---='                       ##'''
+    print r'''    ##                                                     ##'''
+    print r'''    ##     Amituofo, buddha bless me, never have bug       ##'''
+    print r'''    ####@#######@#######@#######@#####@#####@#######@######@#'''
+    print r'''  #@##@##@####@##@####@##@####@##@##@##@##@##@####@##@###@##@##'''
+    print r'''#####@####@#@#####@#@#####@#@#####@#####@#####@#@#####@#@####@###'''
