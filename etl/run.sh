@@ -44,14 +44,14 @@ fi
 mv ${fluentd_ad_path} ${ngx_ad_path}
 
 cd $src_path
-python app.py 'h'
+python app.py admonitor 'h'
 if [ $? -eq 255 ];then
     echo "ad app hour run error"
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
 fi
 if [ "${hour}" == "23" ];then
-    python app.py 'd'
+    python app.py admonitor 'd'
     if [ $? -eq 255 ];then
         echo "ad app day run error"
         sh send_mail.sh ${year}${month}${day} ad app day run error
