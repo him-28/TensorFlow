@@ -1,19 +1,9 @@
 ############################################################################
 ##
-## Copyright (c) 2013 hunantv.com, Inc. All Rights Reserved
-## $Id: run.sh,v 0.0 2015年10月14日 星期二 11时02分08秒  dongjie Exp $
-##
-############################################################################
-#
-###
-# # @file   run.sh
-# # @author dongjie<dongjie@e.hunantv.com>
-# # @date   2015年10月14日 星期二 11时02分08秒
-# # @brief
-# #
-# ##
 #!/bin/bash
-src_path="/data1/amble/etl"
+src_path="/data2/amble/etl"
+fluentd_dir="/data2/ad/track"
+ngx_ad_dir="/data3/ngx"
 
 year=$1
 month=$2
@@ -38,42 +28,33 @@ fi
 
 echo "==>${year}${month}${day}${hour}"
 
+## move file
+fluentd_ad_path="${fluentd_dir}/ad_track.${year}${month}${day}${hour}.log"
+ngx_ad_path="${ngx_ad_dir}/${year}/${month}/${day}/ad_${hour}.log"
+
+echo "==>fluentd log path:${fluentd_ad_path}"
+echo "==>nginx log path:${ngx_ad_path}"
+
+if [ ! -a ${fluentd_ad_path} ];then
+    echo "fluentd source file not exists"
+    sh send_mail.sh ${year}${month}${day} ${hour} fluentd source file not exists
+    exit
+fi
+
+mv ${fluentd_ad_path} ${ngx_ad_path}
+
 cd $src_path
-python adlog_format_audit.py ${year}${month}${day} ${hour}
+python app.py 'h'
 if [ $? -eq 255 ];then
-    echo "ad log audit error"
-    sh send_mail.sh ${year}${month}${day} ${hour} ad log audit error
-    exit
-fi
-python etl_transform.py ${year}${month}${day} ${hour} 'hour' 'new'
-if [ $? -eq 255 ];then
-    echo "etl transform error"
-    sh send_mail.sh ${year}${month}${day} ${hour} etl transform error
-    exit
-fi
-python etl_job_hour.py ${year}${month}${day} ${hour} 'new'
-if [ $? -eq 255 ];then
-    echo "etl job hour error"
-    sh send_mail.sh ${year}${month}${day} ${hour} etl job hour error
+    echo "ad app hour run error"
+    sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
 fi
 if [ "${hour}" == "23" ];then
-    python day_etl_transform.py ${year}${month}${day} 'merge' 'new'
+    python app.py 'd'
     if [ $? -eq 255 ];then
-        echo "day etl transform error"
-        sh send_mail.sh ${year}${month}${day} day etl transform error
+        echo "ad app day run error"
+        sh send_mail.sh ${year}${month}${day} ad app day run error
         exit
     fi
-    python etl_job_day.py ${year}${month}${day} 'merge' 'new'
-    if [ $? -eq 255 ];then
-        sh send_mail.sh ${year}${month}${day} etl job day error
-        echo "etl job day error"
-        exit
-    fi
-fi
-python quality_audit.py ${year}${month}${day} ${hour}
-if [ $? -eq 255 ];then
-    echo "quality error"
-    sh send_mail.sh ${year}${month}${day} ${hour} quality error
-    exit
 fi
