@@ -51,7 +51,7 @@ class FlatData:
                 if first_row:
                     first_row = False
                     continue
-                row = [i.strip() for i in line.strip().strip(Config["strip_char"]).split(Config["file_split"])]
+                row = [i.strip() for i in line.strip().split(Config["file_split"])]
                 self.flat_in_buffer(row)
         self.write_buffer_in_file()
         self.flat_buffer = []
@@ -147,10 +147,10 @@ def get_list(row_list):
     return row_list[:]
 
 def get_line(row):
-    line = ""
-    for data in row:
-        line += str(data)+"\t"
-    line = line.strip("\t")
+#     for data in row:
+#         line += str(data)+Config["output_column_sep"]
+#     line = line.strip(Config["output_column_sep"])
+    line = Config["output_column_sep"].join(i for i in row)
     line += '\n'
     return line
     
