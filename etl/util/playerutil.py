@@ -6,6 +6,9 @@ Created on 2015年11月3日
 '''
 import datetime
 import time
+import yaml
+
+import psycopg2 as psy
 
 from etl.util.pgutil import DBUtils
 from etl.conf.settings import LOGGER
@@ -14,6 +17,15 @@ PLAYER_TABLE_NAME = "ad_space"
 GROUP_TABLE_NAME = ""
 ADSPACE_TABLE_NAME = ""
 
+Config = yaml.load(file("conf/config.yml"))
+config = {}
+config.update({
+    'database': Config['database']['db_name'],
+    'user': Config['database']['user'],
+    'password': Config['database']['password'],
+    'host': Config['database']['host'],
+    'port': Config['database']['port']
+    })
 
 def getplayerInfo():
     '''
@@ -28,21 +40,40 @@ def getplayerInfo():
         }
     '''
     ed = datetime.datetime.now()
-    endtime=datetime.datetime.strftime(ed,"%Y-%m-%d %H:%M")
+    endtime = datetime.datetime.strftime(ed, "%Y-%m-%d %H:%M")
     starttime = getStartTime()
     
     _getsplittime_sql = " select effect_s from \"%s\" where effect_s <='%s' and effect_e >= '%s' GROUP BY effect_s ORDER by effect_s asc" % \
-                (PLAYER_TABLE_NAME,endtime,starttime,)
+                (PLAYER_TABLE_NAME, endtime, starttime,)
     
     try:
-        splitrows = DBUtils.fetchall(_getsplittime_sql)
+        # splitrows = DBUtils.fetchall(_getsplittime_sql)
+        _conn = None
+        _cur = None
+        try:
+            _conn = psy.connect(database=config['database'], user=config['user'], \
+                password=config['password'], host=config['host'], \
+                port=config['port'])
+            _cur = _conn.cursor()
+            _cur.execute(_getsplittime_sql)
+            splitrows = _cur.fetchall()
+        except psy.DatabaseError, e:
+            LOGGER.error('pg bulk insert error: %s' % e)
+            if _conn:
+                _conn.rollback()
+            return None
+        finally:
+            if _conn:
+                _cur.close()
+                _conn.close()
+            del _conn
         if not splitrows or not len(splitrows):
             LOGGER.error("can't get player info time split info errors")
             raise Exception("can't get player info time split info errors")
         
-        split_player_info = _getSplitInfo(splitrows,ed)
+        split_player_info = _getSplitInfo(splitrows, ed)
         return split_player_info
-    except Exception,e:
+    except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
 
@@ -54,14 +85,14 @@ def getGroupIdBySlotId(slotid):
         return None
     
     d = datetime.datetime.now()
-    ftime=datetime.datetime.strftime(d,"%Y-%m-%d %H:%M")
-    _sql = "select group_id from \"%s\" as s where s.status='1' and s.slot_id=%s and s.effect_e >= '%s' " % (ADSPACE_TABLE_NAME,slotid,ftime)
+    ftime = datetime.datetime.strftime(d, "%Y-%m-%d %H:%M")
+    _sql = "select group_id from \"%s\" as s where s.status='1' and s.slot_id=%s and s.effect_e >= '%s' " % (ADSPACE_TABLE_NAME, slotid, ftime)
     try:
         result = DBUtils.fetchone(_sql)
         if not result :
             return None
         return result
-    except Exception,e:
+    except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
 
@@ -74,10 +105,10 @@ def getAllGroupId(dtime=None):
     if dtime is None:
         d = datetime.datetime.now()
     else:
-        d=datetime.datetime.strptime(dtime,"%Y%m%d%H%M")
+        d = datetime.datetime.strptime(dtime, "%Y%m%d%H%M")
         
-    ftime=datetime.datetime.strftime(d,"%Y-%m-%d %H:%M")
-    _GROUPSQL = "select ad_id,node_id from \"%s\" as s where s.status='1' and s.effect_s <= '%s' and s.effect_e > '%s' " % (ADSPACE_TABLE_NAME,ftime,ftime)
+    ftime = datetime.datetime.strftime(d, "%Y-%m-%d %H:%M")
+    _GROUPSQL = "select ad_id,node_id from \"%s\" as s where s.status='1' and s.effect_s <= '%s' and s.effect_e > '%s' " % (ADSPACE_TABLE_NAME, ftime, ftime)
     groups = {}
     try:
         rows = DBUtils.fetchall(_GROUPSQL)
@@ -89,7 +120,7 @@ def getAllGroupId(dtime=None):
                 continue
             groups[row[0]] = row[1]
         return groups
-    except Exception,e:
+    except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
 
@@ -98,12 +129,12 @@ def getAllGroupId(dtime=None):
 def getStartTime():    
     ds = datetime.datetime.now().timetuple()
     l = time.mktime(ds)
-    l = l-(60*60*24)
+    l = l - (60 * 60 * 24)
     startDt = datetime.datetime.fromtimestamp(l)
-    starttime = datetime.datetime.strftime(startDt,"%Y-%m-%d %H:%M")
+    starttime = datetime.datetime.strftime(startDt, "%Y-%m-%d %H:%M")
     return starttime
     
-def _getSplitInfo(rows,endd):
+def _getSplitInfo(rows, endd):
     index = 0
     splitInfo = {}
     for row in rows:
@@ -113,34 +144,52 @@ def _getSplitInfo(rows,endd):
             continue
         
         nextendtime = row[0]   
-        splitplayerInfo = _getSplitPlayerInfo(starttime,nextendtime)
+        splitplayerInfo = _getSplitPlayerInfo(starttime, nextendtime)
         splitInfo[index] = splitplayerInfo
         index = index + 1
         starttime = row[0]
         
-    splitplayerInfo = _getSplitPlayerInfo(starttime,endd)
+    splitplayerInfo = _getSplitPlayerInfo(starttime, endd)
     splitInfo[index] = splitplayerInfo   
     return splitInfo
         
-def _getSplitPlayerInfo(starttime,endtime):
+def _getSplitPlayerInfo(starttime, endtime):
     starttimetuple = starttime.timetuple()
     endtimetuple = endtime.timetuple()
     l = time.mktime(starttimetuple)
-    l = l+1
+    l = l + 1
     startDt = datetime.datetime.fromtimestamp(l)
-    starttimestr = datetime.datetime.strftime(startDt,"%Y-%m-%d %H:%M:%S")  # +1 second    
+    starttimestr = datetime.datetime.strftime(startDt, "%Y-%m-%d %H:%M:%S")  # +1 second    
     
     l = time.mktime(endtimetuple)
-    l = l-1
+    l = l - 1
     endDt = datetime.datetime.fromtimestamp(l)
-    endtimestr = datetime.datetime.strftime(endDt,"%Y-%m-%d %H:%M:%S") #  -1 second
+    endtimestr = datetime.datetime.strftime(endDt, "%Y-%m-%d %H:%M:%S")  #  -1 second
     starttimelong = time.mktime(starttimetuple)
     endtimelong = time.mktime(endtimetuple)
     
     _playersql = " select player_id,ad_id,node_id,name,priority from \"%s\" as s where s.status='1' and \
              s.effect_s <= '%s' and  s.effect_e >= '%s'  order by player_id,node_id,priority asc" % \
-             (PLAYER_TABLE_NAME,starttimestr,endtimestr)       
-    rows = DBUtils.fetchall(_playersql)
+             (PLAYER_TABLE_NAME, starttimestr, endtimestr)       
+
+    try:
+        _conn = psy.connect(database=config['database'], user=config['user'], \
+            password=config['password'], host=config['host'], \
+            port=config['port'])
+        _cur = _conn.cursor()
+        _cur.execute(_playersql)
+        rows = _cur.fetchall()
+    except psy.DatabaseError, e:
+        LOGGER.error('pg bulk insert error: %s' % e)
+        if _conn:
+            _conn.rollback()
+        return None
+    finally:
+        if _conn:
+            _cur.close()
+            _conn.close()
+        del _conn
+
     player_info = {}
     try:
         if not rows or not len(rows):
@@ -155,21 +204,21 @@ def _getSplitPlayerInfo(starttime,endtime):
         splitinfo["endtime"] = endtimelong
         splitinfo["playerinfo"] = player_info
         return splitinfo
-    except Exception,e:
+    except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
 
-def _update_player_info(playerinfo,row):
-    _player=playerinfo.get(row[0])
+def _update_player_info(playerinfo, row):
+    _player = playerinfo.get(row[0])
     
     if _player is None:
-        _player={}
-        playerinfo[row[0]]=_player
+        _player = {}
+        playerinfo[row[0]] = _player
     _slotid = _player.get(row[1])
     
     if _slotid is None:
         _slotid = []
-        _player[row[1]]=_slotid
+        _player[row[1]] = _slotid
     _slotid.append(row[2])
     _slotid.append(row[3])
     _slotid.append(row[4])

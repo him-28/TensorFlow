@@ -88,6 +88,9 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
+        finally:
+            if conn:
+                conn.close()
 
     @staticmethod
     def bulkInsert(sql,vals=[],dbconn=None,commit=True,bulk_size=1000):
@@ -112,6 +115,9 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
+        finally:
+            if conn:
+                conn.close()
 
     @staticmethod
     def fetchone(sql):
@@ -129,6 +135,9 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
+        finally:
+            if conn:
+                conn.close()
 
     @staticmethod
     def fetchall(sql):
@@ -143,6 +152,9 @@ class DBUtils:
             if conn:
                 conn.rollback()
             return None
+        finally:
+            if conn:
+                conn.close()
         
 SQL_INSERT_QUERY = 'INSERT INTO %s (%s) VALUES (%s)'
 
@@ -182,6 +194,9 @@ class LoadUtils:
             LOGGER.error(ex)
             if conn:
                 conn.rollback()
+        finally:
+            if conn:
+                conn.close()
                     
     @staticmethod
     def todb(table,conn,tablename,cols,commit):
