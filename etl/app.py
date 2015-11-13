@@ -26,12 +26,12 @@ METRICS = Config['metrics']
 M_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}"
 H_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}"
 D_Dir = "{prefix}{sep}{year}{sep}{month}"
-M_Logic0_Filename = "logic0_{metric}_ad_{minute}.csv"
-H_Logic0_Filename = "logic0_{metric}_ad_{hour}.csv"
-D_Logic0_Filename = "logic0_{metric}_ad_{day}.csv"
-M_Logic1_Filename = "logic1_{metric}_ad_{minute}.csv"
-H_Logic1_Filename = "logic1_{metric}_ad_{hour}.csv"
-D_Logic1_Filename = "logic1_{metric}_ad_{day}.csv"
+M_Logic0_Filename = "logic0_{metric}_ad_{minute:02d}.csv"
+H_Logic0_Filename = "logic0_{metric}_ad_{hour:02d}.csv"
+D_Logic0_Filename = "logic0_{metric}_ad_{day:02d}.csv"
+M_Logic1_Filename = "logic1_{metric}_ad_{minute:02d}.csv"
+H_Logic1_Filename = "logic1_{metric}_ad_{hour:02d}.csv"
+D_Logic1_Filename = "logic1_{metric}_ad_{day:02d}.csv"
 
 class AdMonitorRunner(object):
 
@@ -179,7 +179,7 @@ class AdMonitorRunner(object):
             output_filename0 = D_Logic0_Filename.format(metric=metric, day=now.day)
             output_filename1 = D_Logic1_Filename.format(metric=metric, day=now.day)
 
-            for i in xrange(1, 24, Config["d_delay"]):
+            for i in xrange(0, 24, Config["d_delay"]):
                 filename0 = H_Logic0_Filename.format(hour=i, metric=metric)
                 filename1 = H_Logic1_Filename.format(hour=i, metric=metric)
 
