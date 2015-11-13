@@ -179,7 +179,7 @@ class AdMonitorRunner(object):
             output_filename0 = D_Logic0_Filename.format(metric=metric, day=now.day)
             output_filename1 = D_Logic1_Filename.format(metric=metric, day=now.day)
 
-            for i in range(0, 24):
+            for i in xrange(1, 24, Config["d_delay"]):
                 filename0 = H_Logic0_Filename.format(hour=i, metric=metric)
                 filename1 = H_Logic1_Filename.format(hour=i, metric=metric)
 
@@ -360,13 +360,18 @@ class AdMonitorRunner(object):
 
 def run_cli(arguments):
     try:
-        args = arguments[1:]
+        run_type = arguments[1]
+        args = arguments[2:]
         now = datetime.now()
-        if 'h' == args[0]:
-            now = now - timedelta(hours=1)
-        elif 'd' == args[0]:
-            now = now - timedelta(days=1)
-        AdMonitorRunner().run(now, args[0])
+        if run_type == 'admonitor':
+            if 'h' == args[0]:
+                now = now - timedelta(hours=1)
+            elif 'd' == args[0]:
+                now = now - timedelta(days=1)
+            AdMonitorRunner().run(now, args[0])
+        else:
+            LOGGER.error("app run_type [{0}] is wrong".format(run_type))
+            sys.exit(-1)
     except Exception, e:
         import traceback
         print traceback.format_exc()
