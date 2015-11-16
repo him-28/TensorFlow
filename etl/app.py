@@ -305,7 +305,7 @@ class AdMonitorRunner(object):
                     paths['ad_src_filename'],
                     paths['logic0_output_paths'])
             end = time.clock()
-            logic0_sptime = '%0.2f'%(end - start)
+            logic0_sptime = '%0.2f' % (end - start)
             LOGGER.info("logic0 calc spent: %s s" , logic0_sptime)
 
             start = time.clock()
@@ -316,7 +316,7 @@ class AdMonitorRunner(object):
                     paths['ad_src_filename'],
                     paths['logic1_output_paths'])
             end = time.clock()
-            logic1_sptime = '%0.2f'%(end - start)
+            logic1_sptime = '%0.2f' % (end - start)
             LOGGER.info("logic1 calc spent: %s s" , logic1_sptime)
 
             # 读取计算结果
@@ -325,8 +325,15 @@ class AdMonitorRunner(object):
                                     paths['logic1_output_paths'])
             # 报告结果
             filesize = getfilesize(ad_src_path)
-            Reportor(paths["ad_src_filename"],filesize,logic0_sptime,logic1_sptime,now.strftime("%Y-%m-%d %H:00:00"),now.strftime("%Y-%m-%d %H:59:59"),\
-                      d_reader).report_text()
+            params = {
+                      "type":"hour",
+                      "filename":paths["ad_src_filename"], 
+                      "filesize":filesize, 
+                      "logic0_sptime":logic0_sptime, 
+                      "logic1_sptime":logic1_sptime, 
+                      "start_time":now.strftime("%Y-%m-%d %H:00:00"), 
+                      "end_time":now.strftime("%Y-%m-%d %H:59:59")}
+            Reportor(params,d_reader).report_text()
 
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
@@ -344,27 +351,43 @@ class AdMonitorRunner(object):
             # logic0 code
             start = time.clock()
             merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
-            end = time.clock()
-            LOGGER.info("logic0 hour agg spend: %f s" % (end - start))
 
             # logic1 code
-            start = time.clock()
             merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
-            LOGGER.info("logic1 hour agg spend: %f s" % (end - start))
+            sptime = '%0.2f' % (end - start)
+            LOGGER.info("merge file spend: %f s" % (end - start))
+
 
             # 读取计算结果
             d_reader = DataReader().hour_data(\
                                     paths['logic0_output_paths'], \
                                     paths['logic1_output_paths'])
+
+            params = {
+                      "type":"day",
+                      "fileinfo0":getfilesinfo(paths['logic0_output_paths']), 
+                      "fileinfo1":getfilesinfo(paths['logic1_output_paths']), 
+                      "sptime":sptime, 
+                      "start_time":now.strftime("%Y-%m-%d 00:00:00"), 
+                      "end_time":now.strftime("%Y-%m-%d 23:59:59")}
             # 报告结果
-#             Reportor(now.strftime("%Y-%m-%d 00:00:00"),now.strftime("%Y-%m-%d 23:59:59"),\
-#                       d_reader).report_text()
+            Reportor(params, d_reader).report_text()
 
 def getfilesize(filepath):
     psize = os.path.getsize(filepath)
-    filesize = '%0.3f' % (psize/1024.0/1024.0)
-    return str(filesize)+"MB"
+    filesize = '%0.3f' % (psize / 1024.0 / 1024.0)
+    return str(filesize) + "MB"
+
+def getfilesinfo(filepaths):
+    info = {}
+    print filepaths
+    for key,filepath in filepaths.iteritems():
+        filesize = getfilesize(filepath)
+        filename = os.path.split(filepath)[1]
+        info[key] = (filesize,filename)
+    return info
+
 def run_cli(arguments):
     try:
         run_type = arguments[1]
@@ -391,4 +414,3 @@ if __name__ == '__main__':
     args: python app.py ad_monitor m|h|d
     '''
     run_cli(sys.argv)
-
