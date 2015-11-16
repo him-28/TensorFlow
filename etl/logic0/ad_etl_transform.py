@@ -357,10 +357,10 @@ class ETL_Transform:
         etl.tocsv(self.chance_merge_table,chance_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+sale_file)
-        etl.tocsv(self.count_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
+        etl.tocsv(self.count_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+seq_file)
-        etl.tocsv(self.seq_merge_table,sale_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
+        etl.tocsv(self.seq_merge_table,seq_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])
 
         LOGGER.info("generate "+up_file)
         etl.tocsv(self.up_merge_table,up_file,encoding="utf-8",write_header=True,delimiter=Config["output_column_sep"])

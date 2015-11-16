@@ -71,7 +71,7 @@ class AdMonitor_audit:
         
     def audit(self):
         start_time = time.time()
-        first_row = True
+        first_row = Config["with_header"]
         tmp_file_path = self.filepath + ".tmp"
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
