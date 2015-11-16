@@ -289,7 +289,7 @@ def ad_audit(filepath,filename):
         import traceback
         ex=traceback.format_exc()
         LOGGER.error(ex)
-        print ex
+        sys.exit(-1)
         
 if __name__ == "__main__":
     import time

@@ -5,7 +5,7 @@ Created on 2015年11月11日
 @author: Administrator
 '''
 import types
-import yaml
+import sys
 import os
 
 from etl.util.ip_convert import IP_Util
@@ -189,7 +189,7 @@ def flat_data(input_path,out_putpath):
         import traceback
         ex=traceback.format_exc()
         LOGGER.error(ex)
-        print ex
+        sys.exit(-1)
         
 if __name__ == "__main__":
     inputf = "C:/Users/Administrator/Desktop/flat_test/flat_test.csv"
