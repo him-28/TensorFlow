@@ -28,7 +28,7 @@ class ADMonitorAuditRobot(object):
         self.total = total
         self.problems = problems
         self.spent = spent
-        self.title = u"小金汇报-android 手机"
+        self.title = u"原始日志审计"
         self.channel = u'广告-数据'
         self.normal = '#F8F8FF'
         self.error = '#FF0000'
@@ -71,7 +71,7 @@ class AdMonitor_audit:
         
     def audit(self):
         start_time = time.time()
-        first_row = True
+        first_row = Config["with_header"]
         tmp_file_path = self.filepath + ".tmp"
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
