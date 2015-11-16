@@ -150,7 +150,7 @@ def get_line(row):
 #     for data in row:
 #         line += str(data)+Config["output_column_sep"]
 #     line = line.strip(Config["output_column_sep"])
-    line = Config["output_column_sep"].join(i for i in row)
+    line = Config["output_column_sep"].join(str(i) for i in row)
     line += '\n'
     return line
     
