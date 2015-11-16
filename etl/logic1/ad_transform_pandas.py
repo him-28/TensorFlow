@@ -10,11 +10,9 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from etl.util import init_log
+from etl.conf.settings import PdLogger as LOG
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 from etl.util.playerutil import getplayerInfo
-
-LOG = init_log.init("util/logger.conf", 'pandasEtlLogger')
 
 def split_header(names, header):
     '''转换配置里的数据类型、列名'''

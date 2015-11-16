@@ -86,8 +86,8 @@ __init__ method need 3 parameters witch format as bellow example:
 '''
 
 import datetime as dt
-import collections
 
+from etl.conf.settings import LOGGER as LOG
 from etl.util import bearychat as bc
 from etl.util.playerutil import getplayerInfo
 
@@ -113,9 +113,25 @@ def get_pf_name(pf_code):
         return PF[pf_code]
     return "Unknow"
 
+def get_metric_data(metric, logic, data):
+    '''get data in each metric'''
+    if data.has_key(metric):
+        if data[metric].has_key(logic):
+            return data[metric][logic]
+        else:
+            LOG.warn("can not find logic:%s in metric:%s,the data is:%s", \
+                      logic, metric, data)
+    else:
+        LOG.warn("can not find metric:%s,the data is:%s", metric, data)
+    return 0
+
 class Reportor(object):
     '''Report ETL result'''
-    def __init__(self, filename,filesize,logic0_sptime,logic1_sptime,start_time, end_time, data):
+    def __init__(self, params, data):
+        self.params = params
+        end_time = params["end_time"]
+        start_time = params["start_time"]
+        LOG.info("init reportor.")
         if is_num(end_time):
             self.end_time = dt.datetime.\
                 fromtimestamp(end_time).strptime("%Y%m%d %H:%M:%S")
@@ -126,10 +142,6 @@ class Reportor(object):
                 fromtimestamp(start_time).strptime("%Y%m%d %H:%M:%S")
         else:
             self.start_time = start_time
-        self.logic0_sptime = logic0_sptime
-        self.logic1_sptime = logic1_sptime
-        self.filename = filename
-        self.filesize = filesize
         self.data = data
         self.total = {}
         for _pf in data.keys():
@@ -148,17 +160,20 @@ class Reportor(object):
         '''Report ETL result data in text format
         '''
         data = self.data
+        LOG.info("report text...")
+        LOG.info("got data:")
+
         result_text = []
         if data:
             for _pf, pf_data in data.iteritems():
                 _pf_result_text = []
                 for board_id, slot_data in pf_data.iteritems():
                     _pf_result_text.extend(self.__statistics(_pf, board_id, slot_data))
-                    _pf_result_text.extend(self.__seqs(_pf, board_id, slot_data))
+                    _pf_result_text.extend(self.__seqs(board_id, slot_data))
                 _pf_result_text.insert(0, self.__report_total_text(_pf))
                 result_text.append((_pf, _pf_result_text))
         else:
-            result_text = [("WARNING",[("没有数据","审计结果是空")])]
+            result_text = [("WARNING", [("没有数据", "审计结果是空")])]
 
         # 发送到Bearychat
         for _pf, t_r in result_text:
@@ -167,8 +182,9 @@ class Reportor(object):
                 msg += title + "\n"
                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            time_title = "%s~%s数据审计完成" % (self.start_time,self.end_time)
-            bc.new_send_message(text=get_pf_name(_pf), at_title=time_title,\
+            time_title = "%s~%s数据审计完成" % (self.start_time, self.end_time)
+            LOG.info("report text,title: %s .", time_title)
+            bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
                                 channel=REPORT_CHANNEL , at_text=msg)
         return result_text
 
@@ -211,38 +227,41 @@ class Reportor(object):
                       l0_1 % (click_rate0, click_rate1))
         slot_str = slot_title % slot_value
         fnssp = ""
-        fnssp += "文件名{%s}, 大小%s \r\n" % (self.filename,self.filesize)
-        fnssp += "[logic0] 耗时 %s秒，[logic1] 耗时 %s秒 \r\n" % (str(self.logic0_sptime),str(self.logic1_sptime))
-        return fnssp+"【汇总报告】", slot_str
-
-    def __get_metric_data(self, metric, logic, data):
-        '''get data in each metric'''
-        if data.has_key(metric):
-            return data[metric][logic]
-        else:
-            return 0
+        if "hour" == self.params["type"]:
+            fnssp += "文件名{%s}, 大小%s \r\n" % (self.params["filename"], self.params["filesize"])
+            fnssp += "[logic0] 耗时 %s秒，[logic1] 耗时 %s秒 \r\n" % \
+                (str(self.params["logic0_sptime"]), str(self.params["logic1_sptime"]))
+        elif "day" == self.params["type"]:
+            sptime = self.params["sptime"]
+            #fileinfo0 = self.params["fileinfo0"]
+            #fileinfo1 = self.params["fileinfo1"]
+            #for key, info in fileinfo0.iteritems():
+            #    fnssp += "文件名{%s,%s}, 大小{%s,%s} \r\n" % \
+            #        (info[1], fileinfo1[key][1], info[0], fileinfo1[key][0])
+            fnssp = "耗时：%s秒" % sptime
+        return fnssp + "【汇总报告】", slot_str
 
     def __statistics(self, _pf, board_id, slot_data):
         '''statistics'''
-        
+
         if not slot_data.has_key("slot_statistics"):
             return [("播放器ID【%s】" % board_id, "没有广告位数据")]
-        
+
         slot_statistics = slot_data["slot_statistics"]
         if len(slot_statistics) == 0:
             return [("播放器ID【%s】" % board_id, "没有广告位数据")]
         else:
             result = []
             for data in slot_statistics:
-                display_poss0 = self.__get_metric_data("display_poss", "logic0", data)
-                display_poss1 = self.__get_metric_data("display_poss", "logic1", data)
+                display_poss0 = get_metric_data("display_poss", "logic0", data)
+                display_poss1 = get_metric_data("display_poss", "logic1", data)
                 self.__sum_put(_pf, ("display_poss0", "display_poss1"), \
                                 (display_poss0, display_poss1))
-                click0 = self.__get_metric_data("click", "logic0", data)
-                click1 = self.__get_metric_data("click", "logic1", data)
+                click0 = get_metric_data("click", "logic0", data)
+                click1 = get_metric_data("click", "logic1", data)
                 self.__sum_put(_pf, ("click0", "click1"), (click0, click1))
-                impression0 = self.__get_metric_data("impression", "logic0", data)
-                impression1 = self.__get_metric_data("impression", "logic1", data)
+                impression0 = get_metric_data("impression", "logic0", data)
+                impression1 = get_metric_data("impression", "logic1", data)
                 self.__sum_put(_pf, ("impression0", "impression1"), (impression0, impression1))
                 slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
 播放结束数：%s，\n点击数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
@@ -258,16 +277,16 @@ class Reportor(object):
                     click_rate0 = click0 / impression0
                 if not impression1 == 0:
                     click_rate1 = click1 / impression1
-                display_sale0 = self.__get_metric_data("display_sale", "logic0", data)
-                display_sale1 = self.__get_metric_data("display_sale", "logic1", data)
+                display_sale0 = get_metric_data("display_sale", "logic0", data)
+                display_sale1 = get_metric_data("display_sale", "logic1", data)
                 self.__sum_put(_pf, ("display_sale0", "display_sale1"), \
                                 (display_sale0, display_sale1))
-                impression_end0 = self.__get_metric_data("impression_end", "logic0", data)
-                impression_end1 = self.__get_metric_data("impression_end", "logic1", data)
+                impression_end0 = get_metric_data("impression_end", "logic0", data)
+                impression_end1 = get_metric_data("impression_end", "logic1", data)
                 self.__sum_put(_pf, ("impression_end0", "impression_end1"), \
                                (impression_end0, impression_end1))
-                up0 = self.__get_metric_data("up", "logic0", data)
-                up1 = self.__get_metric_data("up", "logic1", data)
+                up0 = get_metric_data("up", "logic0", data)
+                up1 = get_metric_data("up", "logic1", data)
                 self.__sum_put(_pf, ("up0", "up1"), (up0, up1))
                 l0_1 = "{logic0:%s} {logic1:%s}"
                 slot_value = (l0_1 % (display_poss0, display_poss1), \
@@ -283,7 +302,7 @@ class Reportor(object):
                 result.append((format_title, slot_str))
         return result
 
-    def __seqs(self, _pf, board_id, slot_data):
+    def __seqs(self, board_id, slot_data):
         '''statistics'''
 
         if (not slot_data.has_key("seq_display")) or len(slot_data["seq_display"]) == 0:
@@ -344,6 +363,16 @@ import pandas as pd
 from etl.logic1.ad_transform_pandas import split_header
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 
+# debug start
+import logging
+import sys
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.DEBUG)
+fmt_str = "[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s"
+console_handler.setFormatter(logging.Formatter(fmt_str, ""))
+LOG.addHandler(console_handler)
+# debug end
+
 class DataReader(object):
     '''读取计算好的结果'''
     def __init__(self):
@@ -355,13 +384,14 @@ class DataReader(object):
 
     def hour_data(self, paths0, paths1):
         '''按小时计的结果'''
+        LOG.info("create hour data structs ...")
         for key, path in paths0.iteritems():
             if key == "display":
                 dataf = self.__get_seq_data_frame(path)
                 if not dataf is None:
                     self.__handle_seq_data(dataf, "logic0")
             else:
-                dataf = self.__get_data_frame(path)
+                dataf = self.get_data_frame(path)
                 if not dataf is None:
                     self.__handle_metric_data(key, dataf, "logic0")
 
@@ -371,28 +401,36 @@ class DataReader(object):
                 if not dataf is None:
                     self.__handle_seq_data(dataf, "logic1")
             else:
-                dataf = self.__get_data_frame(path)
+                dataf = self.get_data_frame(path)
                 if not dataf is None:
                     self.__handle_metric_data(key, dataf, "logic1")
         return self.data_struct
 
-    def __get_data_frame(self, data_file_path):
+    def get_data_frame(self, data_file_path):
+        '''謧文件返回统一的统计合集'''
+        LOG.info("retieve data frame : %s", data_file_path)
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
         if dataf.empty:
+            LOG.info("got empty dataframe!")
             return None
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
 
     def __get_seq_data_frame(self, data_file_path):
+        '''謧文件返回统一的顺序实际展示数统计合集'''
+        LOG.info("retieve seq data frame : %s", data_file_path)
         dataf = pd.read_csv(data_file_path, sep=self.sep, \
                             dtype=self.dtype, index_col=False)
         if dataf.empty:
+            LOG.info("got empty seq dataframe!")
             return None
         return dataf.groupby(['board_id', 'pf', 'seq']).sum()
 
     def __handle_seq_data(self, dataf, logic):
+        '''返回顺序实际展示数的统计数据格式'''
+        LOG.info("handle seq metric data")
         for row in dataf.iterrows():
-            board_id = str(row[0][0])
+            board_id = int(row[0][0])
             _pf = str(row[0][1])
             seq = str(row[0][2])
             total = row[1]["total"]
@@ -403,15 +441,17 @@ class DataReader(object):
                 seq_displays[seq] = {logic:total}
 
     def __handle_metric_data(self, metric, dataf, logic):
+        '''返回统一的统计数据格式'''
+        LOG.info("handle metric data")
         for row in dataf.iterrows():
-            board_id = str(row[0][0])
+            board_id = int(row[0][0])
             _pf = str(row[0][1])
-            slot_id = str(row[0][2])
-            total = row[1]["total"]
+            slot_id = int(row[0][2])
+            total = row[1]["total"]  # TODO FIXME int compareS
             has_update = False
             slot_statistics = self.__get_slot_statistics(_pf, board_id)
             for s_slot_info in slot_statistics:
-                if s_slot_info["slot_id"] == slot_id:
+                if int(s_slot_info["slot_id"]) == slot_id:  # TODO FIXME int compareS
                     if not s_slot_info.has_key(metric):
                         s_slot_info[metric] = {logic:total}
                     else:
@@ -428,6 +468,7 @@ class DataReader(object):
                         })
 
     def __get_slot_statistics(self, _pf, board_id):
+        '''获取已存在的或新建统计结果返回'''
         if not self.data_struct.has_key(_pf):
             self.data_struct[_pf] = {}
         if not self.data_struct[_pf].has_key(board_id):
@@ -437,6 +478,7 @@ class DataReader(object):
         return self.data_struct[_pf][board_id]["slot_statistics"]
 
     def __get_seq_display(self, _pf, board_id):
+        '''获取已存在的或新建实际展示数统计结果返回'''
         if not self.data_struct.has_key(_pf):
             self.data_struct[_pf] = {}
         if not self.data_struct[_pf].has_key(board_id):
@@ -449,14 +491,20 @@ class DataReader(object):
     def __get_player_infos(self):
         '''获取播放器信息，如果已经获取过，从缓存中拿'''
         if self.__player_id_cache is None:
+            LOG.info("try to retrieve player info...")
             self.__player_id_cache = getplayerInfo()  # TODO FIXME 更改了Status的Player可能获取不到（存在时间差）
+            LOG.info("got : %s", str(self.__player_id_cache))
         return self.__player_id_cache
 
     def __get_slot_name(self, slot_id):
+        '''根据slot_id获取slot name'''
         if self.__slot_id_cache.has_key(slot_id):
             return self.__slot_id_cache[slot_id]
         else:
             pinfo = self.__get_player_infos()
+            if pinfo is None:
+                LOG.error("no player info,plz check the db connection")
+                return str(slot_id)
             for item in pinfo.values():
                 playerinfo = item["playerinfo"]
                 for group_id, slot_infos in playerinfo.iteritems():
@@ -465,5 +513,5 @@ class DataReader(object):
                             res = slot_info[1]
                             self.__slot_id_cache[slot_id] = res
                             return res
-        return "NaN"
+        return str(slot_id)
 
