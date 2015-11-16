@@ -63,7 +63,7 @@ class FlatData:
             ad_list = self.unpack_adlist(adlist)
             self.flat_buffer = self.pack_list(self.flat_buffer, row, ad_list)
         except Exception,e:
-            LOGGER.error("flat adlist error,error message: %s" % e.message)
+            LOGGER.error("flat adlist error,行:%s error message: %s" % (row,e.message))
             
         if len(self.flat_buffer) >= self.batch_write_size:
             self.write_buffer_in_file()
@@ -180,9 +180,16 @@ def get_time_playerinfo(allplayerinfo):
         
         
 def flat_data(input_path,out_putpath):
-    fd = FlatData(input_path,out_putpath)
-    fd.flat()
-    
+    try:
+        fd = FlatData(input_path,out_putpath)
+        fd.flat()
+    except Exception,e:
+        LOGGER.error("flat log file error,filepath:%s . error message: %s"%(input_path,e.message))
+        import traceback
+        ex=traceback.format_exc()
+        LOGGER.error(ex)
+        print ex
+        
 if __name__ == "__main__":
     inputf = "C:/Users/Administrator/Desktop/flat_test/flat_test.csv"
     output = "C:/Users/Administrator/Desktop/flat_test/flat_test_end.csv"

@@ -14,6 +14,7 @@ from datetime import datetime
 
 from etl.util.bearychat import new_send_message
 from etl.conf.settings import AuditConfig as Config
+from etl.conf.settings import LOGGER
 
 SUCCESS = "success"
 
@@ -92,7 +93,10 @@ class AdMonitor_audit:
                     continue
                 row=[i.strip() for i in line.strip().strip(Config["strip_char"]).split(file_split)]
                 self.count_rows = self.count_rows + 1
-                res = self.validator(row,self.count_rows)
+                try:
+                    res = self.validator(row,self.count_rows)
+                except Exception,e:
+                    LOGGER.error("audit error,行号：%s 行值：%s .error message:%s"%(str(self.count_rows),line,e.message))
                 tag = 0
                 if not res:
                     tag = 101
@@ -275,10 +279,16 @@ class AdMonitor_audit:
         return str(filesize)+"MB"
     
 def ad_audit(filepath,filename):
-    
-    ad = AdMonitor_audit(filepath,filename)
-    ad.audit()
-    ad.report()
+    try:
+        ad = AdMonitor_audit(filepath,filename)
+        ad.audit()
+        ad.report()
+    except Exception,e:
+        LOGGER.error("audit log file error,filepath:%s%s error message: %s"%(filepath,filename,e.message))
+        import traceback
+        ex=traceback.format_exc()
+        LOGGER.error(ex)
+        print ex
         
 if __name__ == "__main__":
     import time
