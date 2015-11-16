@@ -1,5 +1,6 @@
 strip_char: \"
 file_split: ","
+with_header: False
 sample_error_size: 3
 header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag']
 int: int
