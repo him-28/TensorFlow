@@ -182,6 +182,7 @@ def get_time_playerinfo(allplayerinfo):
 def flat_data(input_path,out_putpath):
     try:
         fd = FlatData(input_path,out_putpath)
+        LOGGER.info("flat log ...")
         fd.flat()
     except Exception,e:
         LOGGER.error("flat log file error,filepath:%s . error message: %s"%(input_path,e.message))

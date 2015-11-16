@@ -281,6 +281,7 @@ class AdMonitor_audit:
 def ad_audit(filepath,filename):
     try:
         ad = AdMonitor_audit(filepath,filename)
+        LOGGER.info("audit log ...")
         ad.audit()
         ad.report()
     except Exception,e:
