@@ -1,5 +1,5 @@
 strip_char: \"
-file_split: ","
+file_split: "\t"
 with_header: False
 sample_error_size: 3
 int: int

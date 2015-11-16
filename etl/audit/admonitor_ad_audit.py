@@ -94,6 +94,7 @@ class AdMonitor_audit:
                     continue
                 row=[i.strip() for i in line.strip().strip(Config["strip_char"]).split(file_split)]
                 self.count_rows = self.count_rows + 1
+                res = False
                 try:
                     res = self.validator(row,self.count_rows)
                 except Exception,e:
