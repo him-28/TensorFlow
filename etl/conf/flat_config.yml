@@ -1,4 +1,4 @@
-file_split: ","
+file_split: "\t"
 ad_split: ","
 output_column_sep: "\t"
 strip_char: \"
