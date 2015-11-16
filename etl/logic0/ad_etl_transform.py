@@ -11,7 +11,7 @@ import os
 import types
 
 from etl.conf.settings import MONITOR_CONFIGS as Config
-from etl.conf.settings import LOGGER
+from etl.conf.settings import ptLogger as LOGGER
 from etl.util.playerutil import getplayerInfo 
 
 REAL_SLOTID = Config["addslotid"]
