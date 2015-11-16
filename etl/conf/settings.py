@@ -18,4 +18,5 @@ PdLogger = init_log.init("util/logger.conf", 'pandasEtlLogger')
 ENV_CONF = yaml.load(file("conf/monitor_config.yml"))
 CURRENT_ENV = ENV_CONF.get("current_env")
 MONITOR_CONFIGS = ENV_CONF[CURRENT_ENV]["monitor"]
-
+AUDIT_HEADER = MONITOR_CONFIGS["audit_header"]
+HEADER = MONITOR_CONFIGS["header"]
