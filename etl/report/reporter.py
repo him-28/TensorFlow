@@ -199,7 +199,7 @@ class Reportor(object):
         if not impression1 == 0:
             click_rate1 = click1 / impression1
         slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
-播放结束数：%s，\n点击播放数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
+播放结束数：%s，\n点击数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
         l0_1 = "｛logic0:%s｝ ｛logic1:%s｝"
         slot_value = (l0_1 % (display_poss0, display_poss1), \
                       l0_1 % (display_sale0, display_sale1), \
@@ -245,7 +245,7 @@ class Reportor(object):
                 impression1 = self.__get_metric_data("impression", "logic1", data)
                 self.__sum_put(_pf, ("impression0", "impression1"), (impression0, impression1))
                 slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
-播放结束数：%s，\n点击播放数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
+播放结束数：%s，\n点击数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
                 impression_rate0 = 0
                 impression_rate1 = 0
                 click_rate0 = 0
