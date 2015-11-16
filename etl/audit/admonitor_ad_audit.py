@@ -15,6 +15,7 @@ from datetime import datetime
 from etl.util.bearychat import new_send_message
 from etl.conf.settings import AuditConfig as Config
 from etl.conf.settings import LOGGER
+from etl.conf.settings import AUDIT_HEADER
 
 SUCCESS = "success"
 
@@ -65,7 +66,7 @@ class AdMonitor_audit:
         self.error_rows = 0
         self.count_rows = 0
         self.sample_error_size = Config["sample_error_size"]
-        self.header = Config["header"]
+        self.header = AUDIT_HEADER
         self.problems = []
         self.columns_errors = {}
         self.spent = 0
@@ -77,12 +78,12 @@ class AdMonitor_audit:
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
         tmp_file = open(tmp_file_path,"w+")
-        for idx in range(0,len(Config["header"])):
+        for idx in range(0,len(AUDIT_HEADER)):
             if idx != 0:
                 tmp_file.write(Config["file_split"])
-            tmp_file.write(Config["header"][idx])
+            tmp_file.write(AUDIT_HEADER[idx])
         tmp_file.write("\n")
-        tag_index = Config["header"].index("tag")
+        tag_index = AUDIT_HEADER.index("tag")
         file_split = Config["file_split"]
         with open(self.filepath,'rb') as fr:
             for line in fr:

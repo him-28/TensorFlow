@@ -12,6 +12,8 @@ from etl.util.ip_convert import IP_Util
 from etl.util.playerutil import getplayerInfo
 from etl.conf.settings import FlatConfig as Config
 from etl.conf.settings import LOGGER
+from etl.conf.settings import HEADER
+from etl.conf.settings import AUDIT_HEADER
 
 class FlatData:
     def __init__(self,input_path,out_putpath):
@@ -24,8 +26,8 @@ class FlatData:
         self.AD_SPLIT = Config["ad_split"]
         self.ADLIST_SPLIT = Config["adlist_split"]
         self.batch_write_size = Config["batch_write_size"]
-        self.header = Config["header"]
-        self.flat_header = Config["flat_header"]
+        self.header = AUDIT_HEADER
+        self.flat_header = HEADER
         self.slotid_index = self.header.index(Config["slotid"])
         self.mediabuyid_index = self.header.index(Config["mediabuyid"])
         self.creativeid_index = self.header.index(Config["creativeid"])
