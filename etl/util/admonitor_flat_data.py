@@ -5,13 +5,15 @@ Created on 2015年11月11日
 @author: Administrator
 '''
 import types
-import yaml
+import sys
 import os
 
 from etl.util.ip_convert import IP_Util
 from etl.util.playerutil import getplayerInfo
 from etl.conf.settings import FlatConfig as Config
 from etl.conf.settings import LOGGER
+from etl.conf.settings import HEADER
+from etl.conf.settings import AUDIT_HEADER
 
 class FlatData:
     def __init__(self,input_path,out_putpath):
@@ -24,8 +26,8 @@ class FlatData:
         self.AD_SPLIT = Config["ad_split"]
         self.ADLIST_SPLIT = Config["adlist_split"]
         self.batch_write_size = Config["batch_write_size"]
-        self.header = Config["header"]
-        self.flat_header = Config["flat_header"]
+        self.header = AUDIT_HEADER
+        self.flat_header = HEADER
         self.slotid_index = self.header.index(Config["slotid"])
         self.mediabuyid_index = self.header.index(Config["mediabuyid"])
         self.creativeid_index = self.header.index(Config["creativeid"])
@@ -63,7 +65,7 @@ class FlatData:
             ad_list = self.unpack_adlist(adlist)
             self.flat_buffer = self.pack_list(self.flat_buffer, row, ad_list)
         except Exception,e:
-            LOGGER.error("flat adlist error,error message: %s" % e.message)
+            LOGGER.error("flat adlist error,行:%s error message: %s" % (row,e.message))
             
         if len(self.flat_buffer) >= self.batch_write_size:
             self.write_buffer_in_file()
@@ -180,9 +182,17 @@ def get_time_playerinfo(allplayerinfo):
         
         
 def flat_data(input_path,out_putpath):
-    fd = FlatData(input_path,out_putpath)
-    fd.flat()
-    
+    try:
+        fd = FlatData(input_path,out_putpath)
+        LOGGER.info("flat log ...")
+        fd.flat()
+    except Exception,e:
+        LOGGER.error("flat log file error,filepath:%s . error message: %s"%(input_path,e.message))
+        import traceback
+        ex=traceback.format_exc()
+        LOGGER.error(ex)
+        sys.exit(-1)
+        
 if __name__ == "__main__":
     inputf = "C:/Users/Administrator/Desktop/flat_test/flat_test.csv"
     output = "C:/Users/Administrator/Desktop/flat_test/flat_test_end.csv"
