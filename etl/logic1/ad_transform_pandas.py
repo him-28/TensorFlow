@@ -342,7 +342,7 @@ class AdTransformPandas(object):
         for row_data in chunk.iterrows():
             row = row_data[1]
             board_id = row["board_id"]
-            timestamp = row["server_timestamp"]
+            timestamp = long(row["server_timestamp"])
             seq = row["seq"]  # 播放顺序
             # 获取实际在按播放顺序的广告位ID
             _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
@@ -381,7 +381,7 @@ class AdTransformPandas(object):
             ex.目前需要打平的字段有：slot_id
          '''
         board_id = row_data["board_id"]
-        timestamp = row_data["server_timestamp"]
+        timestamp = float(row_data["server_timestamp"])
         slot_ids = self.__get_slot_ids(board_id, timestamp)
         if slot_ids is None:
             LOG.error("no slot data with the condition: board_id: %s, timestamp: %s"
@@ -403,8 +403,8 @@ class AdTransformPandas(object):
             end = group['endtime']
             if start <= timestamp and end > timestamp:
                 playerinfo = group["playerinfo"]
-                if playerinfo.has_key(board_id):
-                    return playerinfo[board_id].keys()
+                if playerinfo.has_key(int(board_id)):
+                    return playerinfo[int(board_id)].keys()
         return None
 
     def __get_store_slotid_by_seq(self, board_id, timestamp, seq):
@@ -416,10 +416,10 @@ class AdTransformPandas(object):
             end = group['endtime']
             if start <= timestamp and end > timestamp:
                 playerinfo = group["playerinfo"]
-                if playerinfo.has_key(board_id):
-                    slot_info = playerinfo[board_id]
+                if playerinfo.has_key(int(board_id)):
+                    slot_info = playerinfo[int(board_id)]
                     for slot_id, details in slot_info.iteritems():
-                        if details[2] == seq:
+                        if details[2] == int(seq):
                             return slot_id
         LOG.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
                   board_id, timestamp, seq)
