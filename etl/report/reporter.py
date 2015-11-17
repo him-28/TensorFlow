@@ -363,15 +363,6 @@ import pandas as pd
 from etl.logic1.ad_transform_pandas import split_header
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 
-# debug start
-import logging
-import sys
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.DEBUG)
-fmt_str = "[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s"
-console_handler.setFormatter(logging.Formatter(fmt_str, ""))
-LOG.addHandler(console_handler)
-# debug end
 
 class DataReader(object):
     '''读取计算好的结果'''
@@ -430,7 +421,7 @@ class DataReader(object):
         '''返回顺序实际展示数的统计数据格式'''
         LOG.info("handle seq metric data")
         for row in dataf.iterrows():
-            board_id = int(row[0][0])
+            board_id = str(row[0][0])
             _pf = str(row[0][1])
             seq = str(row[0][2])
             total = row[1]["total"]

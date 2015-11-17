@@ -381,7 +381,6 @@ def getfilesize(filepath):
 
 def getfilesinfo(filepaths):
     info = {}
-    print filepaths
     for key,filepath in filepaths.iteritems():
         filesize = getfilesize(filepath)
         filename = os.path.split(filepath)[1]
