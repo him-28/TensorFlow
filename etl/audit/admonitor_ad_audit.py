@@ -209,7 +209,7 @@ class AdMonitor_audit:
             error_flag = True
         if error_flag:
             self.error_rows = self.error_rows + 1
-        return True
+        return not error_flag
     def validate_field(self,index,row,field_name):       
         _index = self.header.index(field_name)
 #         print row
