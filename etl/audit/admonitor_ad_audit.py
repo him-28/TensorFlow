@@ -16,6 +16,9 @@ from etl.util.bearychat import new_send_message
 from etl.conf.settings import AuditConfig as Config
 from etl.conf.settings import LOGGER
 from etl.conf.settings import AUDIT_HEADER
+from etl.conf.settings import MONITOR_CONFIGS
+
+REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
 
 SUCCESS = "success"
 
@@ -31,7 +34,7 @@ class ADMonitorAuditRobot(object):
         self.problems = problems
         self.spent = spent
         self.title = u"原始日志审计"
-        self.channel = u'广告-数据'
+        self.channel = REPORT_CHANNEL
         self.normal = '#F8F8FF'
         self.error = '#FF0000'
         self.success = '#7FFFD4'
