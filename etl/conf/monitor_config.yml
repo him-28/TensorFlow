@@ -164,6 +164,7 @@ beta: #测试环境
 release: #生产环境
     monitor: 
         ##########common config########################
+        audit_header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag']
         header: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id','tag','province','city','seq','group_id']
         input_column_sep: "\t"
         output_column_sep: "\t"
@@ -241,7 +242,7 @@ release: #生产环境
             'tag':'int',
             'total':'int'
         }
-        read_csv_chunk: 1000000
+        read_csv_chunk: 10000000
         db_commit_chunk: 10000
         algorithm: 
             display_poss: #广告位展示机会
