@@ -92,11 +92,13 @@ class AdMonitor_audit:
                 if first_row:
                     first_row = False
                     continue
-                eline = eval(line)
-                row=[i.strip() for i in eline.strip().strip(Config["strip_char"]).split(file_split)]
-                self.count_rows = self.count_rows + 1
+                
                 res = False
+                row = []
                 try:
+                    eline = eval(line)
+                    row=[i.strip() for i in eline.strip().strip(Config["strip_char"]).split(file_split)]
+                    self.count_rows = self.count_rows + 1
                     res = self.validator(row,self.count_rows)
                 except Exception,e:
                     LOGGER.error("audit error,行号：%s 行值：%s .error message:%s"%(str(self.count_rows),line,e.message))
