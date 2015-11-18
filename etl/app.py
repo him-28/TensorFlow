@@ -51,7 +51,7 @@ class AdMonitorRunner(object):
 
     def _job_ready_by_minute(self, now):
         paths = {}
-        ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}".format(
+        ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour:02d}".format(
                 prefix=Config["data_prefix"],
                 year=now.year,
                 month=now.month,
@@ -69,7 +69,7 @@ class AdMonitorRunner(object):
             'ad_src_filename': ad_src_filename
             })
 
-        ngx_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}".format(
+        ngx_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour:02d}".format(
                 prefix=Config["ngx_prefix"],
                 year=now.year,
                 month=now.month,
@@ -122,7 +122,7 @@ class AdMonitorRunner(object):
             )
         path_chk_or_create(ngx_src_path)
 
-        ngx_src_filename = "ad_{hour}.log".format(hour=now.hour)
+        ngx_src_filename = "ad_{hour:02d}.log".format(hour=now.hour)
 
         ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
                 prefix=Config["data_prefix"],
@@ -132,7 +132,7 @@ class AdMonitorRunner(object):
                 sep=os.sep
             )
         path_chk_or_create(ad_src_path)
-        ad_src_filename = "src_ad_{hour}.csv".format(hour=now.hour)
+        ad_src_filename = "src_ad_{hour:02d}.csv".format(hour=now.hour)
 
 
         paths.update({
