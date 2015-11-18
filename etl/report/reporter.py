@@ -88,10 +88,11 @@ __init__ method need 3 parameters witch format as bellow example:
 import datetime as dt
 
 from etl.conf.settings import LOGGER as LOG
+from etl.conf.settings import MONITOR_CONFIGS
 from etl.util import bearychat as bc
 from etl.util.playerutil import getplayerInfo
 
-REPORT_CHANNEL = None
+REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
 
 def is_num(obj):
     '''is number'''

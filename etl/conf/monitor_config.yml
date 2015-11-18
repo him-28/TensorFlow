@@ -8,6 +8,7 @@ beta: #测试环境
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
+        bearychat_channel: "广告-数据"
         ##########petl config##########################
         with_header: True
         chance_aggre_header: ['board_id','slot_id','pf']
@@ -167,6 +168,7 @@ release: #生产环境
         input_column_sep: "\t"
         output_column_sep: "\t"
         na_rep: " "
+        bearychat_channel: "广告-数据系统报告"
         ##########petl config##########################
         with_header: True
         chance_aggre_header: ['board_id','slot_id','pf']
