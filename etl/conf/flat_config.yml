@@ -9,6 +9,7 @@ slotid: slot_id
 mediabuyid: mediabuy_id
 creativeid: creator_id
 ip: ip
+tag: tag
 server_timestamp: server_timestamp
 ad_list: ad_list
 ipb_filepath: util/IPB.csv

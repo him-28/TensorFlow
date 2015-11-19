@@ -7,6 +7,7 @@ Created on 2015年11月11日
 import types
 import sys
 import os
+import urllib
 
 from etl.util.ip_convert import IP_Util
 from etl.util.playerutil import getplayerInfo
@@ -32,6 +33,7 @@ class FlatData:
         self.mediabuyid_index = self.header.index(Config["mediabuyid"])
         self.creativeid_index = self.header.index(Config["creativeid"])
         self.ip_index = self.header.index(Config["ip"])
+        self.tag_index = self.header.index(Config["tag"])
         self.server_timestamp_index = self.header.index(Config["server_timestamp"])
         self.adlist_index = self.header.index(Config['ad_list'])
         self.ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
@@ -53,7 +55,7 @@ class FlatData:
                 if first_row:
                     first_row = False
                     continue
-                row = [i.strip() for i in line.strip().split(Config["file_split"])]
+                row = [i.strip() for i in urllib.unquote(line).split(Config["file_split"])]
                 self.flat_in_buffer(row)
         self.write_buffer_in_file()
         self.flat_buffer = []
@@ -85,7 +87,13 @@ class FlatData:
             new_list=[]
         if not old_row or not len(old_row):
             return new_list
-        
+        if int(old_row[self.tag_index]) > 99:
+            old_row.append("") #province
+            old_row.append("") #city
+            old_row.append("") #seq
+            old_row.append("") #groupid
+            new_list.append(old_row)
+            return new_list
         city_row = get_list(old_row)
         self.generate_area_info(city_row)
         if len(ad_list) == 0:
@@ -132,7 +140,7 @@ class FlatData:
         return ad_list
     
     def get_time_seq(self,s_timestamp):
-        i_stmp = int(s_timestamp)
+        i_stmp = float(s_timestamp)
         maxk = 0
         for k,v in self.time_range.items():
             if k > maxk:
