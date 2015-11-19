@@ -64,7 +64,7 @@ class AdTransformPandas(object):
             LOG.addHandler(console_handler)
         # 参数
         self.params = {}
-        self.__player_id_cache = None
+        self.player_id_cache = None
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据
@@ -83,7 +83,7 @@ class AdTransformPandas(object):
             input_path = input_path + os.sep
         # calculate
         for algorithm in alg_file.iterkeys():
-            calcu_result = self.__calculate(algorithm, alg_file[algorithm], \
+            calcu_result = self.do_calculate(algorithm, alg_file[algorithm], \
                                              input_path, input_filename)
             if calcu_result == -1:  # 出错
                 LOG.error("calculate [" + algorithm + "] failed.")
@@ -97,23 +97,23 @@ class AdTransformPandas(object):
     def merge_section(self):
         ''' 计量各分段数据总合 '''
         # info
-        LOG.info("merge the tmp file : " + self.__get('tmp_file_path'))
+        LOG.info("merge the tmp file : " + self.get('tmp_file_path'))
         # 输出结果到文件
-        dataframe = pd.read_csv(self.__get('tmp_file_path'), sep=self.__get('output_column_sep'), \
-                         names=self.__get("sum_names"), header=None, dtype=self.__get('dtype'))
-        total_grouped = dataframe.groupby(self.__get('group_item')).sum()
+        dataframe = pd.read_csv(self.get('tmp_file_path'), sep=self.get('output_column_sep'), \
+                         names=self.get("sum_names"), header=None, dtype=self.get('dtype'))
+        total_grouped = dataframe.groupby(self.get('group_item')).sum()
         del dataframe
         # merge info
         LOG.info("merge result size:" + str(len(total_grouped)))
         total_groupframe = pd.DataFrame(total_grouped)
 
 
-        LOG.info("remove tmp file:" + self.__get('tmp_file_path'))
+        LOG.info("remove tmp file:" + self.get('tmp_file_path'))
         # 删除临时文件
-        os.remove(self.__get('tmp_file_path'))
+        os.remove(self.get('tmp_file_path'))
         return total_groupframe
 
-    def __calculate(self, trans_type, output_file_path, input_path, input_filename):
+    def do_calculate(self, trans_type, output_file_path, input_path, input_filename):
         ''' 计算一个维度的数据 '''
         LOG.info("prepare to calculate : " + trans_type)
         conf_result = self.__configure(trans_type, output_file_path, input_path, input_filename)
@@ -145,61 +145,65 @@ class AdTransformPandas(object):
 
     def __configure(self, trans_type, output_file_path, input_path, input_filename):
         '''配置参数'''
-        self.__put(("input_file_path", "output_file_path"), \
+        self.put(("input_file_path", "output_file_path"), \
                     (input_path + input_filename, output_file_path))
-        self.__put("input_column_sep", CNF.get("input_column_sep"))
-        self.__put("output_column_sep", CNF.get("output_column_sep"))
-        self.__put(("names", "dtype"), split_header(CNF.get("header"), CNF.get("header_type")))
-        self.__put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
-        self.__put("tmp_file_path", output_file_path + ".tmp")
-        self.__put("trans_type", trans_type)
-        config_result = self.__configure_algorithm(trans_type, CNF)
+        self.put("input_column_sep", CNF.get("input_column_sep"))
+        self.put("output_column_sep", CNF.get("output_column_sep"))
+        names, dtype = split_header(CNF.get("header"), CNF.get("header_type"))
+        self.put(("names", "dtype"), (names, dtype))
+        self.put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
+        self.put("tmp_file_path", output_file_path + ".tmp")
+        self.put("trans_type", trans_type)
+        config_result = self.configure_algorithm(trans_type, CNF)
         LOG.info("configure complete, retrieve params:%s" ,
                   str(self.params))
         return config_result
 
-    def __configure_algorithm(self, trans_type, cnf):
+    def configure_algorithm(self, trans_type, cnf):
         '''各个维度的配置'''
         algorithm = cnf.get("algorithm")
         trans_type_cnf = algorithm.get(trans_type)
         if trans_type_cnf is None:
             LOG.error("can not find algorithm type in config:" + trans_type)
             return False
-        self.__put("condition", trans_type_cnf.get("condition"))
-        self.__put("group_item", trans_type_cnf.get("group_item"))
+        self.put("condition", trans_type_cnf.get("condition"))
+        self.put("group_item", trans_type_cnf.get("group_item"))
         sum_names = []
-        for item in self.__get('group_item'):
+        for item in self.get('group_item'):
             sum_names.append(item)
-        for key in self.__get('condition').keys():
-            output_name = self.__get('condition')[key]["output_name"]
+        for key in self.get('condition').keys():
+            output_name = self.get('condition')[key]["output_name"]
             sum_names.append(output_name)
-            self.__get("dtype")[output_name] = np.int64
-        self.__put("sum_names", sum_names)
+            self.get("dtype")[output_name] = np.int64
+        self.put("sum_names", sum_names)
+        if "display_poss" == trans_type:
+            self.put("groupby_list", ['board_id', 'session_id', 'pf', \
+                            'server_timestamp', 'ad_event_type', 'request_res', 'tag'])
         return True
 
     def __load_file(self):
         '''加载文件并计算'''
-        input_file_path = self.__get("input_file_path")
+        input_file_path = self.get("input_file_path")
         LOG.info('load file:' + input_file_path)
         if os.path.exists(input_file_path):
             do_filter = True
-            if "display_poss" == self.__get("trans_type"):
+            if "display_poss" == self.get("trans_type"):
                 input_file_path = self.__transform_display_poss_file()
                 do_filter = False
             if os.path.exists(input_file_path):
                 # 分段处理CSV文件，每READ_CSV_CHUNK行读取一次
-                data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
-                                dtype=self.__get('dtype'), index_col=False, \
-                                chunksize=self.__get('chunk'))
-                self.__transform_section(data_chunks,do_filter)
+                data_chunks = pd.read_csv(input_file_path, sep=self.get('input_column_sep'), \
+                                dtype=self.get('dtype'), index_col=False, \
+                                chunksize=self.get('chunk'))
+                self.__transform_section(data_chunks, do_filter)
                 del data_chunks
-                if "display_poss" == self.__get("trans_type"):
+                if "display_poss" == self.get("trans_type"):
                     os.remove(input_file_path)
                 return True
             else:
-                with open(self.__get('output_file_path'),"wb") as fread:
-                    title = self.__get("output_column_sep")\
-                        .join(s for s in self.__get("group_item"))
+                with open(self.get('output_file_path'), "wb") as fread:
+                    title = self.get("output_column_sep")\
+                        .join(s for s in self.get("group_item"))
                     fread.write(title + "\n")
                 return False
         else:
@@ -209,16 +213,15 @@ class AdTransformPandas(object):
     def __transform_display_poss_file(self):
         '''展示机会需要把打平的日志反打平'''
         LOG.info("merge display poss middle datas...")
-        input_file_path = self.__get("input_file_path")
+        input_file_path = self.get("input_file_path")
         tmp_trans_file = input_file_path + ".ttmp"
         if os.path.exists(tmp_trans_file):
             os.remove(tmp_trans_file)
         LOG.info("read data from %s", input_file_path)
-        data_chunks = pd.read_csv(input_file_path, sep=self.__get('input_column_sep'), \
-                        dtype=self.__get('dtype'), index_col=False, \
-                        chunksize=self.__get('chunk'))
-        groupby_list = ['board_id', 'session_id', 'pf', \
-                        'server_timestamp', 'ad_event_type', 'request_res', 'tag']
+        data_chunks = pd.read_csv(input_file_path, sep=self.get('input_column_sep'), \
+                        dtype=self.get('dtype'), index_col=False, \
+                        chunksize=self.get('chunk'))
+        groupby_list = self.get("groupby_list")
         trunk_size = 0
         for chunk in data_chunks:
             need_header = trunk_size == 0
@@ -226,7 +229,7 @@ class AdTransformPandas(object):
             trunk_size = trunk_size + 1
 
             # 选过滤条件，减少计算数
-            condition = self.__get("condition")
+            condition = self.get("condition")
             for cdt_key in condition.iterkeys():
                 for rel in condition[cdt_key]["filter"]:
                     key = rel[0]
@@ -238,29 +241,29 @@ class AdTransformPandas(object):
                 tmp_df = chunk.groupby(groupby_list).size()
                 LOG.info("append chunk result to %s:", tmp_trans_file)
                 tmp_df.to_csv(tmp_trans_file, header=need_header, \
-                                 sep=self.__get('input_column_sep'), \
+                                 sep=self.get('input_column_sep'), \
                                  na_rep=CNF["na_rep"], mode="a", index=True)
         del data_chunks
         if trunk_size > 1:
             if os.path.exists(tmp_trans_file):
-                data_chunks = pd.read_csv(tmp_trans_file, sep=self.__get('input_column_sep'), \
-                                dtype=self.__get('dtype'), index_col=False)
+                data_chunks = pd.read_csv(tmp_trans_file, sep=self.get('input_column_sep'), \
+                                dtype=self.get('dtype'), index_col=False)
                 LOG.info("merge all trunk results")
                 data_chunks = data_chunks.groupby(groupby_list).size()
                 LOG.info("save final result to: %s", tmp_trans_file)
                 data_chunks.to_csv(tmp_trans_file, header=True, \
-                                         sep=self.__get('input_column_sep'), \
+                                         sep=self.get('input_column_sep'), \
                                          na_rep=CNF["na_rep"], index=True)
         LOG.info("merge display poss middle datas complete!")
         return tmp_trans_file
-    def __transform_section(self, data_chunks,do_filter):
+    def __transform_section(self, data_chunks, do_filter):
         '''分段转换数据'''
         LOG.info('transform...')
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件#############
 
-        if os.path.exists(self.__get('tmp_file_path')):
-            LOG.info("tmp_file exists,remove : " + self.__get('tmp_file_path'))
-            os.remove(self.__get('tmp_file_path'))
+        if os.path.exists(self.get('tmp_file_path')):
+            LOG.info("tmp_file exists,remove : " + self.get('tmp_file_path'))
+            os.remove(self.get('tmp_file_path'))
         section_index = 0
 
         for chunk in data_chunks:
@@ -268,23 +271,23 @@ class AdTransformPandas(object):
             section_index = section_index + 1
             chunk_len = len(chunk)  # 记录chunk长度
             groupframe = None
-            condition = self.__get("condition")
+            condition = self.get("condition")
             for cdt_key in condition.iterkeys():
                 groupframe = self.__calculate_algorithm(groupframe\
                                     , cdt_key, condition[cdt_key], chunk, do_filter)
 
             if not groupframe is None:
                 # 保存到临时CSV文件
-                groupframe.to_csv(self.__get('tmp_file_path'), header=False, \
-                                 sep=self.__get('output_column_sep'), \
+                groupframe.to_csv(self.get('tmp_file_path'), header=False, \
+                                 sep=self.get('output_column_sep'), \
                                  na_rep=CNF["na_rep"], mode="a", index=True)
-            elif not os.path.exists(self.__get('tmp_file_path')):  # 创建一个空文件
-                tmp_file = os.open(self.__get('tmp_file_path'), os.O_CREAT)
+            elif not os.path.exists(self.get('tmp_file_path')):  # 创建一个空文件
+                tmp_file = os.open(self.get('tmp_file_path'), os.O_CREAT)
                 os.close(tmp_file)
             # info info
             LOG.info("grouped: " + str(chunk_len) + " records")
 
-        LOG.info("save to tmp file : " + self.__get('tmp_file_path'))
+        LOG.info("save to tmp file : " + self.get('tmp_file_path'))
         ###############遍历各个分段，分段数据第一次Group Count后存入临时文件############
         LOG.info('transform!')
 
@@ -326,10 +329,10 @@ class AdTransformPandas(object):
         """as u c: merge dataframe group count"""
         if grouped is None:
             if len(dataframe) > 0:
-                grouped = dataframe.groupby(self.__get('group_item')).size()
+                grouped = dataframe.groupby(self.get('group_item')).size()
         else:
             grouped = pd.concat([grouped, dataframe.\
-                                groupby(self.__get('group_item')).size()], axis=1)
+                                groupby(self.get('group_item')).size()], axis=1)
         return grouped
 
     def __group_slot_compare(self, chunk):
@@ -353,8 +356,8 @@ class AdTransformPandas(object):
         '''初始化一个字段的Series空构造
         NOTICE:这个方法会去掉group_item、sum_names里以query-开头字段的“query-”前缀还原字段'''
         __struct = {}
-        group_item = self.__get("group_item")
-        sum_names = self.__get("sum_names")
+        group_item = self.get("group_item")
+        sum_names = self.get("sum_names")
         for item in group_item:
             if item.startswith("query-"):
                 redefine_item = item.replace("query-", "", 1)
@@ -372,7 +375,7 @@ class AdTransformPandas(object):
     def __dtype_series(self, series_data_struct):
         '''给Series构造加上数据类型(dtype)'''
         for item, arr in series_data_struct.iteritems():
-            series_data_struct[item] = np.array(arr, dtype=self.__get("dtype")[item])
+            series_data_struct[item] = np.array(arr, dtype=self.get("dtype")[item])
 
     def __fill_relation_list(self, row_data, series_data_struct):
         '''把查询到的需要打平字段的列表分割、组成Series
@@ -425,32 +428,32 @@ class AdTransformPandas(object):
 
     def __get_player_infos(self):
         '''获取播放器信息，如果已经获取过，从缓存中拿'''
-        if self.__player_id_cache is None:
-            self.__player_id_cache = getplayerInfo()
-        return self.__player_id_cache
+        if self.player_id_cache is None:
+            self.player_id_cache = getplayerInfo()
+        return self.player_id_cache
 
     def __save_result_file(self, merge_result):
         '''保存计算结果到文件'''
-        LOG.info("save result to csv file:" + self.__get('output_file_path'))
-        merge_result.to_csv(self.__get('output_file_path'), sep=\
-                self.__get('output_column_sep'), header=True)
+        LOG.info("save result to csv file:" + self.get('output_file_path'))
+        merge_result.to_csv(self.get('output_file_path'), sep=\
+                self.get('output_column_sep'), header=True)
 
     def __insert(self, merge_result):
         '''处理数据插入数据库'''
         pass
 
-    def __put(self, key, value):
+    def put(self, key, value):
         '''设置self.params'''
         if isinstance(key, tuple):
             __len = len(key)
             for i in range(0, __len):
                 __key = key[i]
                 __value = value[i]
-                self.__put(__key, __value)
+                self.put(__key, __value)
         else:
             self.params[key] = value
 
-    def __get(self, key):
+    def get(self, key):
         '''获取self.params'''
         return self.params[key]
 
