@@ -51,17 +51,11 @@ def filter_chunk(dataframe, key, opt, val):
 
 class AdTransformPandas(object):
     """使用Pandas处理CSV文件数据"""
-    def __init__(self, console_print=False):
+    def __init__(self):
         '''初始化'''
         # 佛祖保佑，永无Bug
         buddha_bless_me()
         LOG.info("Welcome to AdTransformPandas")
-        if console_print:  # print debug info in console
-            console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setLevel(logging.DEBUG)
-            fmt_str = "[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s"
-            console_handler.setFormatter(logging.Formatter(fmt_str, ""))
-            LOG.addHandler(console_handler)
         # 参数
         self.params = {}
         self.player_id_cache = None
@@ -343,7 +337,7 @@ class AdTransformPandas(object):
         for row_data in chunk.iterrows():
             row = row_data[1]
             board_id = row["board_id"]
-            timestamp = long(row["server_timestamp"])
+            timestamp = float(row["server_timestamp"])
             seq = row["seq"]  # 播放顺序
             # 获取实际在按播放顺序的广告位ID
             _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
