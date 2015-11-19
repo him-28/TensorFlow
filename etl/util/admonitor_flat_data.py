@@ -54,7 +54,7 @@ def flat_data_admonitor(input_path, output_path):
                 if len(buffers) > limit:
                     write_buffer(buffers, output_path)
                 else:
-                    new_lines = pack_data(line.strip('\n'))
+                    new_lines = pack_data(line.strip('\r\n'))
                     buffers.extend(new_lines)
 
 def write_buffer(buffers, output_path):
