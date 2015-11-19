@@ -295,7 +295,7 @@ class AdMonitorRunner(object):
             # 审计:
             admonitor_ad_audit.ad_audit(paths["ngx_src_path"],paths["ngx_src_filename"])
             # 打平:
-            admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
+            #admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
 
             # 计算
             start = time.clock()
@@ -413,3 +413,8 @@ if __name__ == '__main__':
     args: python app.py ad_monitor m|h|d
     '''
     run_cli(sys.argv)
+
+    # test flat code
+    #inputf = "/Users/martin/Desktop/ad_13.log"
+    #outputf = "/Users/martin/Desktop/ad_flat.log"
+    #admonitor_flat_data.flat_data_admonitor(inputf, outputf)
