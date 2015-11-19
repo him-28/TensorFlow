@@ -51,17 +51,11 @@ def filter_chunk(dataframe, key, opt, val):
 
 class AdTransformPandas(object):
     """使用Pandas处理CSV文件数据"""
-    def __init__(self, console_print=False):
+    def __init__(self):
         '''初始化'''
         # 佛祖保佑，永无Bug
         buddha_bless_me()
         LOG.info("Welcome to AdTransformPandas")
-        if console_print:  # print debug info in console
-            console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setLevel(logging.DEBUG)
-            fmt_str = "[%(levelname)s] %(asctime)s [%(name)s] [%(funcName)s] %(message)s"
-            console_handler.setFormatter(logging.Formatter(fmt_str, ""))
-            LOG.addHandler(console_handler)
         # 参数
         self.params = {}
         self.player_id_cache = None
