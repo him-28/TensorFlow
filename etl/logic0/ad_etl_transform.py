@@ -144,7 +144,6 @@ class ETL_Transform:
                 maxk = k
         newest_player_info = {}
         maxplayer_info = self.playerinfo.get(maxk).get("playerinfo")
-        #TODO 转换成{4820：[slotid1,slotid2],4821:{}}
         for k,v in maxplayer_info.items():
             _player_info = []
             newest_player_info[str(k)] = _player_info
@@ -236,10 +235,12 @@ class ETL_Transform:
             if first_row: 
                 first_row = False
                 continue
-            
-            new_row = self.getRealSlotId_by_seq(row)
-            if not new_row is None:
-                _new_up_buffer.append(new_row)
+            try:
+                new_row = self.getRealSlotId_by_seq(row)
+                if not new_row is None:
+                    _new_up_buffer.append(new_row)
+            except Exception,e:
+                LOGGER.error("get real slot id error,error message:%s" % e.message)
         return _new_up_buffer 
     def getRealSlotId_by_seq(self,row):
         playerid_index = self.header.index(Config["player_id"])
@@ -253,7 +254,10 @@ class ETL_Transform:
         slotid = row[slotid_index]
         realslotid = ""
         if playerid and groupid and seq and slotid:
-            realslotid = self.newestPlayerInfo[playerid][groupid][seq]
+            try:
+                realslotid = self.newestPlayerInfo[playerid][groupid][seq]
+            except Exception,e:
+                LOGGER.error("get slot id from playerinfo error,playerid:%s groupid:%s seq:%s ,error message:%s"%(playerid,groupid,seq,e.message))
         else:
             return None
         if not realslotid or not realslotid.strip():
@@ -295,31 +299,52 @@ class ETL_Transform:
     def read_buffer_in_table(self):
 #         self.read_buffer = etl.convert(self.read_buffer,Config["tag"],lambda x:int(x))
         self.chance_buffer=self.select_data(self.read_buffer, self.chance_select)
-        self.etl_display_chance()
+        try:
+            self.etl_display_chance()
+        except Exception,e:
+            LOGGER.error("calcuclate display_poss error,error meesage:%s"% e.message)
         self.chance_buffer=None
         
         self.seq_buffer = self.select_data(self.read_buffer, self.seq_select)
-        self.etl_seq_display_count()
+        try:
+            self.etl_seq_display_count()
+        except Exception,e:
+            LOGGER.error("calcuclate display error,error meesage:%s"% e.message)   
         self.seq_buffer = None
         
         self.up_buffer=self.select_data(self.read_buffer, self.up_select)
-        self.etl_up_count()
+        try:
+            self.etl_up_count()
+        except Exception,e:
+            LOGGER.error("calcuclate display_up error,error meesage:%s"% e.message)
         self.up_buffer=None
         
         self.count_buffer=self.select_data(self.read_buffer, self.count_select)
-        self.etl_display_count()
+        try:
+            self.etl_display_count()
+        except Exception,e:
+            LOGGER.error("calcuclate display_sale error,error meesage:%s"% e.message)
         self.count_buffer=None
         
         self.imps_start_buffer=self.select_data(self.read_buffer, self.start_select)
-        self.etl_imps_start()
+        try:
+            self.etl_imps_start()
+        except Exception,e:
+            LOGGER.error("calcuclate impression_start error,error meesage:%s"% e.message)
         self.imps_start_buffer=None
         
         self.imps_end_buffer=self.select_data(self.read_buffer, self.end_select)
-        self.etl_imps_end()
+        try:
+            self.etl_imps_end()
+        except Exception,e:
+            LOGGER.error("calcuclate impression_end error,error meesage:%s"% e.message)
         self.imps_end_buffer=None
         
         self.click_buffer=self.select_data(self.read_buffer, self.click_select)
-        self.etl_click()
+        try:
+            self.etl_click()
+        except Exception,e:
+            LOGGER.error("calcuclate click error,error meesage:%s"% e.message)
         self.click_buffer=None
         
             
