@@ -51,21 +51,21 @@ field_rule:
     video_id:
         scene1:
             condition: 
-            required: True      #图片广告除外
+            required: False      #图片广告除外
             reg: 
             range:
             vtype: int
     playlist_id:
         scene1:
             condition: 
-            required: True      #图片广告除外
+            required: False      #图片广告除外
             reg: 
             range:
             vtype: int
     board_id:
         scene1:
             condition: 
-            required: True      #图片广告除外
+            required: True      
             reg: 
             range:
             vtype: int 
