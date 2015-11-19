@@ -295,7 +295,7 @@ class AdMonitorRunner(object):
             # 审计:
             admonitor_ad_audit.ad_audit(paths["ngx_src_path"],paths["ngx_src_filename"])
             # 打平:
-            #admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
+            admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
 
             # 计算
             start = time.clock()
