@@ -94,9 +94,9 @@ class ETL_Transform:
         first_row = True
         with open(self.filePath,'rb') as fr:
             for line in fr:
-                if not line or not line.strip():
+                if not line:
                     continue
-                row=[i.strip() for i in line.strip().split(Config["input_column_sep"])]
+                row=[i.strip() for i in line.split(Config["input_column_sep"])]
                 if first_row and with_header:
                     self.header = row
                     first_row = False
@@ -251,7 +251,11 @@ class ETL_Transform:
         groupid = row[group_index]
         seq = row[seq_index]
         slotid = row[slotid_index]
-        realslotid = self.newestPlayerInfo[playerid][groupid][seq]
+        realslotid = ""
+        if playerid and groupid and seq and slotid:
+            realslotid = self.newestPlayerInfo[playerid][groupid][seq]
+        else:
+            return None
         if not realslotid or not realslotid.strip():
             LOGGER.error("not find slotid in  playerid:%s group_id:%s seq:%s" % (playerid,groupid,seq))
         if slotid != realslotid:    
