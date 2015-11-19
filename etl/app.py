@@ -412,9 +412,9 @@ if __name__ == '__main__':
     '''
     args: python app.py ad_monitor m|h|d
     '''
-    #run_cli(sys.argv)
+    run_cli(sys.argv)
 
     # test flat code
-    inputf = "/Users/martin/Desktop/ad_13.log"
-    outputf = "/Users/martin/Desktop/ad_flat.log"
-    admonitor_flat_data.flat_data_admonitor(inputf, outputf)
+    #inputf = "/Users/martin/Desktop/ad_13.log"
+    #outputf = "/Users/martin/Desktop/ad_flat.log"
+    #admonitor_flat_data.flat_data_admonitor(inputf, outputf)
