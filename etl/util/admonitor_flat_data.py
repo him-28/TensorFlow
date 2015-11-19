@@ -15,147 +15,111 @@ from etl.conf.settings import LOGGER
 from etl.conf.settings import HEADER
 from etl.conf.settings import AUDIT_HEADER
 
-class FlatData:
-    def __init__(self,input_path,out_putpath):
-        self.playerInfo = None
-        self.time_range = None
-        self.time_playerinfo = None
-        self.input_path = input_path
-        self.output_path = out_putpath
-        self.flat_buffer = []
-        self.AD_SPLIT = Config["ad_split"]
-        self.ADLIST_SPLIT = Config["adlist_split"]
-        self.batch_write_size = Config["batch_write_size"]
-        self.header = AUDIT_HEADER
-        self.flat_header = HEADER
-        self.slotid_index = self.header.index(Config["slotid"])
-        self.mediabuyid_index = self.header.index(Config["mediabuyid"])
-        self.creativeid_index = self.header.index(Config["creativeid"])
-        self.ip_index = self.header.index(Config["ip"])
-        self.server_timestamp_index = self.header.index(Config["server_timestamp"])
-        self.adlist_index = self.header.index(Config['ad_list'])
-        self.ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
-                    city_filepath=Config['city_filepath'])
-    
-        
-    def flat(self):
-        self.playerInfo = getplayerInfo()
-        self.time_range = get_time_range(self.playerInfo)
-        self.time_playerinfo = get_time_playerinfo(self.playerInfo)
-        if os.path.exists(self.output_path):
-            os.remove(self.output_path)
-        first_row = Config["with_header"]
-        self.flat_buffer.append(self.flat_header)
-        with open(self.input_path,'rb') as fr:
-            for line in fr:
-                if not line or not line.strip():
+
+ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
+                city_filepath=Config['city_filepath'])
+
+from pdb import set_trace as st
+
+def flat_data_admonitor(input_path, output_path):
+
+    player_info = getplayerInfo()
+    time_range = get_time_range(player_info)
+    time_player_info = get_time_playerinfo(player_info)
+
+    if os.path.exists(output_path):
+        os.remove(output_path)
+
+    buffers = []
+    limit = 100000
+    count = 0
+
+    with open(input_path, 'rb') as f:
+        while 1:
+            lines = f.readlines(100000)
+            if not lines:
+                write_buffer(buffers, output_path)
+                break
+
+            for line in lines:
+                #skip header
+                count += 1
+                if count == 1:
+                    #append header
+                    s = "\t".join(str(e) for e in HEADER)
+                    buffers.append(s)
                     continue
-                if first_row:
-                    first_row = False
-                    continue
-                row = [i.strip() for i in line.strip().split(Config["file_split"])]
-                self.flat_in_buffer(row)
-        self.write_buffer_in_file()
-        self.flat_buffer = []
-                
-    def flat_in_buffer(self,row):
-        
-        adlist = row[self.adlist_index]
-        try:
-            ad_list = self.unpack_adlist(adlist)
-            self.flat_buffer = self.pack_list(self.flat_buffer, row, ad_list)
-        except Exception,e:
-            LOGGER.error("flat adlist error,行:%s error message: %s" % (row,e.message))
-            
-        if len(self.flat_buffer) >= self.batch_write_size:
-            self.write_buffer_in_file()
-            self.flat_buffer = []
-        
-    def write_buffer_in_file(self):
-        with open(self.output_path,'a') as fr:
-            for row in self.flat_buffer:
-                line = get_line(row)
-                fr.write(line)
-            
-    def pack_list(self,new_list,old_row,ad_list):
-        '''
-                    根据ad_list，组装新的数据list
-        '''
-        if not new_list:
-            new_list=[]
-        if not old_row or not len(old_row):
-            return new_list
-        
-        city_row = get_list(old_row)
-        self.generate_area_info(city_row)
-        if len(ad_list) == 0:
-            city_row.append("") #seq
-            city_row.append("") #groupid
-            new_list.append(city_row)
-            return new_list
-        seq = 1
-        current_groupid = ""
-        for i in ad_list:
-            if not i or len(i) != 3:
-                continue
-            new_row = get_list(city_row)
-            new_row[self.slotid_index]=i[0]
-            new_row[self.mediabuyid_index]=i[1]
-            new_row[self.creativeid_index]=i[2]  # TODO
-            groupid = self.getgroupid(i[0],new_row[self.server_timestamp_index])
-            if groupid != current_groupid:
-                seq = 1
-            current_groupid = groupid
-            new_row.append(seq)
-            new_row.append(groupid)
-            seq += 1
-            new_list.append(new_row)
-        return new_list
-        
-    def getgroupid(self,slotid,s_timestamp):
-        time_k = self.get_time_seq(s_timestamp)
-        groupid = self.time_playerinfo.get(time_k).get(int(slotid))
-        return str(groupid)
-        
-    def generate_area_info(self,row):
-        ip = row[self.ip_index]
-        province = self.ip_util.get_cityInfo_from_ip(ip, 2)
-        city = self.ip_util.get_cityInfo_from_ip(ip, 4)
+                if len(buffers) > limit:
+                    write_buffer(buffers, output_path)
+                else:
+                    new_lines = pack_data(line.strip('\n'))
+                    buffers.extend(new_lines)
+
+def write_buffer(buffers, output_path):
+    with open(output_path, 'a') as f:
+        for line in buffers:
+            s = "\t".join(str(e) for e in line)
+            f.write(s+"\n")
+
+def get_area_info(ip):
+    province = ip_util.get_cityInfo_from_ip(ip, 2)
+    city = ip_util.get_cityInfo_from_ip(ip, 4)
+    return province, city
+
+def pack_data(line):
+    delimiter = Config["file_split"]
+    row = line.split(delimiter)
+    #initial line
+    new_data = []
+
+    #TODO:check length
+    if len(row) == len(AUDIT_HEADER):
+        # gen province, city with ip
+        ip_index = AUDIT_HEADER.index('ip')
+        ip = row[ip_index]
+        province, city = get_area_info(ip)
         row.append(province)
         row.append(city)
-        
-    def unpack_adlist(self,adlist):
-        ''' adlist = 90,356,432|91,356,435 '''
-        if not adlist or not adlist.strip():
-            return []
-        ad_list = [[i.strip() for i in ad.strip().split(self.AD_SPLIT)] for ad in adlist.strip().split(self.ADLIST_SPLIT)]
-        return ad_list
-    
-    def get_time_seq(self,s_timestamp):
-        i_stmp = int(s_timestamp)
-        maxk = 0
-        for k,v in self.time_range.items():
-            if k > maxk:
-                maxk = k
-            if v[0] <=i_stmp and v[1] >= i_stmp:
-                return k
-        return maxk
-def get_list(row_list):
-    if not row_list or not len(row_list):
-        return row_list
-    
-    if type(row_list) is types.TupleType:
-        return list(row_list)
-    return row_list[:]
 
-def get_line(row):
-#     for data in row:
-#         line += str(data)+Config["output_column_sep"]
-#     line = line.strip(Config["output_column_sep"])
-    line = Config["output_column_sep"].join(str(i) for i in row)
-    line += '\n'
-    return line
-    
+        # gen ad list
+        adlist_index = AUDIT_HEADER.index('ad_list')
+        ad_list = row[adlist_index]
+        zip_data = map(lambda s: s.split(','), ad_list.split('|'))
+
+        # gen seq, group_id
+        seq = 1
+        cur_group_id = ""
+
+        for i in zip_data:
+            new_row = row
+            # exists ad info
+            if len(i) == 3:
+                slotid_idx = AUDIT_HEADER.index('slot_id')
+                mediabuyid_idx = AUDIT_HEADER.index('mediabuy_id')
+                creativeid_idx = AUDIT_HEADER.index('creative_id')
+                s_ts = AUDIT_HEADER.index('server_timestamp')
+
+                new_row[slotid_idx] = i[0]
+                new_row[mediabuyid_idx] = i[1]
+                new_row[creativeid_idx] = i[2]
+                group_id = getgroupid(i[0], s_ts)
+                #FIXME: challenge
+                if group_id != cur_group_id:
+                    seq = 1
+                else:
+                    seq += 1
+
+                cur_group_id = group_id
+            else:
+                seq = ""
+                group_id = ""
+
+            new_row.append(seq)
+            new_row.append(group_id)
+
+            new_data.append(new_row)
+
+        return new_data
 
     
 def get_time_range(allplayerinfo):
@@ -181,19 +145,7 @@ def get_time_playerinfo(allplayerinfo):
     return alltime_playerinfo
         
         
-def flat_data(input_path,out_putpath):
-    try:
-        fd = FlatData(input_path,out_putpath)
-        LOGGER.info("flat log ...")
-        fd.flat()
-    except Exception,e:
-        LOGGER.error("flat log file error,filepath:%s . error message: %s"%(input_path,e.message))
-        import traceback
-        ex=traceback.format_exc()
-        LOGGER.error(ex)
-        sys.exit(-1)
-        
 if __name__ == "__main__":
-    inputf = "C:/Users/Administrator/Desktop/flat_test/flat_test.csv"
-    output = "C:/Users/Administrator/Desktop/flat_test/flat_test_end.csv"
-    flat_data(inputf,output)
+    inputf = "/Users/martin/Desktop/ad_13.log"
+    output = "/Users/martin/Desktop/ad_flat.log"
+    flat_data_admonitor(inputf,output)
