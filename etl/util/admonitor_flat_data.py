@@ -95,7 +95,7 @@ def pack_data(line):
         for i in zip_data:
             new_row = row[:]
             # exists ad info
-            if len(i) == 3:
+            try:
                 slotid_idx = AUDIT_HEADER.index('slot_id')
                 mediabuyid_idx = AUDIT_HEADER.index('mediabuy_id')
                 creativeid_idx = AUDIT_HEADER.index('creator_id')
@@ -117,11 +117,12 @@ def pack_data(line):
                     seq += 1
 
                 cur_group_id = group_id
-            else:
+            except Exception as e:
                 seq = ""
                 group_id = ""
                 new_row.append(seq)
                 new_row.append(group_id)
+                LOGGER.error("%s" % str(e))
 
             new_data.append(new_row)
 
