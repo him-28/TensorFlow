@@ -7,6 +7,7 @@ Created on 2015年11月11日
 import types
 import sys
 import os
+import urllib
 
 from etl.util.ip_convert import IP_Util
 from etl.util.playerutil import getplayerInfo
@@ -19,12 +20,15 @@ from etl.conf.settings import AUDIT_HEADER
 ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
                 city_filepath=Config['city_filepath'])
 
+player_info = getplayerInfo()
+
+from pdb import set_trace as st
 
 def flat_data_admonitor(input_path, output_path):
 
-    player_info = getplayerInfo()
-    time_range = get_time_range(player_info)
-    time_player_info = get_time_playerinfo(player_info)
+    #player_info = getplayerInfo()
+    #time_range = get_time_range(player_info)
+    #time_player_info = get_time_playerinfo(player_info)
 
     if os.path.exists(output_path):
         os.remove(output_path)
@@ -81,7 +85,7 @@ def pack_data(line):
 
         # gen ad list
         adlist_index = AUDIT_HEADER.index('ad_list')
-        ad_list = row[adlist_index]
+        ad_list = urllib.unquote(row[adlist_index])
         zip_data = map(lambda s: s.split(','), ad_list.split('|'))
 
         # gen seq, group_id
@@ -89,19 +93,24 @@ def pack_data(line):
         cur_group_id = ""
 
         for i in zip_data:
-            new_row = row
+            new_row = row[:]
             # exists ad info
             if len(i) == 3:
                 slotid_idx = AUDIT_HEADER.index('slot_id')
                 mediabuyid_idx = AUDIT_HEADER.index('mediabuy_id')
-                creativeid_idx = AUDIT_HEADER.index('creative_id')
+                creativeid_idx = AUDIT_HEADER.index('creator_id')
                 s_ts = AUDIT_HEADER.index('server_timestamp')
+                b_id = AUDIT_HEADER.index('board_id')
 
                 new_row[slotid_idx] = i[0]
                 new_row[mediabuyid_idx] = i[1]
                 new_row[creativeid_idx] = i[2]
-                group_id = getgroupid(i[0], s_ts)
+
+                group_id = get_group_id(int(row[b_id]), int(i[0]), float(row[s_ts]))
                 #FIXME: challenge
+
+                new_row.append(seq)
+                new_row.append(group_id)
                 if group_id != cur_group_id:
                     seq = 1
                 else:
@@ -111,14 +120,31 @@ def pack_data(line):
             else:
                 seq = ""
                 group_id = ""
-
-            new_row.append(seq)
-            new_row.append(group_id)
+                new_row.append(seq)
+                new_row.append(group_id)
 
             new_data.append(new_row)
 
         return new_data
 
+
+def get_group_id(board_id, slotid, s_timestamp):
+    '''
+    {"slot_id+s_timestamp": "group_id"}
+    '''
+    group_id = ""
+    try:
+        for k, v in player_info.iteritems():
+            start = v.get('starttime')
+            end = v.get('endtime')
+            if s_timestamp > start and s_timestamp < end:
+                group_id = v['playerinfo'][board_id][slotid][0]
+                break
+    except Exception as e:
+        LOGGER.error("groupid not found, board_id: %d, slotid:%d, s_timestamp:%f" % \
+                (board_id, slotid, s_timestamp))
+
+    return group_id
     
 def get_time_range(allplayerinfo):
     '''
