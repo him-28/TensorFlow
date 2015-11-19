@@ -19,7 +19,6 @@ from etl.conf.settings import AUDIT_HEADER
 ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
                 city_filepath=Config['city_filepath'])
 
-from pdb import set_trace as st
 
 def flat_data_admonitor(input_path, output_path):
 
@@ -46,8 +45,7 @@ def flat_data_admonitor(input_path, output_path):
                 count += 1
                 if count == 1:
                     #append header
-                    s = "\t".join(str(e) for e in HEADER)
-                    buffers.append(s)
+                    buffers.append(HEADER)
                     continue
                 if len(buffers) > limit:
                     write_buffer(buffers, output_path)
