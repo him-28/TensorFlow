@@ -328,7 +328,7 @@ class AdTransformPandas(object):
     def __merge_dataframe_group_count(self, grouped, dataframe):
         """as u c: merge dataframe group count"""
         if grouped is None:
-            if len(dataframe) > 0:
+            if dataframe.empty:
                 grouped = dataframe.groupby(self.get('group_item')).size()
         else:
             grouped = pd.concat([grouped, dataframe.\
@@ -343,7 +343,7 @@ class AdTransformPandas(object):
         for row_data in chunk.iterrows():
             row = row_data[1]
             board_id = row["board_id"]
-            timestamp = long(row["server_timestamp"])
+            timestamp = float(row["server_timestamp"])
             seq = row["seq"]  # 播放顺序
             # 获取实际在按播放顺序的广告位ID
             _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
@@ -420,6 +420,8 @@ class AdTransformPandas(object):
                 if playerinfo.has_key(int(board_id)):
                     slot_info = playerinfo[int(board_id)]
                     for slot_id, details in slot_info.iteritems():
+                        if seq is None or 'nan' == str(seq):
+                            return '-1'
                         if details[2] == int(seq):
                             return slot_id
         LOG.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
