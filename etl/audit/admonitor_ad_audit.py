@@ -134,85 +134,85 @@ class AdMonitor_audit:
         robot.report()
             
     def validator(self,row,index):
-        error_flag = False
+        flag = True
         result = self.validate_field(index,row,Config["ip"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["ad_event_type"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["url"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["video_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["playlist_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["board_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["request_res"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["ad_list"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["time_delay"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["request_str"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["slot_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["mediabuy_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["creator_id"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["video_play_time"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["play_event"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["pf"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["device_id"])
         if not result:
-            error_flag = True
+            flag = True
         result = self.validate_field(index,row,Config["uid"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["os"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["net"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["manufacturer"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["model"])
         if not result:
-            error_flag = True
+            flag = True
         result = self.validate_field(index,row,Config["app"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["timestamp"])
         if not result:
-            error_flag = True
+            flag = False
         result = self.validate_field(index,row,Config["session_id"])
         if not result:
-            error_flag = True
-        if error_flag:
+            flag = False
+        if not flag:
             self.error_rows = self.error_rows + 1
-        return True
+        return  flag
     def validate_field(self,index,row,field_name):       
         _index = self.header.index(field_name)
 #         print row
