@@ -230,20 +230,22 @@ class AdTransformPandas(object):
                     opt = rel[1]
                     val = rel[2]
                     chunk = filter_chunk(chunk, key, opt, val)
-
-            if not chunk.empty:
-                tmp_df = chunk.groupby(groupby_list).size()
-                LOG.info("append chunk result to %s:", tmp_trans_file)
-                tmp_df.to_csv(tmp_trans_file, header=need_header, \
-                                 sep=self.get('input_column_sep'), \
-                                 na_rep=CNF["na_rep"], mode="a", index=True)
+                output_name = self.get('condition')[cdt_key]["output_name"]
+                if not chunk.empty:
+                    tmp_df = pd.DataFrame(chunk.groupby(groupby_list).size())\
+                        .rename(columns={0:output_name})
+                    LOG.info("append chunk result to %s:", tmp_trans_file)
+                    tmp_df.to_csv(tmp_trans_file, header=need_header, \
+                                     sep=self.get('input_column_sep'), \
+                                     na_rep=CNF["na_rep"], mode="a", index=True)
         del data_chunks
         if trunk_size > 1:
             if os.path.exists(tmp_trans_file):
                 data_chunks = pd.read_csv(tmp_trans_file, sep=self.get('input_column_sep'), \
                                 dtype=self.get('dtype'), index_col=False)
                 LOG.info("merge all trunk results")
-                data_chunks = data_chunks.groupby(groupby_list).size()
+                data_chunks = pd.DataFrame(data_chunks.groupby(groupby_list).size())\
+                    .rename(columns={0:output_name})
                 LOG.info("save final result to: %s", tmp_trans_file)
                 data_chunks.to_csv(tmp_trans_file, header=True, \
                                          sep=self.get('input_column_sep'), \
@@ -322,7 +324,7 @@ class AdTransformPandas(object):
     def __merge_dataframe_group_count(self, grouped, dataframe):
         """as u c: merge dataframe group count"""
         if grouped is None:
-            if dataframe.empty:
+            if not dataframe.empty:
                 grouped = dataframe.groupby(self.get('group_item')).size()
         else:
             grouped = pd.concat([grouped, dataframe.\

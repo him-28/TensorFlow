@@ -55,7 +55,6 @@ def flat_data_admonitor(input_path, output_path):
                     if count == 1:
                         #append header
                         buffers.append(HEADER)
-                        continue
                     if len(buffers) > limit:
                         write_buffer(buffers, output_path)
                     else:

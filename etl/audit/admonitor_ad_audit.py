@@ -18,6 +18,7 @@ from etl.conf.settings import LOGGER
 from etl.conf.settings import HEADER
 from etl.conf.settings import AUDIT_HEADER
 from etl.conf.settings import MONITOR_CONFIGS
+from etl.util.playerutil import getplayerInfo
 
 REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
 
@@ -76,6 +77,10 @@ class AdMonitor_audit:
         self.spent = 0
         self.batch_write_size = Config["batch_write_size"]
         self.tmp_file_path = self.filepath + ".tmp"
+        self.player_info = getplayerInfo()
+        self.slotid_index = AUDIT_HEADER.index("slot_id")
+        self.boardid_index = AUDIT_HEADER.index("board_id")
+        self.s_ts_index = AUDIT_HEADER.index("server_timestamp")
         
     def audit(self):
         start_time = time.time()
@@ -94,7 +99,7 @@ class AdMonitor_audit:
                 if first_row:
                     first_row = False
                     continue
-                res = False
+                res = 0
                 row = []
                 self.count_rows = self.count_rows + 1
                 try:
@@ -103,10 +108,7 @@ class AdMonitor_audit:
                 except Exception,e:
                     LOGGER.error("audit error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))
                     continue
-                tag = 0
-                if not res:
-                    tag = 101
-                row[tag_index] = tag
+                row[tag_index] = res
                 write_buffer.append(row)
                 if len(write_buffer) >= self.batch_write_size:
                     self.write_file(write_buffer)
@@ -139,29 +141,44 @@ class AdMonitor_audit:
         robot.report()
             
     def validator(self,row,index):
-        flag = True
+        flag = 0
         for field in Config["validate_fields"]:
             result = self.validate_field(index,row,field)
-            if not result:
-                flag = False
-        if not flag:
+            if result > flag:
+                flag = result
+            result = self.validate_slot_id(row)
+            if result > flag:
+                flag = result
+        if flag > 99:
             self.error_rows = self.error_rows + 1
         return  flag
-    def validate_field(self,index,row,field_name):       
+    def validate_slot_id(self,row):
+        slot_id = int(row[self.slotid_index])
+        board_id = int(row[self.boardid_index])
+        s_timestamp= float(row[self.s_ts_index])
+        for v in self.player_info.values():
+            start = v.get('starttime')
+            end = v.get('endtime')
+            if s_timestamp > start and s_timestamp < end:
+                if v['playerinfo'].has_key(board_id):
+                    if v['playerinfo'][board_id].has_key(slot_id):
+                        return 0
+        return 102
+    def validate_field(self,index,row,field_name):
         _index = self.header.index(field_name)
 #         print row
         value = row[_index]
         scenes = Config["field_rule"][field_name]
         result = self._validate_value(row,value, scenes)
         if result == SUCCESS:
-            return True
+            return 0
 #         self.error_rows = self.error_rows + 1
         problem = "行%s,列：%s 值：%s 错误信息：%s"%(str(index),field_name,value,result)
         self.problems.append(problem)
         c = self.columns_errors.get(field_name,0)
         c = c + 1
         self.columns_errors.update({field_name:c})
-        return False
+        return 101
         
     def _validate_value(self,row,value,scenes):
         for k,v in scenes.items():
