@@ -73,21 +73,18 @@ class AdMonitor_audit:
         self.problems = []
         self.columns_errors = {}
         self.spent = 0
+        self.batch_write_size = Config["batch_write_size"]
+        self.tmp_file_path = self.filepath + ".tmp"
         
     def audit(self):
         start_time = time.time()
         first_row = Config["with_header"]
-        tmp_file_path = self.filepath + ".tmp"
-        if os.path.exists(tmp_file_path):
-            os.remove(tmp_file_path)
-        tmp_file = open(tmp_file_path,"w+")
-        for idx in range(0,len(AUDIT_HEADER)):
-            if idx != 0:
-                tmp_file.write(Config["file_split"])
-            tmp_file.write(AUDIT_HEADER[idx])
-        tmp_file.write("\n")
+        if os.path.exists(self.tmp_file_path):
+            os.remove(self.tmp_file_path)
         tag_index = AUDIT_HEADER.index("tag")
         file_split = Config["file_split"]
+        write_buffer = []
+        write_buffer.append(self.header)
         with open(self.filepath,'rb') as fr:
             for line in fr:
                 if not line or not line.strip():
@@ -95,31 +92,42 @@ class AdMonitor_audit:
                 if first_row:
                     first_row = False
                     continue
-                
                 res = False
                 row = []
+                self.count_rows = self.count_rows + 1
                 try:
                     eline = eval(line)
-                    row=[i.strip() for i in eline.strip().strip(Config["strip_char"]).split(file_split)]
-                    self.count_rows = self.count_rows + 1
+                except Exception,e:
+                    LOGGER.error("audit eval error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))
+                    eline = line
+                try:
+                    row=[i.strip() for i in eline.strip(Config["strip_char"]).split(file_split)]
                     res = self.validator(row,self.count_rows)
                 except Exception,e:
-                    LOGGER.error("audit error,行号：%s 行值：%s .error message:%s"%(str(self.count_rows),line,e.message))
+                    LOGGER.error("audit error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))
+                    continue
                 tag = 0
                 if not res:
                     tag = 101
                 row[tag_index] = tag
-                for idx in range(0,len(row)):
-                    if idx != 0:
-                        tmp_file.write(file_split)
-                    tmp_file.write(str(row[idx]))
-                tmp_file.write("\n")
-        tmp_file.close()
+                write_buffer.append(row)
+                if len(write_buffer) >= self.batch_write_size:
+                    self.write_file(write_buffer)
+                    write_buffer = []
+                    
+        self.write_file(write_buffer)
         os.remove(self.filepath)
-        os.rename(tmp_file_path,self.filepath)
+        os.rename(self.tmp_file_path,self.filepath)
+        write_buffer = []
         end_time = time.time()
         self.spent = end_time - start_time
-
+        
+    def write_file(self,write_buffer):
+        with open(self.tmp_file_path, 'a') as f:
+            for row in write_buffer:
+                s = MONITOR_CONFIGS["output_column_sep"].join(str(e) for e in row)
+                f.write(s+Config["line_n"])
+        
     def report(self):
         sample = []
         max_s = self.sample_error_size
@@ -135,81 +143,10 @@ class AdMonitor_audit:
             
     def validator(self,row,index):
         flag = True
-        result = self.validate_field(index,row,Config["ip"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["ad_event_type"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["url"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["video_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["playlist_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["board_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["request_res"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["ad_list"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["time_delay"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["request_str"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["slot_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["mediabuy_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["creator_id"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["video_play_time"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["play_event"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["pf"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["device_id"])
-        if not result:
-            flag = True
-        result = self.validate_field(index,row,Config["uid"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["os"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["net"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["manufacturer"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["model"])
-        if not result:
-            flag = True
-        result = self.validate_field(index,row,Config["app"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["timestamp"])
-        if not result:
-            flag = False
-        result = self.validate_field(index,row,Config["session_id"])
-        if not result:
-            flag = False
+        for field in Config["validate_fields"]:
+            result = self.validate_field(index,row,field)
+            if not result:
+                flag = False
         if not flag:
             self.error_rows = self.error_rows + 1
         return  flag
@@ -248,6 +185,12 @@ class AdMonitor_audit:
                 if vtype == Config["int"]:
                     try:
                         int(value)
+                    except:
+                        msg = "value type is error"
+                        return msg
+                elif vtype == Config["float"]:
+                    try:
+                        float(value)
                     except:
                         msg = "value type is error"
                         return msg
