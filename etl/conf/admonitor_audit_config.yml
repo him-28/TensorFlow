@@ -1,11 +1,12 @@
 strip_char: \"
 file_split: "\t"
 with_header: False
-sample_error_size: 3
+sample_error_size: 10
 batch_write_size: 10000
 line_n: "\n"
 int: int
-validate_fields: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id']
+float: float
+validate_fields: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','server_timestamp','session_id']
 field_rule:
     ip:
         scene1:
@@ -178,7 +179,14 @@ field_rule:
             required: True
             reg: 
             range:
-            vtype: int
+            vtype: float
+    server_timestamp:
+        scene1:
+            condition: 
+            required: True
+            reg: 
+            range:
+            vtype: float
     session_id:
         scene1:
             condition: 

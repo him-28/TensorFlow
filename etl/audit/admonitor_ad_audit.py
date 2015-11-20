@@ -188,6 +188,12 @@ class AdMonitor_audit:
                     except:
                         msg = "value type is error"
                         return msg
+                elif vtype == Config["float"]:
+                    try:
+                        float(value)
+                    except:
+                        msg = "value type is error"
+                        return msg
                     
             reg = v.get("reg")
             reg_result = self.match_reg(value, reg)
