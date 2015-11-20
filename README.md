@@ -109,7 +109,5 @@ If you want to automate the download of the dataset, there is an included file t
 `sudo ./download_mnist.sh`
 
 ***Known Issues***
-`Library not loaded: /usr/local/opt/openssl/lib/libssl.1.0.0.dylib`
-This results from a broken openssl installation on mac. It can be fixed by uninstalling and reinstalling openssl:
-`sudo brew remove openssl`
-`brew install openssl`
+Library not loaded: /usr/local/opt/openssl/lib/libssl.1.0.0.dylib, This results from a broken openssl installation on mac.
+It can be fixed by uninstalling and reinstalling openssl: sudo brew remove openssl brew install openssl.
