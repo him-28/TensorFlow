@@ -2,33 +2,10 @@ strip_char: \"
 file_split: "\t"
 with_header: False
 sample_error_size: 3
+batch_write_size: 10000
+line_n: "\n"
 int: int
-ip: ip
-ad_event_type: ad_event_type
-url: url
-video_id: video_id
-playlist_id: playlist_id
-board_id: board_id
-request_res: request_res
-ad_list: ad_list
-time_delay:  time_delay
-request_str: request_str
-slot_id: slot_id
-mediabuy_id: mediabuy_id
-creator_id: creator_id
-video_play_time: video_play_time
-order: order
-play_event: play_event
-pf: pf
-device_id: device_id
-uid: uid
-net: net
-os: os
-manufacturer: manufacturer
-model: model
-app: app
-timestamp: timestamp
-session_id: session_id
+validate_fields: ['ip','ad_event_type','url','video_id','playlist_id','board_id','request_res','ad_list','time_delay','request_str','slot_id','mediabuy_id','creator_id','video_play_time','order','play_event','pf','device_id','uid','net','os','manufacturer','model','app','timestamp','session_id']
 field_rule:
     ip:
         scene1:
