@@ -181,9 +181,9 @@ class Reportor(object):
             msg = ""
             for title, text in t_r:
                 msg += title + "\n"
-                msg += "-----------------------------------------------------\n"
+#                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            time_title = "%s~%s数据审计完成" % (self.start_time, self.end_time)
+            time_title = "%s~%s数据统计完成" % (self.start_time, self.end_time)
             LOG.info("report text,title: %s .", time_title)
             bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
                                 channel=REPORT_CHANNEL , at_text=msg)
@@ -215,9 +215,9 @@ class Reportor(object):
             click_rate0 = click0 / impression0
         if not impression1 == 0:
             click_rate1 = click1 / impression1
-        slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
-播放结束数：%s，\n点击数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
-        l0_1 = "｛logic0:%s｝ ｛logic1:%s｝"
+        slot_title = "展示机会：%s \n投放数：%s \n开始播放数：%s \n\
+播放结束数：%s \n点击数：%s \n升位数：%s \n曝光率：%s \n点击率：%s \n"
+        l0_1 = "logic0总计：%s ，logic1总计：%s"
         slot_value = (l0_1 % (display_poss0, display_poss1), \
                       l0_1 % (display_sale0, display_sale1), \
                       l0_1 % (impression0, impression1), \
@@ -230,7 +230,7 @@ class Reportor(object):
         fnssp = ""
         if "hour" == self.params["type"]:
             fnssp += "文件名{%s}, 大小%s \r\n" % (self.params["filename"], self.params["filesize"])
-            fnssp += "[logic0] 耗时 %s秒，[logic1] 耗时 %s秒 \r\n" % \
+            fnssp += "logic0 耗时 %s秒\r\nlogic1 耗时 %s秒 \r\n" % \
                 (str(self.params["logic0_sptime"]), str(self.params["logic1_sptime"]))
         elif "day" == self.params["type"]:
             sptime = self.params["sptime"]
@@ -264,8 +264,8 @@ class Reportor(object):
                 impression0 = get_metric_data("impression", "logic0", data)
                 impression1 = get_metric_data("impression", "logic1", data)
                 self.__sum_put(_pf, ("impression0", "impression1"), (impression0, impression1))
-                slot_title = "展示机会：%s，\n投放数：%s，\n开始播放数：%s，\n\
-播放结束数：%s，\n点击数：%s，\n升位数：%s，\n曝光率：%s，\n点击率：%s\n"
+                slot_title = "展示机会：%s \n投放数：%s \n开始播放数：%s \n\
+播放结束数：%s \n点击数：%s \n升位数：%s \n曝光率：%s \n点击率：%s\n"
                 impression_rate0 = 0
                 impression_rate1 = 0
                 click_rate0 = 0
@@ -289,7 +289,7 @@ class Reportor(object):
                 up0 = get_metric_data("up", "logic0", data)
                 up1 = get_metric_data("up", "logic1", data)
                 self.__sum_put(_pf, ("up0", "up1"), (up0, up1))
-                l0_1 = "{logic0:%s} {logic1:%s}"
+                l0_1 = "logic0总计：%s， logic1总计：%s"
                 slot_value = (l0_1 % (display_poss0, display_poss1), \
                               l0_1 % (display_sale0, display_sale1), \
                               l0_1 % (impression0, impression1), \
@@ -319,7 +319,7 @@ class Reportor(object):
             logic1_data = 0
             if data.has_key("logic1"):
                 logic1_data = data["logic1"]
-            seq_str += "广告位顺序【%s】实际展示数：｛logic0: %s｝｛logic1: %s｝ \n"\
+            seq_str += "广告位顺序【%s】实际展示数：logic0总计: %s，logic1总计: %s \n"\
                 % (seq, logic0_data, logic1_data)
         return [(format_title, seq_str)]
 
