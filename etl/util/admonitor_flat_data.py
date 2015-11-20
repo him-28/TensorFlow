@@ -4,8 +4,6 @@ Created on 2015年11月11日
 
 @author: Administrator
 '''
-import types
-import sys
 import os
 import urllib
 
@@ -16,13 +14,19 @@ from etl.conf.settings import LOGGER
 from etl.conf.settings import HEADER
 from etl.conf.settings import AUDIT_HEADER
 
+adlist_index=AUDIT_HEADER.index('ad_list')
+slotid_idx=AUDIT_HEADER.index('slot_id')
+mediabuyid_idx=AUDIT_HEADER.index('mediabuy_id')
+creativeid_idx=AUDIT_HEADER.index('creator_id')
+s_ts=AUDIT_HEADER.index('server_timestamp')
+b_id=AUDIT_HEADER.index('board_id')
+delimiter = Config["file_split"]
+ip_index = AUDIT_HEADER.index('ip')
 
 ip_util=IP_Util(ipb_filepath=Config['ipb_filepath'],
                 city_filepath=Config['city_filepath'])
 
 player_info = getplayerInfo()
-
-from pdb import set_trace as st
 
 def flat_data_admonitor(input_path, output_path):
 
@@ -43,19 +47,23 @@ def flat_data_admonitor(input_path, output_path):
             if not lines:
                 write_buffer(buffers, output_path)
                 break
-
             for line in lines:
-                #skip header
-                count += 1
-                if count == 1:
-                    #append header
-                    buffers.append(HEADER)
-                    continue
-                if len(buffers) > limit:
-                    write_buffer(buffers, output_path)
-                else:
-                    new_lines = pack_data(line.strip('\r\n'))
-                    buffers.extend(new_lines)
+                try:
+                    line = eval(line)
+                    #skip header
+                    count += 1
+                    if count == 1:
+                        #append header
+                        buffers.append(HEADER)
+                        continue
+                    if len(buffers) > limit:
+                        write_buffer(buffers, output_path)
+                    else:
+                        new_lines = pack_data(line.strip('\r\n'))
+                        if new_lines:
+                            buffers.extend(new_lines)
+                except Exception,e:
+                    LOGGER.error("flat eval error：%s ,error message:%s" , line, e.message)
 
 def write_buffer(buffers, output_path):
     with open(output_path, 'a') as f:
@@ -69,64 +77,61 @@ def get_area_info(ip):
     return province, city
 
 def pack_data(line):
-    delimiter = Config["file_split"]
     row = line.split(delimiter)
     #initial line
     new_data = []
 
-    #TODO:check length
-    if len(row) == len(AUDIT_HEADER):
-        # gen province, city with ip
-        ip_index = AUDIT_HEADER.index('ip')
-        ip = row[ip_index]
-        province, city = get_area_info(ip)
-        row.append(province)
-        row.append(city)
+    # gen province, city with ip
+    ip = row[ip_index]
+    province, city = get_area_info(ip)
+    row.append(province)
+    row.append(city)
 
-        # gen ad list
-        adlist_index = AUDIT_HEADER.index('ad_list')
-        ad_list = urllib.unquote(row[adlist_index])
-        zip_data = map(lambda s: s.split(','), ad_list.split('|'))
-
-        # gen seq, group_id
-        seq = 1
-        cur_group_id = ""
-
-        for i in zip_data:
-            new_row = row[:]
-            # exists ad info
-            try:
-                slotid_idx = AUDIT_HEADER.index('slot_id')
-                mediabuyid_idx = AUDIT_HEADER.index('mediabuy_id')
-                creativeid_idx = AUDIT_HEADER.index('creator_id')
-                s_ts = AUDIT_HEADER.index('server_timestamp')
-                b_id = AUDIT_HEADER.index('board_id')
-
-                new_row[slotid_idx] = i[0]
-                new_row[mediabuyid_idx] = i[1]
-                new_row[creativeid_idx] = i[2]
-
-                group_id = get_group_id(int(row[b_id]), int(i[0]), float(row[s_ts]))
-                #FIXME: challenge
-
-                new_row.append(seq)
-                new_row.append(group_id)
-                if group_id != cur_group_id:
-                    seq = 1
-                else:
-                    seq += 1
-
-                cur_group_id = group_id
-            except Exception as e:
-                seq = ""
-                group_id = ""
-                new_row.append(seq)
-                new_row.append(group_id)
-                LOGGER.error("%s" % str(e))
-
-            new_data.append(new_row)
-
+    # gen ad list
+    ad_list = urllib.unquote(row[adlist_index])
+    row[adlist_index] = ad_list
+    if ad_list.strip() == "":
+        seq = -1
+        group_id = -1
+        row.append(seq)
+        row.append(group_id)
+        new_data.append(row)
         return new_data
+    zip_data = map(lambda s: s.split(','), ad_list.split('|'))
+
+    # gen seq, group_id
+    seq = 1
+    cur_group_id = ""
+
+
+    for i in zip_data:
+        new_row = row[:]
+        # exists ad info
+        try:
+
+            new_row[slotid_idx] = i[0]
+            new_row[mediabuyid_idx] = i[1]
+            new_row[creativeid_idx] = i[2]
+
+            group_id = get_group_id(int(row[b_id]), int(i[0]), float(row[s_ts]))
+            #FIXME: challenge
+
+            new_row.append(seq)
+            new_row.append(group_id)
+            if group_id != cur_group_id:
+                seq = 1
+            else:
+                seq += 1
+
+            cur_group_id = group_id
+        except Exception as e:
+            seq = ""
+            group_id = ""
+            new_row.append(seq)
+            new_row.append(group_id)
+            LOGGER.error("%s" % str(e))
+        new_data.append(new_row)
+    return new_data
 
 
 def get_group_id(board_id, slotid, s_timestamp):

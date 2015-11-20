@@ -15,6 +15,7 @@ from datetime import datetime
 from etl.util.bearychat import new_send_message
 from etl.conf.settings import AuditConfig as Config
 from etl.conf.settings import LOGGER
+from etl.conf.settings import HEADER
 from etl.conf.settings import AUDIT_HEADER
 from etl.conf.settings import MONITOR_CONFIGS
 
@@ -69,7 +70,7 @@ class AdMonitor_audit:
         self.error_rows = 0
         self.count_rows = 0
         self.sample_error_size = Config["sample_error_size"]
-        self.header = AUDIT_HEADER
+        self.header = HEADER
         self.problems = []
         self.columns_errors = {}
         self.spent = 0
@@ -87,7 +88,8 @@ class AdMonitor_audit:
         write_buffer.append(self.header)
         with open(self.filepath,'rb') as fr:
             for line in fr:
-                if not line or not line.strip():
+                new_line = line.strip("\r\n").strip("\n")
+                if not new_line:
                     continue
                 if first_row:
                     first_row = False
@@ -96,12 +98,7 @@ class AdMonitor_audit:
                 row = []
                 self.count_rows = self.count_rows + 1
                 try:
-                    eline = eval(line)
-                except Exception,e:
-                    LOGGER.error("audit eval error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))
-                    eline = line
-                try:
-                    row=[i.strip() for i in eline.strip(Config["strip_char"]).split(file_split)]
+                    row=[i for i in new_line.split(file_split)]
                     res = self.validator(row,self.count_rows)
                 except Exception,e:
                     LOGGER.error("audit error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))

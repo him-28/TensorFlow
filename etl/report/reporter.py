@@ -313,8 +313,14 @@ class Reportor(object):
         format_title = "播放器ID【%s】" % board_id
         seq_str = ""
         for seq, data in seq_display.iteritems():
+            logic0_data = 0
+            if data.has_key("logic0"):
+                logic0_data = data["logic0"]
+            logic1_data = 0
+            if data.has_key("logic1"):
+                logic1_data = data["logic1"]
             seq_str += "广告位顺序【%s】实际展示数：｛logic0: %s｝｛logic1: %s｝ \n"\
-                % (seq, data["logic0"], data["logic1"])
+                % (seq, logic0_data, logic1_data)
         return [(format_title, seq_str)]
 
     def __get(self, _pf , total_key):

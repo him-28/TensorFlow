@@ -291,11 +291,11 @@ class AdMonitorRunner(object):
             ngx_src_path = os.path.join(paths["ngx_src_path"], paths["ngx_src_filename"])
             ad_src_path = os.path.join(paths["ad_src_path"], paths["ad_src_filename"])
 
+            # 打平:
+            admonitor_flat_data.flat_data_admonitor(ngx_src_path, ad_src_path)
 
             # 审计:
-            admonitor_ad_audit.ad_audit(paths["ngx_src_path"],paths["ngx_src_filename"])
-            # 打平:
-            admonitor_flat_data.flat_data(ngx_src_path, ad_src_path)
+            admonitor_ad_audit.ad_audit(paths["ad_src_path"], paths["ad_src_filename"])
 
             # 计算
             start = time.clock()
@@ -327,13 +327,13 @@ class AdMonitorRunner(object):
             filesize = getfilesize(ad_src_path)
             params = {
                       "type":"hour",
-                      "filename":paths["ad_src_filename"], 
-                      "filesize":filesize, 
-                      "logic0_sptime":logic0_sptime, 
-                      "logic1_sptime":logic1_sptime, 
-                      "start_time":now.strftime("%Y-%m-%d %H:00:00"), 
+                      "filename":paths["ad_src_filename"],
+                      "filesize":filesize,
+                      "logic0_sptime":logic0_sptime,
+                      "logic1_sptime":logic1_sptime,
+                      "start_time":now.strftime("%Y-%m-%d %H:00:00"),
                       "end_time":now.strftime("%Y-%m-%d %H:59:59")}
-            Reportor(params,d_reader).report_text()
+            Reportor(params, d_reader).report_text()
 
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
@@ -366,10 +366,10 @@ class AdMonitorRunner(object):
 
             params = {
                       "type":"day",
-                      "fileinfo0":getfilesinfo(paths['logic0_output_paths']), 
-                      "fileinfo1":getfilesinfo(paths['logic1_output_paths']), 
-                      "sptime":sptime, 
-                      "start_time":now.strftime("%Y-%m-%d 00:00:00"), 
+                      "fileinfo0":getfilesinfo(paths['logic0_output_paths']),
+                      "fileinfo1":getfilesinfo(paths['logic1_output_paths']),
+                      "sptime":sptime,
+                      "start_time":now.strftime("%Y-%m-%d 00:00:00"),
                       "end_time":now.strftime("%Y-%m-%d 23:59:59")}
             # 报告结果
             Reportor(params, d_reader).report_text()
@@ -381,10 +381,10 @@ def getfilesize(filepath):
 
 def getfilesinfo(filepaths):
     info = {}
-    for key,filepath in filepaths.iteritems():
+    for key, filepath in filepaths.iteritems():
         filesize = getfilesize(filepath)
         filename = os.path.split(filepath)[1]
-        info[key] = (filesize,filename)
+        info[key] = (filesize, filename)
     return info
 
 def run_cli(arguments):
@@ -415,6 +415,6 @@ if __name__ == '__main__':
     run_cli(sys.argv)
 
     # test flat code
-    #inputf = "/Users/martin/Desktop/ad_13.log"
-    #outputf = "/Users/martin/Desktop/ad_flat.log"
-    #admonitor_flat_data.flat_data_admonitor(inputf, outputf)
+    # inputf = "/Users/martin/Desktop/ad_13.log"
+    # outputf = "/Users/martin/Desktop/ad_flat.log"
+    # admonitor_flat_data.flat_data_admonitor(inputf, outputf)
