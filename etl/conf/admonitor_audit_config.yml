@@ -1,6 +1,6 @@
 strip_char: \"
 file_split: "\t"
-with_header: False
+with_header: True
 sample_error_size: 10
 batch_write_size: 10000
 line_n: "\n"
@@ -80,6 +80,12 @@ field_rule:
             condition: 
                 ad_event_type: ['p'] 
             required: True
+            reg: 
+            range:
+            vtype: int 
+        scene2:
+            condition: 
+            required: False
             reg: 
             range:
             vtype: int 
