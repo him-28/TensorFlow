@@ -183,7 +183,7 @@ class ETL_Transform:
             if first_row: 
                 first_row = False
                 continue
-            _new_chance_buffer.append(row)
+#             _new_chance_buffer.append(row)
             new_rows = self.getchance_row(row)
             for new_row in new_rows:
                 _new_chance_buffer.append(new_row)
@@ -203,10 +203,13 @@ class ETL_Transform:
         
         adlist = row[adlist_index]
         adslots = self.unpack_adlist(adlist)
+        if adslots and len(adslots) > 0:
+            if row[slotid_index] and row[slotid_index] != adslots[0]:
+                return []
         new_rows = []
         for slot in playerSlots:
-            if adslots.count(slot) == 1:
-                continue
+#             if adslots.count(slot) == 1:
+#                 continue
             new_row = get_list(row)
             new_row[seq_index] = ""
             new_row[mediabuyid_index] = "-1"
