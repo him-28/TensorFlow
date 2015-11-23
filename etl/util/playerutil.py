@@ -180,7 +180,7 @@ def _getSplitPlayerInfo(starttime, endtime):
              (PLAYER_TABLE_NAME, starttimestr, endtimestr)       
 
     try:
-        _conn = psy.connect(db=config['database'], user=config['user'], \
+        _conn = psy.connect(db=config['database'],charset="utf8", user=config['user'], \
             passwd=config['password'], host=config['host'], \
             port=config['port'])
         _cur = _conn.cursor()
@@ -217,15 +217,15 @@ def _getSplitPlayerInfo(starttime, endtime):
 
 def _update_player_info(playerinfo, row):
     _player = playerinfo.get(row[0])
-    
+    #p.code,ad_id,node_id,s.name,priority
     if _player is None:
         _player = {}
-        playerinfo[row[0]] = _player
+        playerinfo[int(row[0])] = _player
     _slotid = _player.get(row[1])
     
     if _slotid is None:
         _slotid = []
-        _player[row[1]] = _slotid
-    _slotid.append(row[2])
+        _player[int(row[1])] = _slotid
+    _slotid.append(int(row[2]))
     _slotid.append(row[3])
-    _slotid.append(row[4])
+    _slotid.append(int(row[4]))
