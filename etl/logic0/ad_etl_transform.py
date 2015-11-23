@@ -196,7 +196,7 @@ class ETL_Transform:
         mediabuyid_index = self.header.index(Config["mediabuyid"])
         creativeid_index = self.header.index(Config["creativeid"])
         slotid_index = self.header.index(Config["slotid"])
-        if row[seq_index] and row[seq_index] != '1':
+        if row[seq_index] and row[seq_index] != '1'and row[seq_index] != '-1':
             return []
         playerid = row[playerid_index]
         playerSlots = self.newestPlayerSlotInfo.get(playerid)
