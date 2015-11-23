@@ -84,10 +84,10 @@ day_hour_facts_file_path: "/data1/ad/facts/day/hour"
 
 database:
     db_name: adc
-    user: postgres
-    password: 'adpg@150909'
+    user: etl
+    password: 'etl@150909'
     host: 10.100.5.80
-    port: 11921
+    port: 3306
     minconn: 5
     maxconn: 50
 db_table:
