@@ -331,8 +331,7 @@ class AdMonitorRunner(object):
                       "filesize":filesize,
                       "logic0_sptime":logic0_sptime,
                       "logic1_sptime":logic1_sptime,
-                      "start_time":now.strftime("%Y-%m-%d %H:00:00"),
-                      "end_time":now.strftime("%Y-%m-%d %H:59:59")}
+                      "start_time":now.strftime("%Y-%m-%d %H")}
             Reportor(params, d_reader).report_text()
 
         elif mode == 'd':
@@ -369,8 +368,7 @@ class AdMonitorRunner(object):
                       "fileinfo0":getfilesinfo(paths['logic0_output_paths']),
                       "fileinfo1":getfilesinfo(paths['logic1_output_paths']),
                       "sptime":sptime,
-                      "start_time":now.strftime("%Y-%m-%d 00:00:00"),
-                      "end_time":now.strftime("%Y-%m-%d 23:59:59")}
+                      "start_time":now.strftime("%Y-%m-%d")}
             # 报告结果
             Reportor(params, d_reader).report_text()
 
@@ -414,7 +412,3 @@ if __name__ == '__main__':
     '''
     run_cli(sys.argv)
 
-    # test flat code
-    # inputf = "/Users/martin/Desktop/ad_13.log"
-    # outputf = "/Users/martin/Desktop/ad_flat.log"
-    # admonitor_flat_data.flat_data_admonitor(inputf, outputf)

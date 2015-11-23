@@ -109,16 +109,18 @@ PF = {
 
 def get_pf_name(pf_code):
     '''get pf name by code'''
+    if not pf_code:
+        return "空结果"
     pf_code = str(pf_code)
     if PF.has_key(pf_code):
         return PF[pf_code]
-    return "Unknow"
+    return "未知：" + pf_code
 
 def get_metric_data(metric, logic, data):
     '''get data in each metric'''
     if data.has_key(metric):
         if data[metric].has_key(logic):
-            return data[metric][logic]
+            return int(data[metric][logic])
         else:
             LOG.warn("can not find logic:%s in metric:%s,the data is:%s", \
                       logic, metric, data)
@@ -130,14 +132,8 @@ class Reportor(object):
     '''Report ETL result'''
     def __init__(self, params, data):
         self.params = params
-        end_time = params["end_time"]
         start_time = params["start_time"]
         LOG.info("init reportor.")
-        if is_num(end_time):
-            self.end_time = dt.datetime.\
-                fromtimestamp(end_time).strptime("%Y%m%d %H:%M:%S")
-        else:
-            self.end_time = end_time
         if is_num(start_time):
             self.start_time = dt.datetime.\
                 fromtimestamp(start_time).strptime("%Y%m%d %H:%M:%S")
@@ -174,16 +170,18 @@ class Reportor(object):
                 _pf_result_text.insert(0, self.__report_total_text(_pf))
                 result_text.append((_pf, _pf_result_text))
         else:
-            result_text = [("WARNING", [("没有数据", "审计结果是空")])]
+            result_text = [(None, [("没有数据", "审计结果是空")])]
 
         # 发送到Bearychat
         for _pf, t_r in result_text:
             msg = ""
             for title, text in t_r:
                 msg += title + "\n"
-#                 msg += "-----------------------------------------------------\n"
                 msg += text + "\n"
-            time_title = "%s~%s数据统计完成" % (self.start_time, self.end_time)
+            if self.params['type'] == 'day':
+                time_title = "【%s】天数据统计完成" % self.start_time
+            else:
+                time_title = "【%s】小时数据统计完成" % self.start_time
             LOG.info("report text,title: %s .", time_title)
             bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
                                 channel=REPORT_CHANNEL , at_text=msg)
@@ -203,34 +201,35 @@ class Reportor(object):
         up1 = self.__get(_pf, "up1")
         impression_end0 = self.__get(_pf, "impression_end0")
         impression_end1 = self.__get(_pf, "impression_end1")
-        impression_rate0 = 0
-        impression_rate1 = 0
-        click_rate0 = 0
-        click_rate1 = 0
+        impression_rate0 = 0.0
+        impression_rate1 = 0.0
+        click_rate0 = 0.0
+        click_rate1 = 0.0
         if not display_poss0 == 0:
-            impression_rate0 = impression0 / display_poss0
+            impression_rate0 = impression0 / display_poss0 * 100.0
         if not display_poss1 == 0:
-            impression_rate1 = impression1 / display_poss1
+            impression_rate1 = impression1 / display_poss1 * 100.0
         if not impression0 == 0:
-            click_rate0 = click0 / impression0
+            click_rate0 = click0 / impression0 * 100.0
         if not impression1 == 0:
-            click_rate1 = click1 / impression1
-        slot_title = "展示机会：%s \n投放数：%s \n开始播放数：%s \n\
-播放结束数：%s \n点击数：%s \n升位数：%s \n曝光率：%s \n点击率：%s \n"
-        l0_1 = "logic0总计：%s ，logic1总计：%s"
+            click_rate1 = click1 / impression1 * 100.0
+        slot_title = "【展示机会】：  %s \n【投放数】：  %s \n【开始播放数】：  %s \n\
+【播放结束数】： %s \n【点击数】： %s \n【升位数】： %s \n【曝光率】： %s \n【点击率】： %s \n"
+        l0_1 = "logic0总计： %s ，logic1总计：  %s"
+        f0_1 = "logic0总计： %.2f%% ，logic1总计：  %.2f%%"
         slot_value = (l0_1 % (display_poss0, display_poss1), \
                       l0_1 % (display_sale0, display_sale1), \
                       l0_1 % (impression0, impression1), \
                       l0_1 % (impression_end0, impression_end1), \
                       l0_1 % (click0, click1), \
                       l0_1 % (up0, up1), \
-                      l0_1 % (impression_rate0, impression_rate1), \
-                      l0_1 % (click_rate0, click_rate1))
+                      f0_1 % (impression_rate0, impression_rate1), \
+                      f0_1 % (click_rate0, click_rate1))
         slot_str = slot_title % slot_value
         fnssp = ""
         if "hour" == self.params["type"]:
-            fnssp += "文件名{%s}, 大小%s \r\n" % (self.params["filename"], self.params["filesize"])
-            fnssp += "logic0 耗时 %s秒\r\nlogic1 耗时 %s秒 \r\n" % \
+            fnssp += "● 文件名{%s}, 大小%s \r\n" % (self.params["filename"], self.params["filesize"])
+            fnssp += "● logic0 耗时 %s秒\r\n● logic1 耗时 %s秒 \r\n" % \
                 (str(self.params["logic0_sptime"]), str(self.params["logic1_sptime"]))
         elif "day" == self.params["type"]:
             sptime = self.params["sptime"]
@@ -239,7 +238,7 @@ class Reportor(object):
             #for key, info in fileinfo0.iteritems():
             #    fnssp += "文件名{%s,%s}, 大小{%s,%s} \r\n" % \
             #        (info[1], fileinfo1[key][1], info[0], fileinfo1[key][0])
-            fnssp = "耗时：%s秒" % sptime
+            fnssp = "● 耗时：%s秒 \r\n" % sptime
         return fnssp + "【汇总报告】", slot_str
 
     def __statistics(self, _pf, board_id, slot_data):
@@ -264,20 +263,20 @@ class Reportor(object):
                 impression0 = get_metric_data("impression", "logic0", data)
                 impression1 = get_metric_data("impression", "logic1", data)
                 self.__sum_put(_pf, ("impression0", "impression1"), (impression0, impression1))
-                slot_title = "展示机会：%s \n投放数：%s \n开始播放数：%s \n\
-播放结束数：%s \n点击数：%s \n升位数：%s \n曝光率：%s \n点击率：%s\n"
+                slot_title = "【展示机会】 %s \n【投放数】 %s \n【开始播放数】 %s \n\
+【播放结束数】 %s \n【点击数】 %s \n【升位数】 %s \n【曝光率】 %s \n【点击率】 %s\n"
                 impression_rate0 = 0
                 impression_rate1 = 0
-                click_rate0 = 0
-                click_rate1 = 0
+                click_rate0 = 0.0
+                click_rate1 = 0.0
                 if not display_poss0 == 0:
-                    impression_rate0 = impression0 / display_poss0
+                    impression_rate0 = impression0 / display_poss0 * 100.0
                 if not display_poss1 == 0:
-                    impression_rate1 = impression1 / display_poss1
+                    impression_rate1 = impression1 / display_poss1 * 100.0
                 if not impression0 == 0:
-                    click_rate0 = click0 / impression0
+                    click_rate0 = click0 / impression0 * 100.0
                 if not impression1 == 0:
-                    click_rate1 = click1 / impression1
+                    click_rate1 = click1 / impression1 * 100.0
                 display_sale0 = get_metric_data("display_sale", "logic0", data)
                 display_sale1 = get_metric_data("display_sale", "logic1", data)
                 self.__sum_put(_pf, ("display_sale0", "display_sale1"), \
@@ -289,15 +288,16 @@ class Reportor(object):
                 up0 = get_metric_data("up", "logic0", data)
                 up1 = get_metric_data("up", "logic1", data)
                 self.__sum_put(_pf, ("up0", "up1"), (up0, up1))
-                l0_1 = "logic0总计：%s， logic1总计：%s"
+                l0_1 = "logic0总计： %s， logic1总计： %s"
+                f0_1 = "logic0总计： %.2f%%， logic1总计： %.2f%%"
                 slot_value = (l0_1 % (display_poss0, display_poss1), \
                               l0_1 % (display_sale0, display_sale1), \
                               l0_1 % (impression0, impression1), \
                               l0_1 % (impression_end0, impression_end1), \
                               l0_1 % (click0, click1), \
                               l0_1 % (up0, up1), \
-                              l0_1 % (impression_rate0, impression_rate1), \
-                              l0_1 % (click_rate0, click_rate1))
+                              f0_1 % (impression_rate0, impression_rate1), \
+                              f0_1 % (click_rate0, click_rate1))
                 slot_str = slot_title % slot_value
                 format_title = "播放器ID【%s】，展示广告位：【%s】 " % (board_id, data["slot_name"])
                 result.append((format_title, slot_str))
@@ -311,15 +311,39 @@ class Reportor(object):
 
         seq_display = slot_data["seq_display"]
         format_title = "播放器ID【%s】" % board_id
-        seq_str = ""
+        seq_list = []
+        # 把dict转换成list
         for seq, data in seq_display.iteritems():
+            seq_list.append((seq,data))
+        # 对list排序
+        for i in range(0,len(seq_list)):
+            for j in range(0,len(seq_list) - i):
+                seq1 = seq_list[i][0]
+                if not seq1:
+                    seq1 = 0
+                else:
+                    seq1 = int(seq1)
+                seq2 = seq_list[j][0]
+                if not seq2:
+                    seq2 = 0
+                else:
+                    seq2 = int(seq2)
+                if seq1 > seq2:
+                    tmp = seq_list[i]
+                    seq_list[i] = seq_list[j]
+                    seq_list[j] = tmp
+        # 拼接成字符串
+        seq_str = ""
+        for i in range(0,len(seq_list)):
+            seq = seq_list[i][0]
+            data = seq_list[i][1]
             logic0_data = 0
             if data.has_key("logic0"):
                 logic0_data = data["logic0"]
             logic1_data = 0
             if data.has_key("logic1"):
                 logic1_data = data["logic1"]
-            seq_str += "广告位顺序【%s】实际展示数：logic0总计: %s，logic1总计: %s \n"\
+            seq_str += "【广告位顺序 ~ %s】实际展示数：logic0总计: %s，logic1总计: %s \n"\
                 % (seq, logic0_data, logic1_data)
         return [(format_title, seq_str)]
 
