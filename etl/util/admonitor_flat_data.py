@@ -100,8 +100,8 @@ def pack_data(line):
 
     # gen seq, group_id
     seq = 1
-    cur_group_id = ""
 
+    seq_cache = {}
 
     for i in zip_data:
         new_row = row[:]
@@ -115,14 +115,21 @@ def pack_data(line):
             group_id = get_group_id(int(row[b_id]), int(i[0]), float(row[s_ts]))
             #FIXME: challenge
 
+            seq = seq_cache.get(group_id)
+            if seq and group_id:
+                seq += 1
+                seq_cache.update({group_id: seq})
+            elif group_id:
+                seq = 1
+                seq_cache.update({group_id: 1})
             new_row.append(seq)
             new_row.append(group_id)
-            if group_id != cur_group_id:
-                seq = 1
-            else:
-                seq += 1
+            #if group_id != cur_group_id:
+            #    seq = 1
+            #else:
+            #    seq += 1
 
-            cur_group_id = group_id
+            #cur_group_id = group_id
         except Exception as e:
             seq = ""
             group_id = ""
