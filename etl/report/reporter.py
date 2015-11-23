@@ -316,8 +316,9 @@ class Reportor(object):
         for seq, data in seq_display.iteritems():
             seq_list.append((seq,data))
         # 对list排序
-        for i in range(0,len(seq_list)):
-            for j in range(0,len(seq_list) - i):
+        seq_len = len(seq_list)
+        for i in range(0,seq_len):
+            for j in range(0,seq_len):
                 seq1 = seq_list[i][0]
                 if not seq1:
                     seq1 = 0
@@ -328,13 +329,13 @@ class Reportor(object):
                     seq2 = 0
                 else:
                     seq2 = int(seq2)
-                if seq1 > seq2:
+                if seq1 < seq2:
                     tmp = seq_list[i]
                     seq_list[i] = seq_list[j]
                     seq_list[j] = tmp
         # 拼接成字符串
         seq_str = ""
-        for i in range(0,len(seq_list)):
+        for i in range(0,seq_len):
             seq = seq_list[i][0]
             data = seq_list[i][1]
             logic0_data = 0
