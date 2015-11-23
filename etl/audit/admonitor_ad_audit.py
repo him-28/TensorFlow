@@ -51,6 +51,10 @@ class ADMonitorAuditRobot(object):
         column_total = self.problems["column_total"]
         for k,v in column_total.items():
             content += u"字段: %s, 错误次数: %d\r\n" % (k, v)
+            
+        board_id_errors = self.problems["board_id_error"]
+        if board_id_errors > 0:
+            content += u"字段 board_id与slotid对应关系, 错误次数: %d\r\n" % (board_id_errors)
         sample = self.problems['sample']
 
         content += u"错误抽样样本%d条\r\n" % len(sample)
@@ -81,6 +85,7 @@ class AdMonitor_audit:
         self.slotid_index = AUDIT_HEADER.index("slot_id")
         self.boardid_index = AUDIT_HEADER.index("board_id")
         self.s_ts_index = AUDIT_HEADER.index("server_timestamp")
+        self.board_errors = 0
         
     def audit(self):
         start_time = time.time()
@@ -136,7 +141,7 @@ class AdMonitor_audit:
             sample.append(self.problems[i])
             
         filesize = self.getfilesize()
-        total_problems = {'column_total': self.columns_errors,'total': self.error_rows, 'sample': sample,'filename':self.filename,'filesize':filesize}
+        total_problems = {'column_total': self.columns_errors,'board_id_error':self.board_errors,'total': self.error_rows, 'sample': sample,'filename':self.filename,'filesize':filesize}
         robot = ADMonitorAuditRobot(self.count_rows, total_problems, self.spent)
         robot.report()
             
@@ -146,13 +151,15 @@ class AdMonitor_audit:
             result = self.validate_field(index,row,field)
             if result > flag:
                 flag = result
-            result = self.validate_slot_id(row)
-            if result > flag:
-                flag = result
+        result = self.validate_slot_id(row,index)
+        if result > flag:
+            flag = result
         if flag > 99:
             self.error_rows = self.error_rows + 1
         return  flag
-    def validate_slot_id(self,row):
+    def validate_slot_id(self,row,index):
+        if not row[self.slotid_index]:
+            return 0
         slot_id = int(row[self.slotid_index])
         board_id = int(row[self.boardid_index])
         s_timestamp= float(row[self.s_ts_index])
@@ -163,6 +170,9 @@ class AdMonitor_audit:
                 if v['playerinfo'].has_key(board_id):
                     if v['playerinfo'][board_id].has_key(slot_id):
                         return 0
+        problem = "行%s,列：%s 值：%s 错误信息：%s"%(str(index),"board_id",str(board_id),"not matched slotid:%s"%row[self.slotid_index])
+        self.problems.append(problem)
+        self.board_errors = self.board_errors + 1
         return 102
     def validate_field(self,index,row,field_name):
         _index = self.header.index(field_name)
