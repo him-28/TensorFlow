@@ -8,7 +8,8 @@ import datetime
 import time
 import yaml
 
-import psycopg2 as psy
+#import psycopg2 as psy
+import MySQLdb as psy
 
 from etl.util.pgutil import DBUtils
 from etl.conf.settings import LOGGER
@@ -43,21 +44,21 @@ def getplayerInfo():
     endtime = datetime.datetime.strftime(ed, "%Y-%m-%d %H:%M")
     starttime = getStartTime()
     
-    _getsplittime_sql = " select effect_s from \"%s\" where effect_s <='%s' and effect_e >= '%s' GROUP BY effect_s ORDER by effect_s asc" % \
-                (PLAYER_TABLE_NAME, endtime, starttime,)
+    _getsplittime_sql = " select unix_timestamp(effect_s) from %s where effect_s <='%s' and effect_e >= '%s' GROUP BY effect_s ORDER by effect_s asc" % \
+                (PLAYER_TABLE_NAME, endtime, starttime)
     
     try:
         # splitrows = DBUtils.fetchall(_getsplittime_sql)
         _conn = None
         _cur = None
         try:
-            _conn = psy.connect(database=config['database'], user=config['user'], \
-                password=config['password'], host=config['host'], \
+            _conn = psy.connect(db=config['database'], user=config['user'], \
+                passwd=config['password'], host=config['host'], \
                 port=config['port'])
             _cur = _conn.cursor()
-            _cur.execute(_getsplittime_sql)
+            result  = _cur.execute(_getsplittime_sql)
             splitrows = _cur.fetchall()
-        except psy.DatabaseError, e:
+        except Exception, e:
             LOGGER.error('pg bulk insert error: %s' % e)
             if _conn:
                 _conn.rollback()
@@ -154,6 +155,11 @@ def _getSplitInfo(rows, endd):
     return splitInfo
         
 def _getSplitPlayerInfo(starttime, endtime):
+    starttime = datetime.datetime.fromtimestamp(starttime)
+    try:
+        endtime = datetime.datetime.fromtimestamp(endtime)
+    except:
+        endtime = endtime
     starttimetuple = starttime.timetuple()
     endtimetuple = endtime.timetuple()
     l = time.mktime(starttimetuple)
@@ -168,18 +174,19 @@ def _getSplitPlayerInfo(starttime, endtime):
     starttimelong = time.mktime(starttimetuple)
     endtimelong = time.mktime(endtimetuple)
     
-    _playersql = " select player_id,ad_id,node_id,name,priority from \"%s\" as s where s.status='1' and \
-             s.effect_s <= '%s' and  s.effect_e >= '%s'  order by player_id,node_id,priority asc" % \
+    _playersql = " select p.code,ad_id,node_id,s.name,priority from %s as s \
+                join player p on s.player_id=p.id and p.online=1 and s.status='1' and \
+             s.effect_s <= '%s' and  s.effect_e >= '%s'  order by s.player_id,node_id,priority asc" % \
              (PLAYER_TABLE_NAME, starttimestr, endtimestr)       
 
     try:
-        _conn = psy.connect(database=config['database'], user=config['user'], \
-            password=config['password'], host=config['host'], \
+        _conn = psy.connect(db=config['database'], user=config['user'], \
+            passwd=config['password'], host=config['host'], \
             port=config['port'])
         _cur = _conn.cursor()
         _cur.execute(_playersql)
         rows = _cur.fetchall()
-    except psy.DatabaseError, e:
+    except Exception, e:
         LOGGER.error('pg bulk insert error: %s' % e)
         if _conn:
             _conn.rollback()
