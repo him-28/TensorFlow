@@ -1,4 +1,4 @@
-current_env: release
+current_env: beta
 
 beta: #测试环境
     monitor: 
@@ -22,7 +22,7 @@ beta: #测试环境
         chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
         count_select: "{ad_event_type} == 'e'  and {tag} < 100"
         up_select: "{ad_event_type} == 'e' and {tag} < 100 "
-        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 "
+        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 and {seq} != '-1'"
         start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {tag} < 100 "
         end_select: "{ad_event_type} == 'p' and {play_event} == 'e'  and {tag} < 100 "
         click_select: "{ad_event_type} == 'p' and {play_event} == 'c' and {tag} < 100 "
@@ -112,7 +112,8 @@ beta: #测试环境
                         filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','==','0'],
-                            ['tag','<',100]
+                            ['tag','<',100],
+                            ['seq','!=','-1']
                         ],
                         output_name: 'total'
                     }
@@ -183,7 +184,7 @@ release: #生产环境
         chance_select: "{ad_event_type} == 'e' and ({request_res} == '0' or {request_res}== '1') and  {tag} < 100 "
         count_select: "{ad_event_type} == 'e'  and {tag} < 100"
         up_select: "{ad_event_type} == 'e' and {tag} < 100 "
-        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 "
+        seq_select: "{ad_event_type} == 'e' and {request_res} == '0' and {tag} < 100 and {seq} != '-1'"
         start_select: "{ad_event_type} == 'p' and {play_event} == 's' and {tag} < 100 "
         end_select: "{ad_event_type} == 'p' and {play_event} == 'e'  and {tag} < 100 "
         click_select: "{ad_event_type} == 'p' and {play_event} == 'c' and {tag} < 100 "
@@ -273,7 +274,8 @@ release: #生产环境
                         filter: [
                             ['ad_event_type','==','e'],
                             ['request_res','==','0'],
-                            ['tag','<',100]
+                            ['tag','<',100],
+                            ['seq','!=','-1']
                         ],
                         output_name: 'total'
                     }
