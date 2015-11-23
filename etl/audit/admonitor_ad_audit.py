@@ -157,12 +157,17 @@ class AdMonitor_audit:
         if flag > 99:
             self.error_rows = self.error_rows + 1
         return  flag
+
     def validate_slot_id(self,row,index):
         if not row[self.slotid_index]:
             return 0
-        slot_id = int(row[self.slotid_index])
-        board_id = int(row[self.boardid_index])
-        s_timestamp= float(row[self.s_ts_index])
+        try:
+            slot_id = int(row[self.slotid_index])
+            board_id = int(row[self.boardid_index])
+            s_timestamp= float(row[self.s_ts_index])
+        except:
+            return 101
+
         for v in self.player_info.values():
             start = v.get('starttime')
             end = v.get('endtime')
@@ -170,7 +175,7 @@ class AdMonitor_audit:
                 if v['playerinfo'].has_key(board_id):
                     if v['playerinfo'][board_id].has_key(slot_id):
                         return 0
-        problem = "行%s,列：%s 值：%s 错误信息：%s"%(str(index),"board_id",str(board_id),"not matched slotid:%s"%row[self.slotid_index])
+        problem = "行%s,列：%s 值：%s 错误信息：%s"%(str(index),"board_id",str(board_id),"not matched slotid:%s" % slot_id)
         self.problems.append(problem)
         self.board_errors = self.board_errors + 1
         return 102
