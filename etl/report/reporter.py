@@ -206,13 +206,13 @@ class Reportor(object):
         click_rate0 = 0.0
         click_rate1 = 0.0
         if not display_poss0 == 0:
-            impression_rate0 = impression0 / display_poss0 * 100.0
+            impression_rate0 = 100.0 * impression0 / display_poss0
         if not display_poss1 == 0:
-            impression_rate1 = impression1 / display_poss1 * 100.0
+            impression_rate1 = 100.0 * impression1 / display_poss1
         if not impression0 == 0:
-            click_rate0 = click0 / impression0 * 100.0
+            click_rate0 = 100.0 * click0 / impression0
         if not impression1 == 0:
-            click_rate1 = click1 / impression1 * 100.0
+            click_rate1 = 100.0 * click1 / impression1
         slot_title = "【展示机会】：  %s \n【投放数】：  %s \n【开始播放数】：  %s \n\
 【播放结束数】： %s \n【点击数】： %s \n【升位数】： %s \n【曝光率】： %s \n【点击率】： %s \n"
         l0_1 = "logic0总计： %s ，logic1总计：  %s"
@@ -233,11 +233,6 @@ class Reportor(object):
                 (str(self.params["logic0_sptime"]), str(self.params["logic1_sptime"]))
         elif "day" == self.params["type"]:
             sptime = self.params["sptime"]
-            #fileinfo0 = self.params["fileinfo0"]
-            #fileinfo1 = self.params["fileinfo1"]
-            #for key, info in fileinfo0.iteritems():
-            #    fnssp += "文件名{%s,%s}, 大小{%s,%s} \r\n" % \
-            #        (info[1], fileinfo1[key][1], info[0], fileinfo1[key][0])
             fnssp = "● 耗时：%s秒 \r\n" % sptime
         return fnssp + "【汇总报告】", slot_str
 
@@ -270,13 +265,13 @@ class Reportor(object):
                 click_rate0 = 0.0
                 click_rate1 = 0.0
                 if not display_poss0 == 0:
-                    impression_rate0 = impression0 / display_poss0 * 100.0
+                    impression_rate0 = 100.0 * impression0 / display_poss0
                 if not display_poss1 == 0:
-                    impression_rate1 = impression1 / display_poss1 * 100.0
+                    impression_rate1 = 100.0 * impression1 / display_poss1
                 if not impression0 == 0:
-                    click_rate0 = click0 / impression0 * 100.0
+                    click_rate0 = 100.0 * click0 / impression0
                 if not impression1 == 0:
-                    click_rate1 = click1 / impression1 * 100.0
+                    click_rate1 = 100.0 * click1 / impression1
                 display_sale0 = get_metric_data("display_sale", "logic0", data)
                 display_sale1 = get_metric_data("display_sale", "logic1", data)
                 self.__sum_put(_pf, ("display_sale0", "display_sale1"), \
