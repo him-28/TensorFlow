@@ -157,7 +157,8 @@ beta: #测试环境
                         filter: [
                             ['ad_event_type','==','e'], 
                             ['request_res','in',['0','1']],
-                            ['tag','<',100]
+                            ['tag','<',100],
+                            ['seq','!=','-1']
                         ],
                         output_name: 'total'
                     }
@@ -319,7 +320,8 @@ release: #生产环境
                         filter: [
                             ['ad_event_type','==','e'], 
                             ['request_res','in',['0','1']],
-                            ['tag','<',100]
+                            ['tag','<',100],
+                            ['seq','!=','-1']
                         ],
                         output_name: 'total'
                     }

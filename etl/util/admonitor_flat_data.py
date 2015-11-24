@@ -46,6 +46,7 @@ def flat_data_admonitor(input_path, output_path):
             lines = f.readlines(100000)
             if not lines:
                 write_buffer(buffers, output_path)
+                buffers = []
                 break
             for line in lines:
                 try:
@@ -57,6 +58,7 @@ def flat_data_admonitor(input_path, output_path):
                         buffers.append(HEADER)
                     if len(buffers) > limit:
                         write_buffer(buffers, output_path)
+                        buffers = []
                     else:
                         new_lines = pack_data(line.strip('\r\n'))
                         if new_lines:
