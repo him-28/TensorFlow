@@ -122,10 +122,10 @@ def get_metric_data(metric, logic, data):
         if data[metric].has_key(logic):
             return int(data[metric][logic])
         else:
-            LOG.warn("can not find logic:%s in metric:%s,the data is:%s", \
+            LOG.debug("can not find logic:%s in metric:%s,the data is:%s", \
                       logic, metric, data)
     else:
-        LOG.warn("can not find metric:%s,the data is:%s", metric, data)
+        LOG.debug("can not find metric:%s,the data is:%s", metric, data)
     return 0
 
 class Reportor(object):
@@ -179,9 +179,9 @@ class Reportor(object):
                 msg += title + "\n"
                 msg += text + "\n"
             if self.params['type'] == 'day':
-                time_title = "【%s】天数据统计完成" % self.start_time
+                time_title = "【%s】【%s】天数据统计完成" % (_pf,self.start_time)
             else:
-                time_title = "【%s】小时数据统计完成" % self.start_time
+                time_title = "【%s】【%s】小时数据统计完成" % (_pf,self.start_time)
             LOG.info("report text,title: %s .", time_title)
             bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
                                 channel=REPORT_CHANNEL , at_text=msg)

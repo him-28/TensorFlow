@@ -14,7 +14,7 @@ from etl.util.datautil import merge_file, transform_ngx_log
 from etl.audit.admonitor_audit import main
 from etl.util.load_data import loadInDb_by_minute, loadInDb_by_hour, loadInDb_by_day
 from etl.logic2.calc import calc_ad_monitor
-from etl.logic1.ad_transform_pandas import AdTransformPandas
+from etl.logic1.ad_transform_pandas import AdTransformPandas,buddha_bless_me
 from etl.logic0.ad_etl_transform import calc_etl
 
 from etl.audit import admonitor_ad_audit
@@ -410,5 +410,6 @@ if __name__ == '__main__':
     '''
     args: python app.py ad_monitor m|h|d
     '''
+    buddha_bless_me()
     run_cli(sys.argv)
 

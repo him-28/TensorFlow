@@ -3,8 +3,6 @@
 使用Pandas处理CSV文件数据
 '''
 import os
-import sys
-import logging
 import datetime as dt
 
 import numpy as np

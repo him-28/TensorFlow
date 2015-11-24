@@ -126,12 +126,6 @@ def pack_data(line):
                 seq_cache.update({group_id: 1})
             new_row.append(seq)
             new_row.append(group_id)
-            #if group_id != cur_group_id:
-            #    seq = 1
-            #else:
-            #    seq += 1
-
-            #cur_group_id = group_id
         except Exception as e:
             seq = ""
             group_id = ""
@@ -152,12 +146,17 @@ def get_group_id(board_id, slotid, s_timestamp):
             start = v.get('starttime')
             end = v.get('endtime')
             if s_timestamp > start and s_timestamp < end:
-                group_id = v['playerinfo'][board_id][slotid][0]
-                break
+                if v['playerinfo'].has_key(board_id) \
+                    and v['playerinfo'][board_id].has_key(slotid)\
+                    and len(v['playerinfo'][board_id]) > 0:
+                    group_id = v['playerinfo'][board_id][slotid][0]
+                    break
     except Exception as e:
         LOGGER.error("groupid not found, board_id: %d, slotid:%d, s_timestamp:%f" % \
                 (board_id, slotid, s_timestamp))
-
+    if not group_id:
+        LOGGER.debug("groupid not found, board_id: %d, slotid:%d, s_timestamp:%f" % \
+                (board_id, slotid, s_timestamp))
     return group_id
     
 def get_time_range(allplayerinfo):
