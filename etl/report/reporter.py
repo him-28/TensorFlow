@@ -395,7 +395,7 @@ class DataReader(object):
     '''读取计算好的结果'''
     def __init__(self):
         self.data_struct = {}
-        self.dtype = split_header(CNF.get("header"), CNF.get("header_type"))[1]
+        self.dtype = split_header(CNF.get("header_type"))
         self.sep = CNF.get("output_column_sep")
         self.__player_id_cache = None
         self.__slot_id_cache = {}
