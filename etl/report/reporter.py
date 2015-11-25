@@ -207,8 +207,8 @@ class Reportor(object):
         click_rate1 = 0.0
 #         if not display_poss0 == 0:
 #             impression_rate0 = 100.0 * impression0 / display_poss0
-        if not display_poss1 == 0:
-            impression_rate1 = 100.0 * impression1 / display_poss1
+        if not display_sale1 == 0:
+            impression_rate1 = 100.0 * impression1 / display_sale1
 #         if not impression0 == 0:
 #             click_rate0 = 100.0 * click0 / impression0
         if not impression1 == 0:
@@ -287,8 +287,7 @@ class Reportor(object):
                 click_rate1 = 0.0
 #                 if not display_poss0 == 0:
 #                     impression_rate0 = 100.0 * impression0 / display_poss0
-                if not display_poss1 == 0:
-                    impression_rate1 = 100.0 * impression1 / display_poss1
+                
 #                 if not impression0 == 0:
 #                     click_rate0 = 100.0 * click0 / impression0
                 if not impression1 == 0:
@@ -297,6 +296,9 @@ class Reportor(object):
                 display_sale1 = get_metric_data("display_sale", "logic1", data)
 #                 self.__sum_put(_pf, ("display_sale0", "display_sale1"), \
 #                                 (display_sale0, display_sale1))
+                if not display_sale1 == 0:
+                    impression_rate1 = 100.0 * impression1 / display_sale1
+                    
                 self.__sum_put(_pf, "display_sale1", \
                                 display_sale1)
 #                 impression_end0 = get_metric_data("impression_end", "logic0", data)
