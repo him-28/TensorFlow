@@ -349,7 +349,7 @@ class AdMonitorRunner(object):
 
             # logic0 code
             start = time.clock()
-            merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
+#             merge_file(paths['logic0_src_paths'], paths['logic0_output_paths'])
 
             # logic1 code
             merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
@@ -365,7 +365,7 @@ class AdMonitorRunner(object):
 
             params = {
                       "type":"day",
-                      "fileinfo0":getfilesinfo(paths['logic0_output_paths']),
+#                       "fileinfo0":getfilesinfo(paths['logic0_output_paths']),
                       "fileinfo1":getfilesinfo(paths['logic1_output_paths']),
                       "sptime":sptime,
                       "start_time":now.strftime("%Y-%m-%d")}
