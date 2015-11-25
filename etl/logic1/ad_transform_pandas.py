@@ -12,11 +12,10 @@ from etl.conf.settings import PdLogger as LOG
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 from etl.util.playerutil import getplayerInfo
 
-def split_header(names, header):
+def split_header(header):
     '''转换配置里的数据类型、列名'''
     target_dtype = {}
-    for name in names:
-        the_type = header[name]
+    for name,the_type in header.iteritems():
         if the_type == 'int':
             target_dtype[name] = int
         elif the_type == 'string':
@@ -25,7 +24,7 @@ def split_header(names, header):
             target_dtype[name] = str
         elif the_type == 'long':
             target_dtype[name] = np.int64
-    return names, target_dtype
+    return target_dtype
 
 
 def filter_chunk(dataframe, key, opt, val):
@@ -118,7 +117,6 @@ class AdTransformPandas(object):
             if is_load_success:
                 merge_result = self.merge_section()
                 self.__save_result_file(merge_result)
-                self.__insert(merge_result)
             else:
                 LOG.error("load file failed,the file may not exists or have none data,exit.")
                 return -1
@@ -138,11 +136,11 @@ class AdTransformPandas(object):
     def __configure(self, trans_type, output_file_path, input_path, input_filename):
         '''配置参数'''
         self.put(("input_file_path", "output_file_path"), \
-                    (input_path + input_filename, output_file_path))
+                    (os.path.join(input_path, input_filename), output_file_path))
         self.put("input_column_sep", CNF.get("input_column_sep"))
         self.put("output_column_sep", CNF.get("output_column_sep"))
-        names, dtype = split_header(CNF.get("header"), CNF.get("header_type"))
-        self.put(("names", "dtype"), (names, dtype))
+        self.put("names",CNF.get("header"))
+        self.put("dtype", split_header(CNF.get("header_type")))
         self.put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
         self.put("tmp_file_path", output_file_path + ".tmp")
         self.put("trans_type", trans_type)
@@ -322,7 +320,7 @@ class AdTransformPandas(object):
     def __merge_dataframe_group_count(self, grouped, dataframe):
         """as u c: merge dataframe group count"""
         if grouped is None:
-            if not dataframe.empty:
+            if not dataframe.empty and len(dataframe) > 0:
                 grouped = dataframe.groupby(self.get('group_item')).size()
         else:
             grouped = pd.concat([grouped, dataframe.\
@@ -338,9 +336,10 @@ class AdTransformPandas(object):
             row = row_data[1]
             board_id = row["board_id"]
             timestamp = float(row["server_timestamp"])
+            group_id = row["group_id"]
             seq = row["seq"]  # 播放顺序
             # 获取实际在按播放顺序的广告位ID
-            _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq))
+            _compare_slot_id_list.append(self.__get_store_slotid_by_seq(board_id, timestamp, seq, group_id))
         chunk["query-slot_id"] = chunk['slot_id']
         chunk['slot_id'] = _compare_slot_id_list
         chunk = chunk[chunk['query-slot_id'] != chunk['slot_id']]
@@ -402,7 +401,7 @@ class AdTransformPandas(object):
                     return playerinfo[int(board_id)].keys()
         return None
 
-    def __get_store_slotid_by_seq(self, board_id, timestamp, seq):
+    def __get_store_slotid_by_seq(self, board_id, timestamp, seq, group_id):
         '''获取一个广告位下的groupid、name和group中的排序'''
         player_infos = self.__get_player_infos()
 
@@ -416,8 +415,8 @@ class AdTransformPandas(object):
                     for slot_id, details in slot_info.iteritems():
                         if seq is None or 'nan' == str(seq):
                             return '-1'
-                        if details[2] == int(seq):
-                            return slot_id
+                        if details[0] == int(group_id) and details[2] == int(seq):
+                            return str(slot_id)
         LOG.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
                   board_id, timestamp, seq)
         return '-1'
@@ -433,10 +432,6 @@ class AdTransformPandas(object):
         LOG.info("save result to csv file:" + self.get('output_file_path'))
         merge_result.to_csv(self.get('output_file_path'), sep=\
                 self.get('output_column_sep'), header=True)
-
-    def __insert(self, merge_result):
-        '''处理数据插入数据库'''
-        pass
 
     def put(self, key, value):
         '''设置self.params'''

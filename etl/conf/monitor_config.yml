@@ -90,7 +90,6 @@ beta: #测试环境
                     query-slot-count: {
                         filter: [
                             ['ad_event_type','==','e'],
-                            ['request_res','in',['0','1']],
                             ['tag','<',100]
                         ],
                         output_name: 'total'
@@ -156,7 +155,6 @@ beta: #测试环境
                     query-slot-compare: {
                         filter: [
                             ['ad_event_type','==','e'], 
-                            ['request_res','in',['0','1']],
                             ['tag','<',100],
                             ['seq','!=','-1']
                         ],
@@ -253,7 +251,6 @@ release: #生产环境
                     query-slot-count: {
                         filter: [
                             ['ad_event_type','==','e'],
-                            ['request_res','in',['0','1']],
                             ['tag','<',100]
                         ],
                         output_name: 'total'
@@ -319,7 +316,6 @@ release: #生产环境
                     query-slot-compare: {
                         filter: [
                             ['ad_event_type','==','e'], 
-                            ['request_res','in',['0','1']],
                             ['tag','<',100],
                             ['seq','!=','-1']
                         ],
