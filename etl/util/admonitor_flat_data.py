@@ -131,7 +131,7 @@ def pack_data(line):
             group_id = ""
             new_row.append(seq)
             new_row.append(group_id)
-            LOGGER.error("%s" % str(e))
+            LOGGER.debug("%s" % str(e))
         new_data.append(new_row)
     return new_data
 
