@@ -75,7 +75,7 @@ def merge_file(input_paths, output_files):
     df2 = None
     df3 = None
 
-    dtype = split_header(CNF.get("header"), CNF.get("header_type"))[1]
+    dtype = split_header(CNF.get("header_type"))
 
     for metric, input_list in input_paths.iteritems():
 
