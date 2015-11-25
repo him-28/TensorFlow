@@ -300,13 +300,13 @@ class AdMonitorRunner(object):
             # 计算
             start = time.clock()
             # logic0
-            calc_etl(
-                    paths['ad_src_path'],
-                    paths['ad_src_filename'],
-                    paths['logic0_output_paths'])
+#             calc_etl(
+#                     paths['ad_src_path'],
+#                     paths['ad_src_filename'],
+#                     paths['logic0_output_paths'])
             end = time.clock()
             logic0_sptime = '%0.2f' % (end - start)
-            LOGGER.info("logic0 calc spent: %s s" , logic0_sptime)
+#             LOGGER.info("logic0 calc spent: %s s" , logic0_sptime)
 
             start = time.clock()
             # logic1 code

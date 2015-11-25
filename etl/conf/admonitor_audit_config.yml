@@ -85,6 +85,7 @@ field_rule:
             vtype: int 
         scene2:
             condition: 
+                ad_event_type: ['e']
             required: False
             reg: 
             range:
