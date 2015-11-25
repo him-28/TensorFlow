@@ -217,7 +217,7 @@ class Reportor(object):
 # 【播放结束数】： %s \n【点击数】： %s \n【升位数】： %s \n【曝光率】： %s \n【点击率】： %s \n"
 #         slot_title = "【投放数】：  %s \n【开始播放数】：  %s \n\
 # 【播放结束数】： %s \n【点击数】： %s \n【升位数】： %s \n【曝光率】： %s \n【点击率】： %s \n"
-        slot_title = " %s , %s , %s , %s , %s , %s , %s"
+        slot_title = " %s , %s , %s , %s , %s , %s , %s \n"
 #         l0_1 = "logic0总计： %s ，logic1总计：  %s"
 #         f0_1 = "logic0总计： %.2f%% ，logic1总计：  %.2f%%"
         l0_1 = " %s"
@@ -247,9 +247,11 @@ class Reportor(object):
 #                 (str(self.params["logic0_sptime"]), str(self.params["logic1_sptime"]))
             fnssp += "● 统计 耗时 %s秒 \r\n" % \
                 ( str(self.params["logic1_sptime"]))
+            fnssp += "● 数据顺序：投放数，开始播放数，结束播放数，点击，升位，投放成功率，点击率\r\n"
         elif "day" == self.params["type"]:
             sptime = self.params["sptime"]
             fnssp = "● 耗时：%s秒 \r\n" % sptime
+            fnssp += "● 数据顺序：投放数，开始播放数，结束播放数，点击，升位，投放成功率，点击率\r\n"
         return fnssp + "【汇总报告】", slot_str
 
     def __statistics(self, _pf, board_id, slot_data):
@@ -333,7 +335,8 @@ class Reportor(object):
                               f0_1 % ( impression_rate1), \
                               f0_1 % ( click_rate1))
                 slot_str = slot_title % slot_value
-                format_title = "播放器ID【%s】，展示广告位：【%s】 " % (board_id, data["slot_name"])
+#                 format_title = "播放器ID【%s】，展示广告位：【%s】 " % (board_id, data["slot_name"])
+                format_title = "%s,%s " % (board_id, data["slot_name"])
                 result.append((format_title, slot_str))
         return result
 
@@ -341,11 +344,12 @@ class Reportor(object):
         '''statistics'''
 
         if (not slot_data.has_key("seq_display")) or len(slot_data["seq_display"]) == 0:
-            return [("播放器ID【%s】" % board_id, "没有顺序位展示数据")]
+            return [("播放器ID【%s】" % board_id, "没有顺序位展示数据\n")]
 
         seq_display = slot_data["seq_display"]
 #         format_title = "播放器ID【%s】" % board_id
-        format_title = "播放器ID【%s】,广告顺序位展示数" % board_id
+#         format_title = "播放器ID【%s】,广告顺序位展示数" % board_id
+        format_title = "%s,广告顺序位展示数" % board_id
         seq_list = []
         # 把dict转换成list
         for seq, data in seq_display.iteritems():
@@ -384,7 +388,7 @@ class Reportor(object):
             seq_str += " %s ,"\
                 % (logic1_data)
             
-        return [(format_title, seq_str)]
+        return [(format_title, seq_str+"\n")]
 
     def __get(self, _pf , total_key):
         '''get'''
