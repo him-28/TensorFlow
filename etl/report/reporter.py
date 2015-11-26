@@ -18,7 +18,22 @@ __init__ method need 3 parameters witch format as bellow example:
     pf1:
         {
         border_id1:
-            {
+            {    
+                "slot_order_display": #广告位按次序的开始播放数，结束数，点击数
+                    {
+                        310: #slotid
+                          {
+                            1:
+                                {
+                                    "click":23,
+                                    "impression_end":456,
+                                    "impression":565
+                                }
+                            2:{
+                                ...
+                            }
+                          }
+                    }
                 "slot_statistics": # 展示广告位统计。广告位顺序按seq升序排列
                     [
                         {
@@ -90,7 +105,7 @@ import datetime as dt
 from etl.conf.settings import LOGGER as LOG
 from etl.conf.settings import MONITOR_CONFIGS
 from etl.util import bearychat as bc
-from etl.util.playerutil import getplayerInfo
+from etl.util.playerutil import getplayerInfo,getAllGroupName,getAllGroupId
 
 REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
 
@@ -152,6 +167,32 @@ class Reportor(object):
                         "impression_end0", "impression_end1", \
                         "up0", "up1"), \
                        (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+        self.__group_name_info = {}
+        self.__group_slot_info = {}
+        self.groupinfo = getAllGroupId()
+    
+    def __get_group_name(self,groupid):
+        if self.__group_name_info.has_key(groupid):
+            return self.__group_name_info[groupid]
+        else:
+            if not self.__group_name_info:
+                self.__group_name_info = getAllGroupName()
+                if self.__group_name_info is None:
+                    LOG.error("no group info,plz check the db connection")
+                    return str(groupid)
+                if self.__group_name_info.has_key(groupid):
+                    return self.__group_name_info[groupid] 
+            
+        return str(groupid)
+    def __get_group_slot_info(self,groupid):
+        if not self.groupinfo:
+            LOG.error("get group info from db error ")
+            return
+        slots = []
+        for slotid,gid in self.groupinfo.items():
+            if groupid == gid[0]: 
+                slots.append([slotid,gid[1]])
+        return slots
 
     def report_text(self):
         '''Report ETL result data in text format
@@ -342,54 +383,106 @@ class Reportor(object):
 
     def __seqs(self, board_id, slot_data):
         '''statistics'''
-
+#         前贴片位序报告：
+#            1,<投放数>,<开始播放数>,<播放结束数>,<升位数>,<点击数>,<投放成功率>,<点击率>
+#            2,<投放数>,<开始播放数>,<播放结束数>,<升位数>,<点击数>,<投放成功率>,<点击率>
+#            3,<投放数>,<开始播放数>,<播放结束数>,<升位数>,<点击数>,<投放成功率>,<点击率>
         if (not slot_data.has_key("seq_display")) or len(slot_data["seq_display"]) == 0:
             return [("播放器ID【%s】" % board_id, "没有顺序位展示数据\n")]
 
         seq_display = slot_data["seq_display"]
 #         format_title = "播放器ID【%s】" % board_id
 #         format_title = "播放器ID【%s】,广告顺序位展示数" % board_id
-        format_title = "%s,广告顺序位展示数" % board_id
-        seq_list = []
-        # 把dict转换成list
-        for seq, data in seq_display.iteritems():
-            seq_list.append((seq,data))
+        result_report = []
+        for groupid,seqsdata in seq_display.items():
+            #begin for groupid,seqsdata
+            group_name = self.__get_group_name(groupid)
+            format_title = "%s,%s位序报告" % (board_id,group_name)
+            seq_list = []
+            # 把dict转换成list
+            for seq, data in seqsdata.iteritems():
+                seq_list.append((seq,data))
+#         seq_list = []
+#         # 把dict转换成list
+#         for seq, data in seq_display.iteritems():
+#             seq_list.append((seq,data))
         # 对list排序
-        seq_len = len(seq_list)
-        for i in range(0,seq_len):
-            for j in range(0,seq_len):
-                seq1 = seq_list[i][0]
-                if not seq1:
-                    seq1 = 0
-                else:
-                    seq1 = int(seq1)
-                seq2 = seq_list[j][0]
-                if not seq2:
-                    seq2 = 0
-                else:
-                    seq2 = int(seq2)
-                if seq1 < seq2:
-                    tmp = seq_list[i]
-                    seq_list[i] = seq_list[j]
-                    seq_list[j] = tmp
-        # 拼接成字符串
-        seq_str = ""
-        for i in range(0,seq_len):
-            seq = seq_list[i][0]
-            data = seq_list[i][1]
-#             logic0_data = 0
-#             if data.has_key("logic0"):
-#                 logic0_data = data["logic0"]
-            logic1_data = 0
-            if data.has_key("logic1"):
-                logic1_data = data["logic1"]
-#             seq_str += "【广告位顺序 ~ %s】实际展示数：logic0总计: %s，logic1总计: %s \n"\
-#                 % (seq, logic0_data, logic1_data)
-            seq_str += " %s ,"\
-                % (logic1_data)
-            
-        return [(format_title, seq_str+"\n")]
+            seq_len = len(seq_list)
+            for i in range(0,seq_len):
+                for j in range(0,seq_len):
+                    seq1 = seq_list[i][0]
+                    if not seq1:
+                        seq1 = 0
+                    else:
+                        seq1 = int(seq1)
+                    seq2 = seq_list[j][0]
+                    if not seq2:
+                        seq2 = 0
+                    else:
+                        seq2 = int(seq2)
+                    if seq1 < seq2:
+                        tmp = seq_list[i]
+                        seq_list[i] = seq_list[j]
+                        seq_list[j] = tmp
+            # 拼接成字符串
+            seq_str = ""
+            for i in range(0,seq_len):
+                seq = seq_list[i][0]
+                data = seq_list[i][1]
+    #             logic0_data = 0
+    #             if data.has_key("logic0"):
+    #                 logic0_data = data["logic0"]
+                logic1_data = 0
+                if data.has_key("logic1"):
+                    logic1_data = data["logic1"]
+    #             seq_str += "【广告位顺序 ~ %s】实际展示数：logic0总计: %s，logic1总计: %s \n"\
+    #                 % (seq, logic0_data, logic1_data)
+                imps_start,imps_end,click,up = self.__get_imps_s_e_click_up_data(groupid,seq,slot_data)
+#                 seq_str += " %s ,"\
+#                     % (logic1_data)
+                # 计算投放成功率，点击率
+                if not logic1_data == 0:
+                    imps_rate1 = 100.0 * imps_start / logic1_data
+                if not imps_start == 0:
+                    click_rate1 = 100.0 * click / imps_start
+                seq_str += "%s,%s,%s,%s,%s,%s,%.2f%%,%.2f%%\n"%(seq,logic1_data,imps_start,imps_end,click,up,imps_rate1,click_rate1)
+            #end for groupid,seqsdata
+            result_report.append((format_title, seq_str+"\n"))
+#         return [(format_title, seq_str+"\n")]
+        return result_report
 
+    def __get_imps_s_e_click_up_data(self,groupid,seq,slot_data):
+        imps_start,imps_end,click,up=0,0,0,0
+        if not groupid or not seq or not slot_data:
+            return imps_start,imps_end,click,up
+        group_slots = self.__get_group_slot_info(groupid)
+        if group_slots:
+            for slotids in group_slots:
+                slotid = slotids[0]
+                sseq = slotids[1]
+                if slot_data.has_key("slot_order_display"):
+                    if slot_data["slot_order_display"].has_key(slotid):
+                        if slot_data["slot_order_display"][slotid].has_key(seq):
+                            if slot_data["slot_order_display"][slotid][seq].has_key("impression"):
+                                imps_start += slot_data["slot_order_display"][slotid][seq]["impression"]
+                            if slot_data["slot_order_display"][slotid][seq].has_key("impression_end"):
+                                imps_end += slot_data["slot_order_display"][slotid][seq]["impression_end"]
+                            if slot_data["slot_order_display"][slotid][seq].has_key("click"):
+                                click += slot_data["slot_order_display"][slotid][seq]["click"]
+                    else:
+                        pass
+                if seq == sseq:
+                    #得到这个广告位的升位数
+                    if slot_data.has_key("slot_statistics"):
+                        for slot_info in slot_data["slot_statistics"]:
+                            if slot_info.has_key("slot_id") and slot_info["slot_id"] == int(slotid) \
+                                and slot_info.has_key("up") and slot_info["up"].has_key("logic1"):
+                                up = slot_info["up"]["logic1"]
+            return imps_start,imps_end,click,up
+                                
+        else:
+            return imps_start,imps_end,click,up
+        
     def __get(self, _pf , total_key):
         '''get'''
         return self.total[_pf][total_key]
@@ -467,8 +560,11 @@ class DataReader(object):
                     self.__handle_seq_data(dataf, "logic1")
             else:
                 dataf = self.get_data_frame(path)
+                datasf = self.get_order_metric_data_frame(key,path)
                 if not dataf is None:
                     self.__handle_metric_data(key, dataf, "logic1")
+                if not datasf is None:
+                    self.__handle_order_metric_data(key,datasf,"logic1")
         return self.data_struct
 
     def get_data_frame(self, data_file_path):
@@ -480,6 +576,16 @@ class DataReader(object):
             LOG.info("got empty dataframe!")
             return None
         return dataf.groupby(['board_id', 'pf', 'slot_id']).sum()
+    
+    def get_order_metric_data_frame(self,key,data_file_path):
+        LOG.info("retieve data frame : %s", data_file_path)
+        if key == "impression" or key == "impression_end" or key == "click":
+            dataf = pd.read_csv(data_file_path, sep=self.sep, \
+                                dtype=self.dtype, index_col=False)
+            if dataf.empty:
+                LOG.info("got empty dataframe!")
+                return None
+            return dataf.groupby(['board_id', 'pf', 'slot_id','order']).sum()
 
     def __get_seq_data_frame(self, data_file_path):
         '''謧文件返回统一的顺序实际展示数统计合集'''
@@ -489,7 +595,7 @@ class DataReader(object):
         if dataf.empty:
             LOG.info("got empty seq dataframe!")
             return None
-        return dataf.groupby(['board_id', 'pf', 'seq']).sum()
+        return dataf.groupby(['board_id', 'pf', 'seq','group_id']).sum()
 
     def __handle_seq_data(self, dataf, logic):
         '''返回顺序实际展示数的统计数据格式'''
@@ -498,13 +604,41 @@ class DataReader(object):
             board_id = int(row[0][0])
             _pf = str(row[0][1])
             seq = str(row[0][2])
+            group_id = str(row[0][3])
             total = row[1]["total"]
             seq_displays = self.__get_seq_display(_pf, board_id)
-            if seq_displays.has_key(seq):
-                seq_displays[seq][logic] = total
+            if seq_displays.has_key(group_id):
+                if seq_displays[group_id].has_key(seq):
+                    seq_displays[group_id][seq][logic] = total
+                else:
+                    seq_displays[group_id][seq] = {logic:total}
             else:
-                seq_displays[seq] = {logic:total}
-
+                seq_displays[group_id] = {seq:{logic:total}}
+            
+#             if seq_displays.has_key(seq):
+#                 seq_displays[seq][logic] = total
+#             else:
+#                 seq_displays[seq] = {logic:total}
+    def __handle_order_metric_data(self,metric, dataf, logic):
+        '''根据order返回统计的数据格式'''
+        #'board_id', 'pf', 'slot_id','order'
+        LOG.info("handle metric data")
+        for row in dataf.iterrows():
+            board_id = int(row[0][0])
+            _pf = str(row[0][1])
+            slot_id = str(row[0][2])
+            order = str(row[0][3])
+            total = row[1]["total"]  # TODO FIXME int compareS
+            slot_order_display = self.__get_slot_order_display(_pf, board_id)
+#             for s_slot_info in slot_order_display:
+            if slot_order_display.has_key(slot_id):
+                if slot_order_display[slot_id].has_key(order):
+                    slot_order_display[slot_id][order][metric] = total
+                else:
+                    slot_order_display[slot_id][order]={metric:total}
+            else:
+                slot_order_display[slot_id]={order:{metric:total}}
+        
     def __handle_metric_data(self, metric, dataf, logic):
         '''返回统一的统计数据格式'''
         LOG.info("handle metric data")
@@ -532,6 +666,14 @@ class DataReader(object):
                             }
                         })
 
+    def __get_slot_order_display(self,_pf,board_id):
+        if not self.data_struct.has_key(_pf):
+            self.data_struct[_pf] = {}
+        if not self.data_struct[_pf].has_key(board_id):
+            self.data_struct[_pf][board_id] = {}
+        if not self.data_struct[_pf][board_id].has_key("slot_order_display"):
+            self.data_struct[_pf][board_id]["slot_order_display"] = {}
+        return self.data_struct[_pf][board_id]["slot_order_display"]
     def __get_slot_statistics(self, _pf, board_id):
         '''获取已存在的或新建统计结果返回'''
         if not self.data_struct.has_key(_pf):
@@ -551,7 +693,6 @@ class DataReader(object):
         if not self.data_struct[_pf][board_id].has_key("seq_display"):
             self.data_struct[_pf][board_id]["seq_display"] = {}
         return self.data_struct[_pf][board_id]["seq_display"]
-
 
     def __get_player_infos(self):
         '''获取播放器信息，如果已经获取过，从缓存中拿'''
