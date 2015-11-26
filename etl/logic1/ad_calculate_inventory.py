@@ -148,6 +148,7 @@ class AdInventoryTranform(AdTransformPandas):
     def __flat_times(self, input_path, input_filename):
         '''按时间打平'''
         # TODO 加入批量读写
+        LOG.info("start to flat city id:%s",input_path)
         # 分隔符
         input_column_sep = CNF.get("input_column_sep")
         # 定位tag位置
@@ -193,6 +194,7 @@ class AdInventoryTranform(AdTransformPandas):
                     flat_file.write(item)
                 flat_file.write("\n")
         flat_file.close()
+        LOG.info("flat completed, result saved at %s", input_filename)
         return input_filename
 
 
