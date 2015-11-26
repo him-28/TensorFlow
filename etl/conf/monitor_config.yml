@@ -117,7 +117,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             impression: #成功播放数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -128,7 +128,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             impression_end: #播放完成数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -139,7 +139,7 @@ beta: #测试环境
                         output_name: 'total'
                     }
             click: #广告点击数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -278,7 +278,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             impression: #成功播放数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -289,7 +289,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             impression_end: #播放完成数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
@@ -300,7 +300,7 @@ release: #生产环境
                         output_name: 'total'
                     }
             click: #广告点击数
-                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf'] #广告位ID，投放ID，创意ID
+                group_item: ['board_id','slot_id','mediabuy_id','creator_id','pf','order'] #广告位ID，投放ID，创意ID
                 condition:
                     count: {
                         filter: [
