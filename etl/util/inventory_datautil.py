@@ -1,6 +1,7 @@
 # encoding=utf8
 ''' merge the files '''
 import os
+import time
 
 import yaml
 import pandas as pd
@@ -27,7 +28,7 @@ def merge_file(input_paths, output_files):
         "metric2":"path2"
     }
     """
-
+    start = time.clock()
     fun_info = "\nmerge file with params: \n%s\n%s" % (str(input_paths), str(output_files))
     LOG.info(fun_info)
 
@@ -83,3 +84,27 @@ def merge_file(input_paths, output_files):
                    dtype=dtype, header=True, index=False)
         LOG.info("merged result saved at : %s, insert to db...", output_filename)
         insert(output_filename)
+        end = time.clock()
+        result_size = 0
+        display_sale = 0
+        display_poss = 0
+        spend_time = "%0.2f" % (end - start)
+        details={}
+        if not df1.empty:
+            result_size = len(df1)
+            display_sale = df1["display_sale"].sum()
+            display_poss = df1["display_poss"].sum()
+            df2 = df1.groupby("pf").sum()
+            for pf,datas in df2.iterrows():
+                details[pf] = {
+                    "display_sale" : int(datas["display_sale"]),
+                    "display_poss" : int(datas["display_poss"])
+               }
+        infos = {
+             "result_size": result_size,
+             "display_sale": display_sale,
+             "display_poss": display_poss,
+             "spend_time": spend_time,
+             "details": details
+        }
+        return infos

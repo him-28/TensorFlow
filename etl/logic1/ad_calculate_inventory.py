@@ -23,6 +23,8 @@ from etl.conf.settings import CURRENT_ENV
 from etl.conf.settings import FlatConfig as Config
 from etl.conf.settings import HEADER
 
+from etl.app import getfilesize
+
 LOG = init_log.init("util/logger.conf", 'inventoryLogger')
 ENV_CONF = yaml.load(file("conf/inventory_monitor_config.yml"))
 SCNF = ENV_CONF[CURRENT_ENV]["store"]
@@ -37,22 +39,29 @@ class AdInventoryTranform(AdTransformPandas):
         Constructor
         '''
         LOG.info("Welcome to AdInventoryTranform")
+        self.starttime = time.clock()
         self.ip_util = IP_Util(ipb_filepath=Config['ipb_filepath'],
                     city_filepath=Config['city_filepath'])
         self.params = {}
         self.player_id_cache = None
         self.result_path = result_path
+        self.filesize = 0
+        self.filename = None
+        self.spend_time = 0
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据'''
 
         input_path = input_path.replace("\\", os.sep).replace("/", os.sep)
         flat_input_file_name = self.__flat_times(input_path, input_filename)
+        flat_input_file_path = os.path.join(input_path, flat_input_file_name)
+        self.filesize = getfilesize(flat_input_file_path)
+        self.filename = input_filename
 
         exec_start_time = dt.datetime.now()  # 开始执行时间
         if not isinstance(alg_file, dict):
             LOG.error("非法参数alg_file：" + str(alg_file))
-            return -1
+            return None
         # handle path
         # calculate
         for algorithm in alg_file.iterkeys():
@@ -65,10 +74,9 @@ class AdInventoryTranform(AdTransformPandas):
 
         LOG.info("all task process complete in [" + str(exec_takes.seconds) + "] seconds (" + \
                 str(exec_takes.seconds / 60) + " minutes)")
-        if os.path.exists(os.path.join(input_path, flat_input_file_name)):
-            os.remove(os.path.join(input_path, flat_input_file_name))
-        self.merge_result(alg_file)
-        return 0
+        if os.path.exists(flat_input_file_path):
+            os.remove(flat_input_file_path)
+        return self.merge_result(alg_file)
 
     def configure_algorithm(self, trans_type, cnf):
         '''各个维度的配置'''
@@ -141,14 +149,39 @@ class AdInventoryTranform(AdTransformPandas):
             LOG.info("write result datas to csv file:%s", self.result_path)
             result_df.to_csv(self.result_path, \
                             dtype=self.get("dtype"), na_rep="0" , index=False, sep=self.get("output_column_sep"))
-        else:
-            # TODO FIXME
-            pass
+            self.spend_time = '%0.2f' % (time.clock() - self.starttime)
+        return self.__report_infos(result_df)
+
+    def __report_infos(self, dataframe):
+        result_size = 0
+        display_sale = 0
+        display_poss = 0
+        if not dataframe.empty:
+            result_size = len(dataframe)
+            display_sale = dataframe["display_sale"].sum()
+            display_poss = dataframe["display_poss"].sum()
+        infos = {
+             "file_size": self.filesize,
+             "file_name": self.filename,
+             "result_size": result_size,
+             "spend_time": self.spend_time,
+             "display_sale": display_sale,
+             "display_poss": display_poss
+        }
+        details = {}
+        if not dataframe.empty:
+            df2 = dataframe.groupby("pf").sum()
+            for pf,datas in df2.iterrows():
+                details[pf] = {
+                    "display_sale" : int(datas["display_sale"]),
+                    "display_poss" : int(datas["display_poss"])
+               }
+        infos["details"] = details
+        return infos
 
     def __flat_times(self, input_path, input_filename):
         '''按时间打平'''
         # TODO 加入批量读写
-        LOG.info("start to flat city id:%s",input_path)
         # 分隔符
         input_column_sep = CNF.get("input_column_sep")
         # 定位tag位置
@@ -158,6 +191,7 @@ class AdInventoryTranform(AdTransformPandas):
         server_timestamp_index = HEADER.index("server_timestamp")
         column_len = len(HEADER)
         filepath = os.path.join(input_path, input_filename)
+        LOG.info("start to flat city id:%s",filepath)
         input_filename = input_filename + ".flat"
         flat_file_path = os.path.join(input_path, input_filename)
         flat_file = open(flat_file_path, "wb")
