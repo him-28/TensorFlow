@@ -14,10 +14,9 @@ from etl.util.inventory_datautil import merge_file
 from etl.logic1.ad_calculate_inventory import AdInventoryTranform
 from etl.logic1.ad_transform_pandas import buddha_bless_me
 
-from etl.report.reporter import DataReader
-from etl.report.reporter import Reportor
+from etl.report.inventory_reporter import InventoryReportor
 
-METRICS = ["display", "display_poss"]
+METRICS = ["display_sale", "display_poss"]
 M_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}"
 H_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}"
 D_Dir = "{prefix}{sep}{year}{sep}{month}"
@@ -154,27 +153,14 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
             # logic1 code
             result_filepath = paths["result_filepath"]
             ait = AdInventoryTranform(result_filepath)
-            ait.calculate(
+            infos = ait.calculate(
                     paths['ad_src_path'],
                     paths['ad_src_filename'],
                     paths['logic1_output_paths'])
             end = time.clock()
             logic1_sptime = '%0.2f' % (end - start)
             LOGGER.info("logic1 calc spent: %s s" , logic1_sptime)
-            '''
-            # 读取计算结果
-            d_reader = DataReader().hour_data(None, \
-                                    paths['logic1_output_paths'])
-            # 报告结果
-            filesize = getfilesize(ad_src_path)
-            params = {
-                      "type":"hour",
-                      "filename":paths["ad_src_filename"],
-                      "filesize":filesize,
-                      "logic1_sptime":logic1_sptime,
-                      "start_time":now.strftime("%Y-%m-%d %H")}
-            Reportor(params, d_reader).report_text()
-            '''
+            InventoryReportor().report_hour(now, infos)
 
         elif mode == 'd':
             paths = self._job_ready_by_day(now)
@@ -187,24 +173,10 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
 
             start = time.clock()
             # logic1 code
-            merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
+            infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
             end = time.clock()
-            #sptime = '%0.2f' % (end - start)
             LOGGER.info("merge file spend: %f s" % (end - start))
-            '''
-            # 读取计算结果
-            d_reader = DataReader().hour_data(None, \
-                                    paths['logic1_output_paths'])
-
-            params = {
-                      "type":"day",
-                      "fileinfo0":None,
-                      "fileinfo1":getfilesinfo(paths['logic1_output_paths']),
-                      "sptime":sptime,
-                      "start_time":now.strftime("%Y-%m-%d")}
-            # 报告结果
-            Reportor(params, d_reader).report_text()
-            '''
+            InventoryReportor().report_day(now, infos)
 
 def getfilesize(filepath):
     psize = os.path.getsize(filepath)
@@ -252,4 +224,3 @@ if __name__ == '__main__':
     '''
     buddha_bless_me()
     run_cli(sys.argv)
-
