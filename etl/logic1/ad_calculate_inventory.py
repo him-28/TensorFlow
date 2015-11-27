@@ -49,7 +49,7 @@ class AdInventoryTranform(AdTransformPandas):
         self.filename = None
         self.spend_time = 0
 
-    def calculate(self, input_path, input_filename, alg_file):
+    def calculate(self, input_path, input_filename, alg_file, group_na_fill=-1):
         '''计算数据'''
 
         input_path = input_path.replace("\\", os.sep).replace("/", os.sep)
