@@ -1,0 +1,29 @@
+beta: #测试环境
+    store: #库存
+        addon_item: ["server_timestamp","city_id", "playlist_id"]
+        result_item: ["server_timestamp", "playlist_id", "slot_id", "city_id", "pf"]
+        result_item_alias: ["date", "playlist_id", "slot_id", "city_id","pf","pv","display"]
+        table_name: "inventory_data"
+        split_char: "\t"
+        db_host: "10.100.2.77"
+        db_username: "data_processing"
+        db_passwd: "123456@bigdata"
+        db_port: 3306
+        db_inventory: "inventory"
+        bearychat_channel: "Test-Dico"
+release: #生产环境
+    store: #库存
+        addon_item: ["server_timestamp","city_id", "playlist_id"]
+        result_item: ["server_timestamp", "playlist_id", "slot_id", "city_id", "pf"]
+        result_item_alias: ["date", "playlist_id", "slot_id", "city_id","pf","pv","display"]
+        table_name: "inventory_data"
+        split_char: "\t"
+        #db_host: "10.100.10.75"
+        #db_username: "ad_inv_data"
+        #db_passwd: "ad_inventory_data@@)!^"
+        db_host: "10.100.2.77"
+        db_username: "data_processing"
+        db_passwd: "123456@bigdata"
+        db_port: 3306
+        db_inventory: "inventory"
+        bearychat_channel: "测试-库存统计报告"

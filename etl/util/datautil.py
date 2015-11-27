@@ -9,8 +9,7 @@ from etl.util import init_log
 from etl.util import path_chk_or_create
 from etl.logic1.ad_transform_pandas import split_header
 from etl.conf.settings import MONITOR_CONFIGS as CNF
-
-LOG = init_log.init("util/logger.conf", 'mergeLogger')
+from etl.conf.settings import LOGGER as LOG
 
 def req_parser(dataframe):
     #TODO: 转化两个地址下不同nginx日志到目标文件

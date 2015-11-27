@@ -52,6 +52,20 @@ if [ $? -eq 255 ];then
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
 fi
+python inventory_app.py inventory 'h'
+if [ $? -eq 255 ];then
+    echo "ad inventory hour run error"
+    sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
+    exit
+fi
+if [ "${hour}" == "03" ];then
+    python inventory_app.py inventory 'd'
+    if [ $? -eq 255 ];then
+        echo "ad inventory day run error"
+        sh send_mail.sh ${year}${month}${day} ad app day run error
+        exit
+    fi
+fi
 if [ "${hour}" == "06" ];then
     python app.py admonitor 'd'
     if [ $? -eq 255 ];then

@@ -1,5 +1,6 @@
 data_prefix: "/data2/ad"
 ngx_prefix: "/data3/ngx"
+inventory_data_prefix: "/data6/ad"
 
 h_delay: 10
 d_delay: 1

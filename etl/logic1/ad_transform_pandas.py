@@ -319,6 +319,9 @@ class AdTransformPandas(object):
 
     def __merge_dataframe_group_count(self, grouped, dataframe):
         """as u c: merge dataframe group count"""
+        # TODO FIXME  config this fillna value
+        for item in self.get("group_item"):
+            dataframe[item] = dataframe[item].fillna(-1)
         if grouped is None:
             if not dataframe.empty and len(dataframe) > 0:
                 grouped = dataframe.groupby(self.get('group_item')).size()
