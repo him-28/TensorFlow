@@ -52,7 +52,7 @@ if [ $? -eq 255 ];then
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
 fi
-if [ "${hour}" == "8" ];then
+if [ "${hour}" == "06" ];then
     python app.py admonitor 'd'
     if [ $? -eq 255 ];then
         echo "ad app day run error"
