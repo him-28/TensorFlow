@@ -55,7 +55,7 @@ class AdInventoryTranform(AdTransformPandas):
         input_path = input_path.replace("\\", os.sep).replace("/", os.sep)
         flat_input_file_name = self.__flat_times(input_path, input_filename)
         flat_input_file_path = os.path.join(input_path, flat_input_file_name)
-        self.filesize = getfilesize(flat_input_file_path)
+        self.filesize = getfilesize(os.path.join(input_path, input_filename))
         self.filename = input_filename
 
         exec_start_time = dt.datetime.now()  # 开始执行时间
@@ -171,7 +171,7 @@ class AdInventoryTranform(AdTransformPandas):
         details = {}
         if not dataframe.empty:
             df2 = dataframe.groupby("pf").sum()
-            for pf,datas in df2.iterrows():
+            for pf, datas in df2.iterrows():
                 details[pf] = {
                     "display_sale" : int(datas["display_sale"]),
                     "display_poss" : int(datas["display_poss"])
@@ -191,11 +191,13 @@ class AdInventoryTranform(AdTransformPandas):
         server_timestamp_index = HEADER.index("server_timestamp")
         column_len = len(HEADER)
         filepath = os.path.join(input_path, input_filename)
-        LOG.info("start to flat city id:%s",filepath)
+        LOG.info("start to flat city id:%s", filepath)
         input_filename = input_filename + ".flat"
         flat_file_path = os.path.join(input_path, input_filename)
         flat_file = open(flat_file_path, "wb")
         first_row = True
+        flat_file_buffer = []
+        buffer_size = 10000
         with open(filepath, "r+") as fileline:
             for line in fileline:
                 line = line.replace("\n", "")
@@ -214,23 +216,32 @@ class AdInventoryTranform(AdTransformPandas):
                 if (not tag) or (int(tag) > 99):
                     continue  # error line
                 server_timestamp = line_list[server_timestamp_index]
-                s_date = dt.date.fromtimestamp(float(server_timestamp)) # 精确到天
+                s_date = dt.date.fromtimestamp(float(server_timestamp))  # 精确到天
                 line_list[server_timestamp_index] = str(time.mktime(s_date.timetuple()))
                 ip_addr = line_list[ip_index]
                 city_id = self.ip_util.get_cityInfo_from_ip(ip_addr, 3)
                 line_list.append(str(city_id))
-                is_first = True
-                for item in line_list:
-                    if is_first:
-                        is_first = False
-                    else:
-                        flat_file.write(input_column_sep)
-                    flat_file.write(item)
-                flat_file.write("\n")
+                flat_file_buffer.append(line_list)
+                if len(flat_file_buffer) >= buffer_size:
+                    self.__write_buffer(flat_file, flat_file_buffer, input_column_sep)
+                    flat_file_buffer = []
+        if len(flat_file_buffer) > 0:
+            self.__write_buffer(flat_file, flat_file_buffer, input_column_sep)
+            flat_file_buffer = []
         flat_file.close()
         LOG.info("flat completed, result saved at %s", input_filename)
         return input_filename
 
+    def __write_buffer(self, flat_file, flat_file_buffer, input_column_sep):
+        for buffer_line_list in flat_file_buffer:
+            is_first = True
+            for item in buffer_line_list:
+                if is_first:
+                    is_first = False
+                else:
+                    flat_file.write(input_column_sep)
+                flat_file.write(item)
+            flat_file.write("\n")
 
 def insert(result_path):
     '''insert csv values to db'''
@@ -247,7 +258,7 @@ def insert(result_path):
         conn = DBUtils.get_connection(database, user, passwd, host, port)
         sep = SCNF["split_char"]
         LoadUtils.fromCsvtodb(result_path, tablename, conn, \
-                              cols=db_columns, commit=False, split_char=sep, \
+                              cols=db_columns, commit=False, bulkread_size=30000, split_char=sep, \
                               skip_first_row=True, cols_type={"date":"timestamp"})
         LOG.info("insert job done.")
     except Exception, exc:
