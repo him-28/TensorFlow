@@ -204,7 +204,8 @@ def run_cli(arguments):
             AdMonitorRunner().run(now, args[0])
         elif run_type == 'inventory':
             if 'h' == args[0]:
-                now = now - timedelta(hours=1)
+                date_str= args[1]
+                now = datetime.strptime(date_str,'%Y-%m-%d:%H')
             elif 'd' == args[0]:
                 now = now - timedelta(days=1)
             InventoryAdMonitorRunner().run(now, args[0])

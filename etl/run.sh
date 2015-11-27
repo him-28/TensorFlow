@@ -52,7 +52,7 @@ if [ $? -eq 255 ];then
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
 fi
-python inventory_app.py inventory 'h'
+python inventory_app.py inventory 'h' '${year}-${month}-${day}:${hour}'
 if [ $? -eq 255 ];then
     echo "ad inventory hour run error"
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
