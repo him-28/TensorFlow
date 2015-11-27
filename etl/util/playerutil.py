@@ -109,22 +109,75 @@ def getAllGroupId(dtime=None):
         d = datetime.datetime.strptime(dtime, "%Y%m%d%H%M")
         
     ftime = datetime.datetime.strftime(d, "%Y-%m-%d %H:%M")
-    _GROUPSQL = "select ad_id,node_id from \"%s\" as s where s.status='1' and s.effect_s <= '%s' and s.effect_e > '%s' " % (ADSPACE_TABLE_NAME, ftime, ftime)
+    _GROUPSQL = "select ad_id,node_id,priority from %s as s where s.status='1' and s.effect_s <= '%s' and s.effect_e > '%s' " % (PLAYER_TABLE_NAME, ftime, ftime)
     groups = {}
     try:
-        rows = DBUtils.fetchall(_GROUPSQL)
+        try:
+            _conn = psy.connect(db=config['database'], user=config['user'],charset="utf8", \
+                passwd=config['password'], host=config['host'], \
+                port=config['port'])
+            _cur = _conn.cursor()
+            _cur.execute(_GROUPSQL)
+            rows = _cur.fetchall()
+        except Exception, e:
+            LOGGER.error('get conn error: %s' % e)
+            if _conn:
+                _conn.rollback()
+            return None
+        finally:
+            if _conn:
+                _cur.close()
+                _conn.close()
+            del _conn
         if not rows or not len(rows):
             return {}
         for row in rows:
-            if not row or len(row) != 2:
-                LOGGER.error("get  node_id ad_id relation row errors,should be 2 but value:" % row)
+            if not row or len(row) != 3:
+                LOGGER.error("get  node_id ad_id relation row errors,should be 3 but value:" % row)
                 continue
-            groups[row[0]] = row[1]
+            groups[str(row[0])] = [str(row[1]),str(row[2])]
         return groups
     except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
 
+def getAllGroupName():
+    '''
+        dtime : %Y%m%d%H%M 201511041816
+        get all groupid  name relation.  
+    '''
+    _GROUPSQL = "select pn.id,lt.name,pn.location_type from patch_node pn join location_type lt on pn.location_type=lt.id"
+    groups = {}
+    try:
+        try:
+            _conn = psy.connect(db=config['database'], user=config['user'], charset="utf8",\
+                passwd=config['password'], host=config['host'], \
+                port=config['port'])
+            _cur = _conn.cursor()
+            _cur.execute(_GROUPSQL)
+            rows = _cur.fetchall()
+        except Exception, e:
+            LOGGER.error('get conn error: %s' % e)
+            if _conn:
+                _conn.rollback()
+            return None
+        finally:
+            if _conn:
+                _cur.close()
+                _conn.close()
+            del _conn
+            
+        if not rows or not len(rows):
+            return {}
+        for row in rows:
+            if not row or len(row) != 3:
+                LOGGER.error("get  node_id name relation row errors,should be 3 but value:" % row)
+                continue
+            groups[str(row[0])] = row[1]
+        return groups
+    except Exception, e:
+        LOGGER.error("get player info errors, message: %s" % e.message)
+    return {}
 # def getAllGroupIdWithPlayerId():
     
 def getStartTime():    
