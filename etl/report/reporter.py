@@ -441,6 +441,8 @@ class Reportor(object):
 #                 seq_str += " %s ,"\
 #                     % (logic1_data)
                 # 计算投放成功率，点击率
+                imps_rate1 = 0.0
+                click_rate1 = 0.0
                 if not logic1_data == 0:
                     imps_rate1 = 100.0 * imps_start / logic1_data
                 if not imps_start == 0:
