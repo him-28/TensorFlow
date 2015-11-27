@@ -24,7 +24,8 @@ M_Logic1_Filename = "result_{metric}_ad_{minute:02d}.csv"
 H_Logic1_Filename = "result_{metric}_ad_{hour:02d}.csv"
 D_Logic1_Filename = "result_{metric}_ad_{day:02d}.csv"
 
-data_prefix = Config["inventory_data_prefix"]
+data_prefix = Config["data_prefix"]
+data_output_prefix = Config["inventory_data_prefix"]
 
 class InventoryAdMonitorRunner(AdMonitorRunner):
 
@@ -61,7 +62,7 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
             })
 
         ad_output_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
-                prefix=data_prefix,
+                prefix=data_output_prefix,
                 year=now.year,
                 month=now.month,
                 day=now.day,
@@ -75,7 +76,7 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
             })
 
         result_dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
-                prefix=data_prefix,
+                prefix=data_output_prefix,
                 year=now.year,
                 month=now.month,
                 day=now.day,
@@ -90,12 +91,12 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
         return paths
 
     def _job_ready_by_day(self, now):
-        output_path = D_Dir.format(prefix=data_prefix,
+        output_path = D_Dir.format(prefix=data_output_prefix,
                                 year=now.year,
                                 sep=os.sep,
                                 month=now.month)
 
-        src_path = H_Dir.format(prefix=data_prefix,
+        src_path = H_Dir.format(prefix=data_output_prefix,
                                 year=now.year,
                                 sep=os.sep,
                                 month=now.month,

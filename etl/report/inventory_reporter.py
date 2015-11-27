@@ -16,13 +16,17 @@ It defines class Reportor
 @contact:    dingzheng@imgo.tv
 '''
 
+import yaml
+
 from etl.conf.settings import LOGGER as LOG
-from etl.conf.settings import MONITOR_CONFIGS
+from etl.conf.settings import CURRENT_ENV
 from etl.util import bearychat as bc
 from etl.report.reporter import get_pf_name
 
-REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
+ENV_CONF = yaml.load(file("conf/inventory_monitor_config.yml"))
+SCNF = ENV_CONF[CURRENT_ENV]["store"]
 
+REPORT_CHANNEL = SCNF["bearychat_channel"]
 
 class InventoryReportor:
     '''Report ETL result'''
