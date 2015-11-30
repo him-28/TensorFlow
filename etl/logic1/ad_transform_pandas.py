@@ -381,7 +381,7 @@ class AdTransformPandas(object):
         timestamp = float(row_data["server_timestamp"])
         slot_ids = self.__get_slot_ids(board_id, timestamp)
         if slot_ids is None:
-            LOG.error("no slot data with the condition: board_id: %s, timestamp: %s"
+            LOG.debug("no slot data with the condition: board_id: %s, timestamp: %s"
                        , board_id, timestamp)
             return
         for slot_id in slot_ids:
