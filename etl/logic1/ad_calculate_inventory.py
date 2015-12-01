@@ -17,7 +17,7 @@ from etl.util.ip_convert import IP_Util
 from etl.util.mysqlutil import LoadUtils
 from etl.util.mysqlutil import DBUtils
 from etl.util import init_log
-from etl.logic1.ad_transform_pandas import AdTransformPandas
+from etl.logic1.ad_transform_pandas import AdTransformPandas, split_header
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 from etl.conf.settings import CURRENT_ENV
 from etl.conf.settings import FlatConfig as Config
@@ -41,9 +41,8 @@ class AdInventoryTranform(AdTransformPandas):
         Constructor
         '''
         LOG.info("Welcome to AdInventoryTranform")
+        AdTransformPandas.__init__(self)
         self.starttime = time.clock()
-        self.params = {}
-        self.player_id_cache = None
         self.result_path = result_path
         self.filesize = 0
         self.filename = None
@@ -188,7 +187,7 @@ def flat_datas(input_path, input_filename):
     LOG.info("start to flat city id、server-timestamp:%s", input_file_path)
     trunks = pd.read_csv(input_file_path, \
                          sep=CNF.get('input_column_sep'), chunksize=CNF.get('read_csv_chunk'), \
-                    dtype=CNF.get('dtype'), index_col=False)
+                    dtype=split_header(CNF.get("header_type")), index_col=False)
     write_mode = 'w'
     for trunk in trunks:
         trunk["server_timestamp"] = trunk["server_timestamp"].apply(flat_times)
