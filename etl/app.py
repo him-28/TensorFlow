@@ -24,8 +24,8 @@ from etl.report.reporter import Reportor
 
 METRICS = Config['metrics']
 M_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}{sep}{hour}"
-H_Dir = "{prefix}{sep}{year}{sep}{month}{sep}{day}"
-D_Dir = "{prefix}{sep}{year}{sep}{month}"
+H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
+D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
 M_Logic0_Filename = "logic0_{metric}_ad_{minute:02d}.csv"
 H_Logic0_Filename = "logic0_{metric}_ad_{hour:02d}.csv"
 D_Logic0_Filename = "logic0_{metric}_ad_{day:02d}.csv"
@@ -113,7 +113,7 @@ class AdMonitorRunner(object):
         paths = {}
 
         # Nginx 收集服务器存储的日志文件
-        ngx_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
+        ngx_src_path = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}".format(
                 prefix=Config["ngx_prefix"],
                 year=now.year,
                 month=now.month,
@@ -124,7 +124,7 @@ class AdMonitorRunner(object):
 
         ngx_src_filename = "ad_{hour:02d}.log".format(hour=now.hour)
 
-        ad_src_path = "{prefix}{sep}{year}{sep}{month}{sep}{day}".format(
+        ad_src_path = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}".format(
                 prefix=Config["data_prefix"],
                 year=now.year,
                 month=now.month,
