@@ -8,7 +8,6 @@ from datetime import timedelta
 if 'amble' not in sys.modules and __name__ == '__main__':
     import pythonpathsetter
 from etl.app import AdMonitorRunner
-from etl.app import M_Dir,H_Dir,D_Dir
 from etl.conf.settings import LOGGER, Config
 from etl.util import path_chk_or_create
 from etl.util.inventory_datautil import merge_file
@@ -18,6 +17,9 @@ from etl.logic1.ad_transform_pandas import buddha_bless_me
 from etl.report.inventory_reporter import InventoryReportor
 
 METRICS = ["display_sale", "display_poss"]
+M_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}{hour:02d}"
+H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
+D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
 M_Logic1_Filename = "result_{metric}_ad_{minute:02d}.csv"
 H_Logic1_Filename = "result_{metric}_ad_{hour:02d}.csv"
 D_Logic1_Filename = "result_{metric}_ad_{day:02d}.csv"
