@@ -21,13 +21,15 @@ from etl.logic1.ad_transform_pandas import AdTransformPandas
 from etl.conf.settings import MONITOR_CONFIGS as CNF
 from etl.conf.settings import CURRENT_ENV
 from etl.conf.settings import FlatConfig as Config
-from etl.conf.settings import HEADER
 
 from etl.app import getfilesize
 
 LOG = init_log.init("util/logger.conf", 'inventoryLogger')
 ENV_CONF = yaml.load(file("conf/inventory_monitor_config.yml"))
 SCNF = ENV_CONF[CURRENT_ENV]["store"]
+
+IP_UTIL = IP_Util(ipb_filepath=Config['ipb_filepath'],
+            city_filepath=Config['city_filepath'])
 
 class AdInventoryTranform(AdTransformPandas):
     '''
@@ -40,8 +42,6 @@ class AdInventoryTranform(AdTransformPandas):
         '''
         LOG.info("Welcome to AdInventoryTranform")
         self.starttime = time.clock()
-        self.ip_util = IP_Util(ipb_filepath=Config['ipb_filepath'],
-                    city_filepath=Config['city_filepath'])
         self.params = {}
         self.player_id_cache = None
         self.result_path = result_path
@@ -49,11 +49,11 @@ class AdInventoryTranform(AdTransformPandas):
         self.filename = None
         self.spend_time = 0
 
-    def calculate(self, input_path, input_filename, alg_file, group_na_fill=-1):
+    def calculate(self, input_path, input_filename, alg_file):
         '''计算数据'''
 
         input_path = input_path.replace("\\", os.sep).replace("/", os.sep)
-        flat_input_file_name = self.__flat_times(input_path, input_filename)
+        flat_input_file_name = flat_datas(input_path, input_filename)
         flat_input_file_path = os.path.join(input_path, flat_input_file_name)
         self.filesize = getfilesize(os.path.join(input_path, input_filename))
         self.filename = input_filename
@@ -62,7 +62,6 @@ class AdInventoryTranform(AdTransformPandas):
         if not isinstance(alg_file, dict):
             LOG.error("非法参数alg_file：" + str(alg_file))
             return None
-        # handle path
         # calculate
         for algorithm in alg_file.iterkeys():
             calcu_result = self.do_calculate(algorithm, alg_file[algorithm], \
@@ -148,11 +147,13 @@ class AdInventoryTranform(AdTransformPandas):
                 result_df[key] = result_df[key].astype(int, na_rep="0")
             LOG.info("write result datas to csv file:%s", self.result_path)
             result_df.to_csv(self.result_path, \
-                            dtype=self.get("dtype"), na_rep="0" , index=False, sep=self.get("output_column_sep"))
+                            dtype=self.get("dtype"), na_rep="0" , index=False, \
+                            sep=self.get("output_column_sep"))
             self.spend_time = '%0.2f' % (time.clock() - self.starttime)
         return self.__report_infos(result_df)
 
     def __report_infos(self, dataframe):
+        '''report infos'''
         result_size = 0
         display_sale = 0
         display_poss = 0
@@ -171,77 +172,40 @@ class AdInventoryTranform(AdTransformPandas):
         details = {}
         if not dataframe.empty:
             df2 = dataframe.groupby("pf").sum()
-            for pf, datas in df2.iterrows():
-                details[pf] = {
+            for _pf, datas in df2.iterrows():
+                details[_pf] = {
                     "display_sale" : int(datas["display_sale"]),
                     "display_poss" : int(datas["display_poss"])
                }
         infos["details"] = details
         return infos
 
-    def __flat_times(self, input_path, input_filename):
-        '''按时间打平'''
-        # TODO 加入批量读写
-        # 分隔符
-        input_column_sep = CNF.get("input_column_sep")
-        # 定位tag位置
-        tag_index = HEADER.index("tag")
-        # 定位IP位置
-        ip_index = HEADER.index("ip")
-        server_timestamp_index = HEADER.index("server_timestamp")
-        column_len = len(HEADER)
-        filepath = os.path.join(input_path, input_filename)
-        LOG.info("start to flat city id:%s", filepath)
-        input_filename = input_filename + ".flat"
-        flat_file_path = os.path.join(input_path, input_filename)
-        flat_file = open(flat_file_path, "wb")
-        first_row = True
-        flat_file_buffer = []
-        buffer_size = 10000
-        with open(filepath, "r+") as fileline:
-            for line in fileline:
-                line = line.replace("\n", "")
-                if first_row:  # 标题行处理
-                    first_row = False
-                    flat_file.write(line)
-                    flat_file.write(input_column_sep)
-                    flat_file.write("city_id")
-                    flat_file.write("\n")
-                    continue
+def flat_datas(input_path, input_filename):
+    '''flat datas'''
+    flat_input_filename = input_filename + ".flat"
+    flat_input_filepath = os.path.join(input_path, flat_input_filename)
+    input_file_path = os.path.join(input_path, input_filename)
+    LOG.info("start to flat city id、server-timestamp:%s", input_file_path)
+    trunks = pd.read_csv(input_file_path, \
+                         sep=CNF.get('input_column_sep'), chunksize=CNF.get('read_csv_chunk'), \
+                    dtype=CNF.get('dtype'), index_col=False)
+    write_mode = 'w'
+    for trunk in trunks:
+        trunk["server_timestamp"] = trunk["server_timestamp"].apply(flat_times)
+        trunk["city_id"] = trunk["ip"].apply(flat_city_id)
+        trunk.to_csv(flat_input_filepath, sep=CNF.get('input_column_sep'), \
+                     header=(write_mode == 'w'), mode=write_mode)
+        if write_mode == 'w':  # 第一次写，覆盖模式、带头
+            write_mode = 'a'
+    return flat_input_filename
 
-                line_list = line.split(input_column_sep)
-                if not len(line_list) == column_len:
-                    continue  # error line
-                tag = line_list[tag_index]
-                if (not tag) or (int(tag) > 99):
-                    continue  # error line
-                server_timestamp = line_list[server_timestamp_index]
-                s_date = dt.date.fromtimestamp(float(server_timestamp))  # 精确到天
-                line_list[server_timestamp_index] = str(time.mktime(s_date.timetuple()))
-                ip_addr = line_list[ip_index]
-                city_id = self.ip_util.get_cityInfo_from_ip(ip_addr, 3)
-                line_list.append(str(city_id))
-                flat_file_buffer.append(line_list)
-                if len(flat_file_buffer) >= buffer_size:
-                    self.__write_buffer(flat_file, flat_file_buffer, input_column_sep)
-                    flat_file_buffer = []
-        if len(flat_file_buffer) > 0:
-            self.__write_buffer(flat_file, flat_file_buffer, input_column_sep)
-            flat_file_buffer = []
-        flat_file.close()
-        LOG.info("flat completed, result saved at %s", input_filename)
-        return input_filename
+def flat_times(server_timestamp):
+    '''flat times'''
+    return str(time.mktime(dt.date.fromtimestamp(float(server_timestamp)).timetuple()))
 
-    def __write_buffer(self, flat_file, flat_file_buffer, input_column_sep):
-        for buffer_line_list in flat_file_buffer:
-            is_first = True
-            for item in buffer_line_list:
-                if is_first:
-                    is_first = False
-                else:
-                    flat_file.write(input_column_sep)
-                flat_file.write(item)
-            flat_file.write("\n")
+def flat_city_id(ip_addr):
+    '''flat city id'''
+    return IP_UTIL.get_cityInfo_from_ip(ip_addr, 3)
 
 def insert(result_path):
     '''insert csv values to db'''
