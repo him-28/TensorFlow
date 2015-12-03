@@ -288,14 +288,14 @@ class AdMonitorRunner(object):
                         paths['logic0_output_paths'],
                         paths['logic1_output_paths'])
 
-            ngx_src_path = os.path.join(paths["ngx_src_path"], paths["ngx_src_filename"])
+            #ngx_src_path = os.path.join(paths["ngx_src_path"], paths["ngx_src_filename"])
             ad_src_path = os.path.join(paths["ad_src_path"], paths["ad_src_filename"])
 
             # 打平:
-            admonitor_flat_data.flat_data_admonitor(ngx_src_path, ad_src_path)
+            #admonitor_flat_data.flat_data_admonitor(ngx_src_path, ad_src_path)
 
             # 审计:
-            admonitor_ad_audit.ad_audit(paths["ad_src_path"], paths["ad_src_filename"])
+            #admonitor_ad_audit.ad_audit(paths["ad_src_path"], paths["ad_src_filename"])
 
             # 计算
             start = time.clock()

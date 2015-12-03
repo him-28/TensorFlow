@@ -56,6 +56,8 @@ class AdTransformPandas(object):
         # 参数
         self.params = {}
         self.player_id_cache = None
+        self.tmp_suffix = ".tmp"
+        self.display_poss_tmp_suffix = ".ttmp"
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据
@@ -142,7 +144,7 @@ class AdTransformPandas(object):
         self.put("names",CNF.get("header"))
         self.put("dtype", split_header(CNF.get("header_type")))
         self.put(("chunk", "db_chunk"), (CNF.get("read_csv_chunk"), CNF.get("db_commit_chunk")))
-        self.put("tmp_file_path", output_file_path + ".tmp")
+        self.put("tmp_file_path", output_file_path + self.tmp_suffix)
         self.put("trans_type", trans_type)
         config_result = self.configure_algorithm(trans_type, CNF)
         self.log.info("configure complete, retrieve params:%s" ,
@@ -204,7 +206,7 @@ class AdTransformPandas(object):
         '''展示机会需要把打平的日志反打平'''
         self.log.info("merge display poss middle datas...")
         input_file_path = self.get("input_file_path")
-        tmp_trans_file = input_file_path + ".ttmp"
+        tmp_trans_file = input_file_path + self.display_poss_tmp_suffix
         if os.path.exists(tmp_trans_file):
             os.remove(tmp_trans_file)
         self.log.info("read data from %s", input_file_path)

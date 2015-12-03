@@ -1,6 +1,6 @@
 #!/bin/bash
 #yyyy-MM-DD:HH
-$date=$1
+date=$1
 echo "python inventory_app.py inventory h ${date}"
 python inventory_app.py inventory h "${date}"
 if [ $? -eq 255 ];then
