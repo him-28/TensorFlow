@@ -95,7 +95,7 @@ class DBUtils(object):
         '''return mysql db connection'''
         conn = None
         try:
-            conn = MySQLdb.connect(db=database, user=user, passwd=passwd, host=host, port=port)
+            conn = MySQLdb.connect(db=database, user=user, passwd=passwd, host=host, port=port, charset="utf8")
         except Exception , exc:
             LOGGER.error('get mysql connection error,error message: %s', exc.message)
         return  conn

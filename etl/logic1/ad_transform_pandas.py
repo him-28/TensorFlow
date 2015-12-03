@@ -243,7 +243,7 @@ class AdTransformPandas(object):
                 data_chunks = pd.DataFrame(data_chunks.groupby(groupby_list).size())\
                     .rename(columns={0:output_name})
                 LOG.info("save final result to: %s", tmp_trans_file)
-                data_chunks.to_csv(tmp_trans_file, header=True, \
+                data_chunks.to_csv(tmp_trans_file, header=True,dtype=self.get("dtype"), \
                                          sep=self.get('input_column_sep'), \
                                          na_rep=CNF["na_rep"], index=True)
         LOG.info("merge display poss middle datas complete!")
