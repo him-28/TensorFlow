@@ -11,7 +11,6 @@ import yaml
 #import psycopg2 as psy
 import MySQLdb as psy
 
-from etl.util.pgutil import DBUtils
 from etl.conf.settings import LOGGER
 
 PLAYER_TABLE_NAME = "ad_space"
@@ -74,25 +73,6 @@ def getplayerInfo():
         
         split_player_info = _getSplitInfo(splitrows, ed)
         return split_player_info
-    except Exception, e:
-        LOGGER.error("get player info errors, message: %s" % e.message)
-    return {}
-
-def getGroupIdBySlotId(slotid):
-    '''
-        根据单个slotid获取groupid(不推荐使用，单个查询慢 . 推荐getAllGroupId() )
-    '''
-    if not slotid:
-        return None
-    
-    d = datetime.datetime.now()
-    ftime = datetime.datetime.strftime(d, "%Y-%m-%d %H:%M")
-    _sql = "select group_id from \"%s\" as s where s.status='1' and s.slot_id=%s and s.effect_e >= '%s' " % (ADSPACE_TABLE_NAME, slotid, ftime)
-    try:
-        result = DBUtils.fetchone(_sql)
-        if not result :
-            return None
-        return result
     except Exception, e:
         LOGGER.error("get player info errors, message: %s" % e.message)
     return {}
