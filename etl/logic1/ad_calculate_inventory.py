@@ -231,7 +231,7 @@ def split_insert_sql(db_columns, table_name):
 
 class DataInsertPool(object):
     '''插入到数据库的简单池'''
-    def __init__(self, conn, commit_size=3000):
+    def __init__(self, conn, commit_size=30000):
         self.commit_size = commit_size
         self.pool = {}
         self.regist_sql_pool = {}
@@ -293,7 +293,7 @@ def insert_data_frames(row_data, db_alias_info, the_pf, db_pool, db_columns):
         value_arr.append(value)
     db_pool.put(the_pf, value_arr)
 
-def insert(dataframe, commit_size=3000):
+def insert(dataframe, commit_size=30000):
     '''insert result to db'''
     LOG.info("insert result to db...")
     try:
