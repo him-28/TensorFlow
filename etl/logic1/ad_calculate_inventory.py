@@ -42,7 +42,7 @@ class AdInventoryTranform(AdTransformPandas):
         Constructor
         '''
         LOG.info("Welcome to AdInventoryTranform")
-        AdTransformPandas.__init__(self)
+        AdTransformPandas.__init__(self, LOG)
         self.starttime = time.clock()
         self.result_path = result_path
         self.filesize = 0
