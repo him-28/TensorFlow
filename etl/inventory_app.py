@@ -173,7 +173,7 @@ class InventoryAdMonitorRunner(AdMonitorRunner):
 
             start = time.clock()
             # logic1 code
-            infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'])
+            infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
             end = time.clock()
             LOGGER.info("merge file spend: %f s" % (end - start))
             InventoryReportor().report_day(now, infos)
