@@ -108,6 +108,7 @@ from etl.util import bearychat as bc
 from etl.util.playerutil import getplayerInfo,getAllGroupName,getAllGroupId
 
 REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
+HOUR_REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel_hour"]
 
 def is_num(obj):
     '''is number'''
@@ -122,6 +123,14 @@ PF = {
         "010201":"Mobile Web for Pad", "020000":"OTT TV"
 }
 
+PF_SNAME = {
+        "000000":"PCWeb", "000100":"PCMac", \
+        "000101":"PCWindows", "010000":" iPad", \
+        "010001":"aPad", "010100":"iPhone", \
+        "010101":"aPhone", "010200":"mWebSite", \
+        "010201":"padWebSite", "020000":"OTT"
+}
+
 def get_pf_name(pf_code):
     '''get pf name by code'''
     if not pf_code:
@@ -129,6 +138,14 @@ def get_pf_name(pf_code):
     pf_code = str(pf_code)
     if PF.has_key(pf_code):
         return PF[pf_code]
+    return "未知：" + pf_code
+def get_pf_sname(pf_code):
+    '''get pf sname by code'''
+    if not pf_code:
+        return "空结果"
+    pf_code = str(pf_code)
+    if PF_SNAME.has_key(pf_code):
+        return PF_SNAME[pf_code]
     return "未知：" + pf_code
 
 def get_metric_data(metric, logic, data):
@@ -219,13 +236,20 @@ class Reportor(object):
             for title, text in t_r:
                 msg += title + "\n"
                 msg += text + "\n"
+            report_chnl = ""
             if self.params['type'] == 'day':
-                time_title = "【%s】【%s】天数据统计完成" % (_pf,self.start_time)
+                #time_title = "【%s】【%s】天数据统计完成" % (_pf,self.start_time)
+                #天数据统计完成
+                time_title = "%s%s 天数据统计完成" % (self.start_time,get_pf_sname(_pf))
+                report_chnl = REPORT_CHANNEL
             else:
-                time_title = "【%s】【%s】小时数据统计完成" % (_pf,self.start_time)
+                #小时数据统计完成
+                #time_title = "【%s】【%s】小时数据统计完成" % (_pf,self.start_time)
+                time_title = "%s%s 小时数据统计完成" % (self.start_time,get_pf_sname(_pf))
+                report_chnl = HOUR_REPORT_CHANNEL
             LOG.info("report text,title: %s .", time_title)
             bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
-                                channel=REPORT_CHANNEL , at_text=msg)
+                                channel=report_chnl , at_text=msg)
         return result_text
 
     def __report_total_text(self, _pf):
