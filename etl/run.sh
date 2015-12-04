@@ -53,7 +53,7 @@ if [ $? -eq 255 ];then
     exit
 fi
 
-nohup sh ./inventory_run.sh "${year}-${month}-${day}:${hour}" > /dev/null 2>&1 &
+nohup sh ./inventory_run.sh "${year}-${month}-${day}:${hour}" "${hour}" > /dev/null 2>&1 &
 
 python app.py admonitor 'h' "${year}-${month}-${day}:${hour}"
 if [ $? -eq 255 ];then

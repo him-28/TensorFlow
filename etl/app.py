@@ -11,13 +11,13 @@ if 'amble' not in sys.modules and __name__ == '__main__':
 from etl.conf.settings import LOGGER, Config
 from etl.util import path_chk_or_create
 from etl.util.datautil import merge_file, transform_ngx_log
-from etl.audit.admonitor_audit import main
+#from etl.audit.admonitor_audit import main
 from etl.logic2.calc import calc_ad_monitor
 from etl.logic1.ad_transform_pandas import AdTransformPandas,buddha_bless_me
 from etl.logic0.ad_etl_transform import calc_etl
 
-from etl.audit import admonitor_ad_audit
-from etl.util import admonitor_flat_data
+#from etl.audit import admonitor_ad_audit
+#from etl.util import admonitor_flat_data
 from etl.report.reporter import DataReader
 from etl.report.reporter import Reportor
 
@@ -328,7 +328,7 @@ class AdMonitorRunner(object):
                       "filesize":filesize,
                       "logic0_sptime":logic0_sptime,
                       "logic1_sptime":logic1_sptime,
-                      "start_time":now.strftime("%Y-%m-%d %H")}
+                      "start_time":now.strftime("%Y%m%d%H")}
             Reportor(params, d_reader).report_text()
 
         elif mode == 'd':
@@ -365,7 +365,7 @@ class AdMonitorRunner(object):
 #                       "fileinfo0":getfilesinfo(paths['logic0_output_paths']),
                       "fileinfo1":getfilesinfo(paths['logic1_output_paths']),
                       "sptime":sptime,
-                      "start_time":now.strftime("%Y-%m-%d")}
+                      "start_time":now.strftime("%Y%m%d")}
             # 报告结果
             Reportor(params, d_reader).report_text()
 
