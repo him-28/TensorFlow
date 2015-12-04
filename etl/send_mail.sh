@@ -23,7 +23,7 @@ SES_content="${cont}</hr>@${ip_addr}"
 SES_address="martin@e.hunantv.com,jinyibin@e.hunantv.com,dingzheng@mgtv.com" 
 SES_title="adlog_etl_error"
 SES_fromName="ad_log"
-SES_fromAddress="dingzheng@mgtv.com"
+SES_fromAddress="dongjie@e.hunantv.com"
 SES_sendType="rightnow"
 
 for address in ${SES_address[@]}
