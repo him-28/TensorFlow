@@ -20,7 +20,7 @@ from etl.conf.settings import AUDIT_HEADER
 from etl.conf.settings import MONITOR_CONFIGS
 from etl.util.playerutil import getplayerInfo
 
-REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel"]
+REPORT_CHANNEL = MONITOR_CONFIGS["bearychat_channel_hour"]
 
 SUCCESS = "success"
 
