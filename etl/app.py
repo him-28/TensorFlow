@@ -389,7 +389,8 @@ def run_cli(arguments):
         now = datetime.now()
         if run_type == 'admonitor':
             if 'h' == args[0]:
-                now = now - timedelta(hours=1)
+                date_str= args[1]
+                now = datetime.strptime(date_str,'%Y-%m-%d:%H')
             elif 'd' == args[0]:
                 now = now - timedelta(days=1)
             AdMonitorRunner().run(now, args[0])
