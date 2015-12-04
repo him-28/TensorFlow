@@ -18,11 +18,12 @@ USER="bigdata"
 PWD="bigdata^@hunantv"
 SES_appid="bigdata"
 SES_pwd="CD435D4F1620BECCA029CBEFA99209AA"
-SES_content="$cont"
-SES_address="dongjie@e.hunantv.com,martin@e.hunantv.com,jinyibin@e.hunantv.com,01911@imgo.tv"
+ip_addr=$(ifconfig|grep "inet addr:"|grep -v "127.0.0.1"|cut -d: -f2|awk '{print $1}')
+SES_content="${cont}</hr>@${ip_addr}"
+SES_address="martin@e.hunantv.com,jinyibin@e.hunantv.com,dingzheng@mgtv.com" 
 SES_title="adlog_etl_error"
 SES_fromName="ad_log"
-SES_fromAddress="dongjie@e.hunantv.com"
+SES_fromAddress="dingzheng@mgtv.com"
 SES_sendType="rightnow"
 
 for address in ${SES_address[@]}

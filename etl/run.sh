@@ -46,25 +46,20 @@ fi
 mv ${fluentd_ad_path} ${ngx_ad_path}
 
 cd $src_path
-python app.py admonitor 'h'
+python audit_app.py admonitor 'h'
+if [ $? -eq 255 ];then
+    echo "ad audit hour run error"
+    sh send_mail.sh ${year}${month}${day} ${hour} ad audit hour run error
+    exit
+fi
+
+nohup sh ./inventory_run.sh "${year}-${month}-${day}:${hour}" "${hour}" > /dev/null 2>&1 &
+
+python app.py admonitor 'h' "${year}-${month}-${day}:${hour}"
 if [ $? -eq 255 ];then
     echo "ad app hour run error"
     sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
     exit
-fi
-python inventory_app.py inventory 'h' "${year}-${month}-${day}:${hour}"
-if [ $? -eq 255 ];then
-    echo "ad inventory hour run error"
-    sh send_mail.sh ${year}${month}${day} ${hour} ad app hour run error
-    exit
-fi
-if [ "${hour}" == "03" ];then
-    python inventory_app.py inventory 'd'
-    if [ $? -eq 255 ];then
-        echo "ad inventory day run error"
-        sh send_mail.sh ${year}${month}${day} ad app day run error
-        exit
-    fi
 fi
 
 if [ "${hour}" == "06" ];then

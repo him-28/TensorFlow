@@ -42,18 +42,21 @@ class AdInventoryTranform(AdTransformPandas):
         Constructor
         '''
         LOG.info("Welcome to AdInventoryTranform")
-        AdTransformPandas.__init__(self)
+        AdTransformPandas.__init__(self, LOG)
         self.starttime = time.clock()
         self.result_path = result_path
         self.filesize = 0
         self.filename = None
         self.spend_time = 0
+        self.tmp_suffix = ".inventory.tmp"
+        self.display_poss_tmp_suffix = ".inventory.ttmp"
+        self.flat_suffix = ".flat"
 
     def calculate(self, input_path, input_filename, alg_file):
         '''计算数据'''
 
         input_path = input_path.replace("\\", os.sep).replace("/", os.sep)
-        flat_input_file_name = flat_datas(input_path, input_filename)
+        flat_input_file_name = self.flat_datas(input_path, input_filename)
         flat_input_file_path = os.path.join(input_path, flat_input_file_name)
         self.filesize = getfilesize(os.path.join(input_path, input_filename))
         self.filename = input_filename
@@ -185,24 +188,24 @@ class AdInventoryTranform(AdTransformPandas):
         infos["details"] = details
         return infos
 
-def flat_datas(input_path, input_filename):
-    '''flat datas'''
-    flat_input_filename = input_filename + ".flat"
-    flat_input_filepath = os.path.join(input_path, flat_input_filename)
-    input_file_path = os.path.join(input_path, input_filename)
-    LOG.info("start to flat city id、server-timestamp:%s", input_file_path)
-    trunks = pd.read_csv(input_file_path, \
-                         sep=CNF.get('input_column_sep'), chunksize=CNF.get('read_csv_chunk'), \
-                    dtype=split_header(CNF.get("header_type")), index_col=False)
-    write_mode = 'w'
-    for trunk in trunks:
-        trunk["server_timestamp"] = trunk["server_timestamp"].apply(flat_times)
-        trunk["city_id"] = trunk["ip"].apply(flat_city_id)
-        trunk.to_csv(flat_input_filepath, sep=CNF.get('input_column_sep'), \
-                     header=(write_mode == 'w'), mode=write_mode)
-        if write_mode == 'w':  # 第一次写，覆盖模式、带头
-            write_mode = 'a'
-    return flat_input_filename
+    def flat_datas(self, input_path, input_filename):
+        '''flat datas'''
+        flat_input_filename = input_filename + self.flat_suffix
+        flat_input_filepath = os.path.join(input_path, flat_input_filename)
+        input_file_path = os.path.join(input_path, input_filename)
+        LOG.info("start to flat city id、server-timestamp:%s", input_file_path)
+        trunks = pd.read_csv(input_file_path, \
+                             sep=CNF.get('input_column_sep'), chunksize=CNF.get('read_csv_chunk'), \
+                        dtype=split_header(CNF.get("header_type")), index_col=False)
+        write_mode = 'w'
+        for trunk in trunks:
+            trunk["server_timestamp"] = trunk["server_timestamp"].apply(flat_times)
+            trunk["city_id"] = trunk["ip"].apply(flat_city_id)
+            trunk.to_csv(flat_input_filepath, sep=CNF.get('input_column_sep'), \
+                         header=(write_mode == 'w'), mode=write_mode)
+            if write_mode == 'w':  # 第一次写，覆盖模式、带头
+                write_mode = 'a'
+        return flat_input_filename
 
 def flat_times(server_timestamp):
     '''flat times'''

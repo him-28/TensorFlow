@@ -400,8 +400,8 @@ class AdTransformPandas(object):
             end = group['endtime']
             if start <= timestamp and end > timestamp:
                 playerinfo = group["playerinfo"]
-                if playerinfo.has_key(int(board_id)):
-                    return playerinfo[int(board_id)].keys()
+                if playerinfo.has_key(int(float(board_id))):
+                    return playerinfo[int(float(board_id))].keys()
         return None
 
     def __get_store_slotid_by_seq(self, board_id, timestamp, seq, group_id):

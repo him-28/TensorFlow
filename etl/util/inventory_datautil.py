@@ -15,7 +15,7 @@ LOG = init_log.init("util/logger.conf", 'inventoryLogger')
 ENV_CONF = yaml.load(file("conf/inventory_monitor_config.yml"))
 SCNF = ENV_CONF[CURRENT_ENV]["store"]
 
-def merge_file(input_paths, output_files):
+def merge_file(input_paths, output_files, data_date):
     """
     @param input_paths:
     {
@@ -47,6 +47,10 @@ def merge_file(input_paths, output_files):
         if os.path.exists(output_filename):
             os.remove(output_filename)
             LOG.warn("output file exists, remove")
+        error_output_filename = output_filename + ".err"
+        if os.path.exists(error_output_filename):
+            os.remove(error_output_filename)
+            LOG.warn("error output file exists, remove")
 
         output_column_sep = CNF.get("output_column_sep")
         daydata_dataframe = load_files(input_list, output_column_sep, dtype)
@@ -54,6 +58,9 @@ def merge_file(input_paths, output_files):
         LOG.info("sum merged datas")
         addon_item = SCNF["result_item"]
         daydata_dataframe["city_id"] = daydata_dataframe["city_id"].fillna("-1").astype(int)
+        daydata_dataframe["server_timestamp"] = daydata_dataframe["server_timestamp"].astype(float)
+        daydata_dataframe = filter_error_data(data_date, daydata_dataframe, \
+                          error_output_filename, dtype, output_column_sep)
         daydata_dataframe = daydata_dataframe.groupby(addon_item, as_index=False).sum()
         daydata_dataframe.to_csv(output_filename, sep=output_column_sep, na_rep=CNF.get("na_rep"), \
                    dtype=dtype, header=True, index=False)
@@ -62,6 +69,24 @@ def merge_file(input_paths, output_files):
         end = time.clock()
         spend_time = "%0.2f" % (end - start)
         return report_infos(daydata_dataframe, spend_time)
+
+def filter_error_data(data_date, daydata_dataframe, \
+                      error_output_filename, dtype, output_column_sep):
+    '''处理错误数据'''
+    timestamp = time.mktime(data_date.date().timetuple())
+    LOG.info("filter error timestamp datas [%s]...", timestamp)
+    error_dataframe = daydata_dataframe[daydata_dataframe["server_timestamp"] != timestamp]
+    if not error_dataframe.empty:
+        err_len = len(error_dataframe)
+        if err_len > 0:
+            LOG.info("found [%s] error timestamp datas", err_len)
+            error_dataframe.to_csv(error_output_filename, sep=output_column_sep, \
+                                   na_rep=CNF.get("na_rep"), \
+                                   dtype=dtype, header=True, index=False)
+            LOG.info("save error datas to : %s", error_output_filename)
+            return daydata_dataframe[daydata_dataframe["server_timestamp"] == timestamp]
+    LOG.info("find no error timestamp data")
+    return daydata_dataframe
 
 def report_infos(df1, spend_time):
     '''返回结果报告'''
@@ -101,9 +126,7 @@ def load_files(input_list, output_column_sep, dtype):
                 df3 = pd.concat([df1, df2])
             else:
                 LOG.error("merge file did not exists:%s", input_file)
-            del df1, df2
             df1 = df3
-            del df3
         else:
             if os.path.exists(input_file):
                 LOG.info("load file: %s " , input_file)
