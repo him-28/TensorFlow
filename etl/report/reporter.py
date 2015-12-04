@@ -101,6 +101,9 @@ __init__ method need 3 parameters witch format as bellow example:
 '''
 
 import datetime as dt
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 from etl.conf.settings import LOGGER as LOG
 from etl.conf.settings import MONITOR_CONFIGS
