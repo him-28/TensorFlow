@@ -66,11 +66,11 @@ class ExtractTransformLoadInventory(object):
 
     def run(self, run_cfg):
         '''Run the ETL !!!'''
-        self.extract(run_cfg)  # step 1
+        result_df = self.extract(run_cfg)  # step 1
         self.save()  # step 3
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
-        self.report()  # step end
+        return self.report(result_df)  # step end
 
     def extract(self, run_cfg, before=None, after=None):
         '''extract data file'''
@@ -85,10 +85,11 @@ class ExtractTransformLoadInventory(object):
 
         for file_path in src_files:
             self.__extract_file(file_path, run_cfg)
-        self.__merge_chunks_result(run_cfg)
+        result_df = self.__merge_chunks_result(run_cfg)
 
         if after:
             self.__handle_after(after)
+        return result_df
 
     def transform(self, alg_file, chunk, before=None, after=None):
         '''transform data'''
@@ -171,6 +172,7 @@ class ExtractTransformLoadInventory(object):
 
     def __caculate_display(self, chunk, trans_type, output_file_path):
         '''计算展示机会'''
+        self.info("caculate display...")
         header = self.get("alg_info")[trans_type]["header"]
         series_data_struct = dict((key, []) for key in header)
         chunk.apply(self.__fill_relation_list, axis=1, \
@@ -192,6 +194,7 @@ class ExtractTransformLoadInventory(object):
             out_path = os.path.dirname(output_file_path)
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
+            self.info("save result to %s", output_file_path)
             result.to_csv(output_file_path, index=True, mode=mode, \
                           header=write_header, sep=self.get("csv_sep"))
         if write_header:
@@ -252,15 +255,44 @@ class ExtractTransformLoadInventory(object):
         if after:
             self.__handle_after(after)
 
-    def report(self, before=None, after=None):
+    def report(self, dataframe, before=None, after=None):
         '''report result to BearyChat,Email'''
         if before:
             self.info("before report: %s", before)
             self.__handle_before(before)
+
+
+        result_size = 0
+        display_sale = 0
+        display_poss = 0
+        if not dataframe.empty:
+            result_size = len(dataframe)
+            display_sale = dataframe["display_sale"].sum()
+            display_poss = dataframe["display_poss"].sum()
+        infos = {
+             "file_size": self.filesize,
+             "file_name": self.filename,
+             "result_size": result_size,
+             "spend_time": self.spend_time,
+             "display_sale": display_sale,
+             "display_poss": display_poss
+        }
+        details = {}
+        if not dataframe.empty:
+            df2 = dataframe.groupby("pf").sum()
+            for the_pf, datas in df2.iterrows():
+                details[the_pf] = {
+                    "display_sale" : int(datas["display_sale"]),
+                    "display_poss" : int(datas["display_poss"])
+               }
+        infos["details"] = details
+
+
         if after:
             self.info("after report: %s", after)
             self.__handle_after(after)
 
+        return infos
     def config_parmas(self, configures):
         '''config params'''
 
@@ -319,6 +351,7 @@ class ExtractTransformLoadInventory(object):
 
     def __merge_chunks_result(self, run_cfg):
         '''merge'''
+        self.info("merge chunk files...")
         dataframe_list = []
         for key, result_path in run_cfg.iteritems():
             header = self.get("alg_info")[key]["header"]
@@ -327,10 +360,12 @@ class ExtractTransformLoadInventory(object):
                                     .groupby(header, as_index=False, sort=False).sum()
             dataframe = pd.DataFrame(dataframe).rename(columns={'0':key})
             dataframe_list.append(dataframe)
+            self.info("save % to %", key, result_path)
             dataframe.to_csv(result_path, index=False, \
                              header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)
         result_out_file = self.get("result_out_file")
+        self.info("merge result to %s", result_out_file)
         result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         return result_df
 
