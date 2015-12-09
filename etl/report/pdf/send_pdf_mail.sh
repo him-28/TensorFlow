@@ -26,4 +26,4 @@ if [ ! -f ${pdf_file_path} ];then
     exit
 fi
 
-mutt -s "广告数据日报" weixiong@mgtv.com,martin@e.hunantv.com,jinyibin@e.hunantv.com -a ${pdf_file_path} < mail_text.txt
+mutt -s "广告数据日报" weixiong@mgtv.com,martin@e.hunantv.com,jinyibin@e.hunantv.com -a ${pdf_file_path} < ./report/pdf/mail_text.txt
