@@ -110,10 +110,14 @@ class AdMonitor_audit:
                 try:
                     row=[i for i in new_line.split(file_split)]
                     res = self.validator(row,self.count_rows)
+                    row[tag_index] = res
+                    if len(row) != 32:
+                        LOGGER.error("audit error,row length is %s ,not 32 行号：%s 行值：%s "%(len(row),str(self.count_rows),line))
+                        continue
                 except Exception,e:
                     LOGGER.error("audit error,行号：%s 行值：%s ,error message:%s"%(str(self.count_rows),line,e.message))
                     continue
-                row[tag_index] = res
+                #row[tag_index] = res
                 write_buffer.append(row)
                 if len(write_buffer) >= self.batch_write_size:
                     self.write_file(write_buffer)
