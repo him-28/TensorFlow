@@ -21,9 +21,9 @@ pdf_file_path="/data2/ad/${year}/${month}/ad_report_${year}${month}${day}.pdf"
 
 if [ ! -f ${pdf_file_path} ];then
     echo "ad report pdf file not exists"
-    #sh ${src_path}/send_mail.sh ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists
-    sh ${src_path}/send_mail.sh  ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists 测试邮件，请忽略
+    sh ${src_path}/send_mail.sh ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists
+    #sh ${src_path}/send_mail.sh  ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists 测试邮件，请忽略
     exit
 fi
 
-mutt -s "广告数据日报" jinyibin@e.hunantv.com -a ${pdf_file_path} < mail_text.txt
+mutt -s "广告数据日报" weixiong@mgtv.com,martin@e.hunantv.com,jinyibin@e.hunantv.com -a ${pdf_file_path} < mail_text.txt
