@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?> 
+<!DOCTYPE document SYSTEM "rml.dtd"> 
+<document  compression='1'> 
+{{script}}#coding=utf-8{{endscript}}
+{{script}}import locale;locale.setlocale(locale.LC_ALL, '');{{endscript}}
+<docinit>
+    <color id="BLUE" CMYK="[1,0.67,0,0.23]"/>
+</docinit>
+<template pageSize="(595, 842)" leftMargin="72" rightMargin="72" >
+
+    <pageTemplate id="head" pageSize="a4 portrait">
+        <pageGraphics >
+            <image  file="{{STATIC_DIR}}" x="40" y="770" width="94" height="25"/>
+            <fill color="#778899"/>
+            <setFont name="song" size="10"/>
+            <lineMode width="1"/>
+            <lines>
+            40 765 555 765
+            </lines>
+            <fill color="#778899"/>
+            <lineMode width="1" />
+            <lines>
+            0 60 595 60
+            </lines>
+            <fill color="#778899"/>
+            <setFont name="song" size="10"/>
+            <drawString x="235" y="40">广告产品部-广告数据 </drawString>
+            <drawString x="450" y="40">当前第<pageNumber countingFrom="1"/>页 </drawString>
+        </pageGraphics>
+        <frame id="second" x1="35" y1="85" width="525" height="660"/>
+    </pageTemplate>
+</template>
+
+<stylesheet>
+    <initialize>
+        <alias id="style.normal" value="style.Normal"/>
+    </initialize>
+    <paraStyle name="common"  fontName="song" fontSize="12" leading="18" spaceBefore="6" spaceAfter="12" firstLineIndent="0.5in" />
+    <paraStyle name="alignLeft" alignment="left" fontName="song" fontSize="12" leading="15" spaceBefore="6" spaceAfter="8" firstLineIndent="0.2in" />
+    <paraStyle name="noIndent" alignment="left" fontName="song" fontSize="12" leading="15" spaceBefore="6" spaceAfter="8" />
+    <!--<paraStyle name="trstyle" alignment="left" fontName="song" fontSize="6" leading="1" spaceBefore="" spaceAfter="" />-->
+    <!--<paraStyle name="trstyle" />-->
+    <paraStyle name="alignRight" alignment="right"  fontName="song" fontSize="12" leading="15" spaceBefore="6" spaceAfter="12" firstLineIndent="0.5in" />
+    <paraStyle name="alignCenter" alignment="center"  fontName="song" fontSize="12" leading="15" spaceBefore="4" spaceAfter="12" firstLineIndent="0.5in" />
+    <paraStyle name="titleb" fontName="song" fontSize="30" leading="24" spaceBefore="6" spaceAfter="50" alignment="center"/>
+    <paraStyle name="title" fontName="song" fontSize="20" leading="24" spaceBefore="6" spaceAfter="50" alignment="center"/>
+    <paraStyle name="paddingLeft" alignment="left" fontName="song" fontSize="12" leading="15" spaceBefore="6" spaceAfter="8" firstLineIndent="250" />
+</stylesheet>
+
+<stylesheet>
+    <blockTableStyle id="myBlockTableStyle"> 
+          <!-- Set fonts --> 
+          <paraStyle name="trstyle"  alignment="left" fontName="song" fontSize="6" leading="8" spaceBefore="" spaceAfter="" />
+          <lineStyle kind="GRID" colorName="black" start="0,0" 
+                        stop="-1,-1" thickness="1"/>
+          <!--<lineStyle kind="LINEBELOW" colorName="orangered" start="0,0" 
+                        stop="-1,0" thickness="5"/> -->
+          <!-- 
+          <blockFont name="Helvetica-BoldOblique" size="10" start="0,0" stop="1,0"/> 
+          <blockTextColor colorName="green" start="1,2" stop="1,4"/> 
+          <blockAlignment value="CENTER"/> 
+          <blockAlignment value="RIGHT" start="1,0" stop="1,-1"/> 
+          <blockAlignment value="LEFT" start="0,1" stop="0,-1"/> 
+          <blockValign value="TOP" start="0,0" stop="-1,0"/> 
+          <blockValign value="MIDDLE" start="1,2" stop="1,2"/> 
+          <lineStyle kind="GRID" colorName="silver"/> 
+          <lineStyle kind="LINEAFTER" colorName="maroon" start="1,1" 
+                        stop="1,6" thickness="1"/> 
+                        -->
+      </blockTableStyle> 
+</stylesheet>
+<story>
+<!--<setNextTemplate name="head"/>-->
+<para style="titleb"><b>芒果TV</b></para>
+<para style="title"><b>广告数据监测日报-{{timenow}}</b></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+<para style="noIndent"></para>
+{{for (pf,pfinfo) in ad_data.items()}}
+<para style="alignCenter"><b>{{pf}}</b></para>
+    <para style="noIndent">汇总报告</para>
+    <blockTable style="myBlockTableStyle" >
+        <tr >
+            <td ><para style="trstyle">展示机会</para></td>
+            <td><para style="trstyle">投放数</para></td>
+            <td><para style="trstyle">素材开始播放数</para></td>
+            <td><para style="trstyle">素材结束播放数</para></td>
+            <td><para style="trstyle">点击数</para></td>
+            <td><para style="trstyle">升位数</para></td>
+            <td><para style="trstyle">投放成功率</para></td>
+            <td><para style="trstyle">点击率</para></td>
+        </tr>
+        <tr >
+            <td><para style="trstyle"></para></td>
+            <td><para style="trstyle">{{sum_list[pf][0]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][1]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][2]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][3]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][4]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][5]}}</para></td>
+            <td><para style="trstyle">{{sum_list[pf][6]}}</para></td>
+            
+        </tr>
+    </blockTable>
+    
+    <para style="noIndent"></para>
+    <para style="noIndent"></para>
+    
+    {{for playerid,playeradinfo in pfinfo.items()}}
+        {{for groupif in playeradinfo}}
+            {{for groupname,groupadinfo in groupif.items()}}
+                <para style="noIndent">播放器{{playerid}}{{groupname}}位序报告</para>
+                <blockTable style="myBlockTableStyle" >
+                    <tr >
+                        <td ><para style="trstyle">广告位序</para></td>
+                        <td ><para style="trstyle">展示机会</para></td>
+                        <td><para style="trstyle">投放数</para></td>
+                        <td><para style="trstyle">素材开始播放数</para></td>
+                        <td><para style="trstyle">素材结束播放数</para></td>
+                        <td><para style="trstyle">点击数</para></td>
+                        <td><para style="trstyle">升位数</para></td>
+                        <td><para style="trstyle">投放成功率</para></td>
+                        <td><para style="trstyle">点击率</para></td>
+                    </tr>
+                    {{for tlist in groupadinfo}}
+                        <tr >
+                            <td><para style="trstyle">{{tlist[0]}}</para></td>
+                            <td><para style="trstyle"></para></td>
+                            <td><para style="trstyle">{{tlist[1]}}</para></td>
+                            <td><para style="trstyle">{{tlist[2]}}</para></td>
+                            <td><para style="trstyle">{{tlist[3]}}</para></td>
+                            <td><para style="trstyle">{{tlist[4]}}</para></td>
+                            <td><para style="trstyle">{{tlist[5]}}</para></td>
+                            <td><para style="trstyle">{{tlist[6]}}</para></td>
+                            <td><para style="trstyle">{{tlist[7]}}</para></td>
+                        </tr>
+                      {{endfor}}
+                </blockTable>
+                <para style="noIndent"></para>
+                <para style="noIndent"></para>
+                <para style="noIndent"></para>
+            {{endfor}}
+        {{endfor}}
+    {{endfor}}
+{{endfor}}
+</story>
+</document>

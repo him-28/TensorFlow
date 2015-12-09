@@ -105,6 +105,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+from etl.report.pdf.report2pdf import generate_pdf_report
 from etl.conf.settings import LOGGER as LOG
 from etl.conf.settings import MONITOR_CONFIGS
 from etl.util import bearychat as bc
@@ -190,6 +191,8 @@ class Reportor(object):
         self.__group_name_info = {}
         self.__group_slot_info = {}
         self.groupinfo = getAllGroupId()
+        self.pdf_ad_data = {}
+        self.pdf_sum_data = {}
     
     def __get_group_name(self,groupid):
         if self.__group_name_info.has_key(groupid):
@@ -227,7 +230,7 @@ class Reportor(object):
                 _pf_result_text = []
                 for board_id, slot_data in pf_data.iteritems():
                     _pf_result_text.extend(self.__statistics(_pf, board_id, slot_data))
-                    _pf_result_text.extend(self.__seqs(board_id, slot_data))
+                    _pf_result_text.extend(self.__seqs(board_id, slot_data,_pf))
                 _pf_result_text.insert(0, self.__report_total_text(_pf))
                 result_text.append((_pf, _pf_result_text))
         else:
@@ -250,9 +253,19 @@ class Reportor(object):
                 #time_title = "【%s】【%s】小时数据统计完成" % (_pf,self.start_time)
                 time_title = "%s%s 小时数据统计完成" % (self.start_time,get_pf_sname(_pf))
                 report_chnl = HOUR_REPORT_CHANNEL
-            LOG.info("report text,title: %s .", time_title)
             bc.new_send_message(text=get_pf_name(_pf), at_title=time_title, \
                                 channel=report_chnl , at_text=msg)
+        LOG.info("report text,title: %s .", time_title)
+        try:
+            # 生成pdf
+            LOG.info("generate PDF report")
+            generate_pdf_report(self.pdf_ad_data,self.pdf_sum_data,self.start_time)
+            LOG.info("generate PDF report done")
+        except Exception,e:
+            import traceback
+            ex = traceback.format_exc()
+            LOG.error("generate PDF report error,error message:%s"%e.message)
+            LOG.error("generate PDF report error %s"%ex)
         return result_text
 
     def __report_total_text(self, _pf):
@@ -307,6 +320,8 @@ class Reportor(object):
                               l0_1 % ( up1), \
                               f0_1 % ( impression_rate1), \
                               f0_1 % ( click_rate1))
+        # 组装pdf需要的数据
+        self.pdf_sum_data[_pf]=[display_sale1,impression1,impression_end1,click1,up1,"%.2f%%"%impression_rate1,"%.2f%%"%click_rate1]
         slot_str = slot_title % slot_value
         fnssp = ""
         if "hour" == self.params["type"]:
@@ -408,7 +423,7 @@ class Reportor(object):
                 result.append((format_title, slot_str))
         return result
 
-    def __seqs(self, board_id, slot_data):
+    def __seqs(self, board_id, slot_data,_pf):
         '''statistics'''
 #         前贴片位序报告：
 #            1,<投放数>,<开始播放数>,<播放结束数>,<升位数>,<点击数>,<投放成功率>,<点击率>
@@ -453,6 +468,7 @@ class Reportor(object):
                         seq_list[j] = tmp
             # 拼接成字符串
             seq_str = ""
+            group_name_dic = {}
             for i in range(0,seq_len):
                 seq = seq_list[i][0]
                 data = seq_list[i][1]
@@ -474,7 +490,22 @@ class Reportor(object):
                     imps_rate1 = 100.0 * imps_start / logic1_data
                 if not imps_start == 0:
                     click_rate1 = 100.0 * click / imps_start
+                    
+                if not group_name_dic.has_key(group_name):
+                    group_name_dic[group_name]=[[seq,logic1_data,imps_start,imps_end,click,up,"%.2f%%"%imps_rate1,"%.2f%%"%click_rate1]]
+                else:
+                    group_name_dic[group_name].append([seq,logic1_data,imps_start,imps_end,click,up,"%.2f%%"%imps_rate1,"%.2f%%"%click_rate1])
+                    
                 seq_str += "%s,%s,%s,%s,%s,%s,%.2f%%,%.2f%%\n"%(seq,logic1_data,imps_start,imps_end,click,up,imps_rate1,click_rate1)
+            # 组装pdf需要的数据
+            if not self.pdf_ad_data.has_key(_pf):
+                self.pdf_ad_data[_pf]={board_id:[group_name_dic] }
+            elif not self.pdf_ad_data[_pf].has_key(board_id):
+                self.pdf_ad_data[_pf][board_id]=[group_name_dic]
+            elif not self.pdf_ad_data[_pf][board_id] or len(self.pdf_ad_data[_pf][board_id]) <= 0:
+                self.pdf_ad_data[_pf][board_id]=[group_name_dic]
+            else:
+                self.pdf_ad_data[_pf][board_id].append(group_name_dic)
             #end for groupid,seqsdata
             result_report.append((format_title, seq_str+"\n"))
 #         return [(format_title, seq_str+"\n")]

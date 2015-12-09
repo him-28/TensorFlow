@@ -1,0 +1,29 @@
+#!/bin/bash
+src_path="/data2/amble/etl"
+
+year=$1
+month=$2
+day=$3
+
+if [ "$year" == "" ];then
+    year=`date -d '-1 hour' +%Y`
+fi
+
+if [ "$month" == "" ];then
+    month=`date -d '-1 hour' +%m`
+fi
+
+if [ "$day" == "" ];then
+    day=`date -d '-1 hour' +%d`
+fi
+
+pdf_file_path="/data2/ad/${year}/${month}/ad_report_${year}${month}${day}.pdf"
+
+if [ ! -f ${pdf_file_path} ];then
+    echo "ad report pdf file not exists"
+    #sh ${src_path}/send_mail.sh ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists
+    sh ${src_path}/send_mail.sh  ad_report_${year}${month}${day}.pdf  ad report pdf file  not exists 测试邮件，请忽略
+    exit
+fi
+
+mutt -s "广告数据日报" jinyibin@e.hunantv.com -a ${pdf_file_path} < mail_text.txt
