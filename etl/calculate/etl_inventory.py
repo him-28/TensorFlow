@@ -189,6 +189,9 @@ class ExtractTransformLoadInventory(object):
                 mode = 'w'
             else:
                 mode = 'a'
+            out_path = os.path.dirname(output_file_path)
+            if not os.path.exists(out_path):
+                os.makedirs(out_path)
             result.to_csv(output_file_path, index=True, mode=mode, \
                           header=write_header, sep=self.get("csv_sep"))
         if write_header:
