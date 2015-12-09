@@ -50,9 +50,9 @@
 <stylesheet>
     <blockTableStyle id="myBlockTableStyle"> 
           <!-- Set fonts --> 
-          <paraStyle name="trstyle"  alignment="left" fontName="song" fontSize="6" leading="8" spaceBefore="" spaceAfter="" />
+          <paraStyle name="trstyle"  alignment="center" fontName="msyh" fontSize="9" />
           <lineStyle kind="GRID" colorName="black" start="0,0" 
-                        stop="-1,-1" thickness="1"/>
+                        stop="-1,-1" />
           <!--<lineStyle kind="LINEBELOW" colorName="orangered" start="0,0" 
                         stop="-1,0" thickness="5"/> -->
           <!-- 
@@ -89,7 +89,7 @@
 {{for (pf,pfinfo) in ad_data.items()}}
 <para style="alignCenter"><b>{{pf}}</b></para>
     <para style="noIndent">汇总报告</para>
-    <blockTable style="myBlockTableStyle" >
+    <blockTable style="myBlockTableStyle" colWidths="1.9cm,2cm,3.1cm,3.1cm,1.8cm,2cm,2.7cm,1.7cm">
         <tr >
             <td ><para style="trstyle">展示机会</para></td>
             <td><para style="trstyle">投放数</para></td>
@@ -120,7 +120,7 @@
         {{for groupif in playeradinfo}}
             {{for groupname,groupadinfo in groupif.items()}}
                 <para style="noIndent">播放器{{playerid}}{{groupname}}位序报告</para>
-                <blockTable style="myBlockTableStyle" >
+                <blockTable style="myBlockTableStyle" colWidths="1.7cm,1.7cm,2cm,2.8cm,2.8cm,1.6cm,2cm,2.3cm,1.5cm">
                     <tr >
                         <td ><para style="trstyle">广告位序</para></td>
                         <td ><para style="trstyle">展示机会</para></td>

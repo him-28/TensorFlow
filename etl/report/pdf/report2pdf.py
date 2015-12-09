@@ -41,8 +41,10 @@ class PDFUtils(object):
         self.ad_data = ad_data
         self.dtime = dtime
         try:
-            # 注册宋体字体
-            pdfmetrics.registerFont(ttfonts.TTFont('song', os.path.join(font_dir, 'STSONG.TTF')))
+            # 注册字体
+            pdfmetrics.registerFont(ttfonts.TTFont('song', os.path.join(font_dir, 'MSYHBD.TTF')))
+            #宋体
+            pdfmetrics.registerFont(ttfonts.TTFont('msyh', os.path.join(font_dir, 'MSYH.TTF')))
             # 注册宋体粗体字体
             pdfmetrics.registerFont(ttfonts.TTFont('song_b', os.path.join(font_dir, 'STZHONGS.TTF')))
         except:
@@ -51,7 +53,8 @@ class PDFUtils(object):
         addMapping('song', 0, 0, 'song')     # normal
         addMapping('song', 0, 1, 'song')     # italic
         addMapping('song', 1, 1, 'song_b')     # bold, italic
-        addMapping('song', 1, 0, 'song_b')     # bold
+        addMapping('song', 1, 0, 'song_b')
+        addMapping('songs', 0, 0, 'songs')     # bold
 
         # 设置自动换行
         reportlab.lib.styles.ParagraphStyle.defaults['wordWrap'] = "CJK"
