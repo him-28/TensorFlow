@@ -13,7 +13,7 @@ from etl.calculate.etl_inventory import ExtractTransformLoadInventory
 def ngx_files(the_date, data_index, time2d):
     '''get ngx files'''
     ngx_file = "{sep}data{data_index}{sep}ngx{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
-log.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d}".format(
+log.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
