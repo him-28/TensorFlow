@@ -1,0 +1,203 @@
+inventory:
+    "original_sep": "\\^A"
+    "csv_sep": "\t"
+    "original_header": ["remote_addr", "http_x_forwarded_for", "host", "time_iso8601",
+         "request_time", "http_referer", "http_user_agent", "cookie", "server_addr",
+         "request_length", "status", "request", "request_body"]
+    "usefull_request_body_header": {
+        "ty": "ad_event_type",
+        "v": "video_id",
+        "ci": "playlist_id",
+        "b": "board_id",
+        "rs": "request_res",
+        "l": "ad_list",
+        "s": "slot_id",
+        "cp": "mediabuy_id",
+        "c": "creator_id",
+        "o": "order",
+        "e": "play_event",
+        "pf": "pf",
+        "time_iso8601": "server_timestamp",
+        "si": "session_id",
+        "ip": "ip",
+        "city_id": "city_id",
+        "tag": "tag"
+    }
+    "dtype": {
+        "ad_event_type": "str",
+        "video_id": "str",
+        "playlist_id": "str",
+        "board_id": "str",
+        "request_res": "str",
+        "ad_list": "str",
+        "slot_id": "str",
+        "mediabuy_id": "str",
+        "creator_id": "str",
+        "order": "str",
+        "play_event": "str",
+        "pf": "str",
+        "server_timestamp": "str",
+        "session_id": "str",
+        "ip": "str",
+        "city_id": "str",
+        "tag": "int"
+    }
+    group_item: 
+        display_poss: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+        display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+    "original_out_suffix": ".src"
+    "original_error": ".orign.err"
+    "read_csv_chunksize": 500000
+    "ipb_filepath": util/IPB.csv
+    "city_filepath": util/city_province.csv
+
+tag_code:
+    "ILLEGAL_REQUEST_BODY": 101
+    "AUDIT_ERROR": 102
+    "AUDIT_EXCEPT": 103
+    "AUDIT_CORRECT": 1
+    "INIT_STATUS": 0
+
+audit_cfg:
+    ip:
+        scene1:
+            condition: 
+            required: True
+    ad_event_type:
+        scene1:
+            condition: 
+            required: True
+            range: ['e','p']
+    url:
+        scene1:
+            condition: 
+            required: False
+    video_id:
+        scene1:
+            condition: 
+            required: False      #图片广告除外
+            dtype: int
+    playlist_id:
+        scene1:
+            condition: 
+            required: False      #图片广告除外
+            dtype: int
+    board_id:
+        scene1:
+            condition: 
+            required: True      
+            dtype: int 
+    request_res:
+        scene1:
+            condition:
+                ad_event_type: ['e'] 
+            required: True
+            range: ['0','1']
+    ad_list:
+        scene1:
+            condition: 
+            required: False
+    time_delay: 
+        scene1:
+            condition: 
+                ad_event_type: ['e']
+            required: True
+            dtype: int
+    request_str:
+        scene1:
+            condition: 
+                ad_event_type: ['e']
+            required: True
+    slot_id:
+        scene1:
+            condition: 
+                ad_event_type: ['p'] 
+            required: True
+            dtype: int 
+        scene2:
+            condition: 
+                ad_event_type: ['e']
+            required: False 
+            dtype: int 
+    mediabuy_id: 
+        scene1:
+            condition: 
+                ad_event_type: ['p']
+            required: True 
+            dtype: int
+    creator_id:
+        scene1:
+            condition: 
+                ad_event_type: ['p']
+            required: True 
+            dtype: int  
+    video_play_time:
+        scene1:
+            condition: 
+                ad_event_type: ['p']
+            required: True 
+            dtype: int
+    order:
+        scene1:
+            condition: 
+                ad_event_type: ['p']
+            required: True 
+            dtype: int
+    play_event:
+        scene1:
+            condition: 
+                ad_event_type: ['p']
+            required: True 
+            range: ["s", "1q","2q","3q","e", "c", "sk", "p", "up", "m", "um"]
+    pf:
+        scene1:
+            condition: 
+            required: True 
+            range: ["000000", "000100", "000101", "010000", "010001", "010100", "010101", "010200","010201","020000"]
+    device_id:
+        scene1:
+            condition: 
+                pf: ["010000", "010001", "010100", "010101", "010200","010201"]
+            required: True 
+    uid:
+        scene1:
+            condition: 
+            required: False 
+    net:
+        scene1:
+            condition: 
+            required: False 
+            range: ['1','2','3','4','5']
+            dtype: int
+    os:
+        scene1:
+            condition: 
+            required: False 
+    manufacturer:
+        scene1:
+            condition: 
+            required: False
+    model:
+        scene1:
+            condition: 
+            required: False
+    app:
+        scene1:
+            condition: 
+                pf: ["010000", "010001", "010100", "010101"]
+            required: True
+    timestamp:
+        scene1:
+            condition: 
+            required: True
+            dtype: float
+    server_timestamp:
+        scene1:
+            condition: 
+            required: True
+            dtype: float
+    session_id:
+        scene1:
+            condition: 
+            required: True
+            range:
