@@ -16,6 +16,7 @@ import logging.config
 import pandas as pd
 import yaml
 import numpy as np
+import urllib
 
 from etl.util.playerutil import getplayerInfo
 from etl.util.ip_convert import IP_Util
@@ -154,9 +155,11 @@ class ExtractTransformLoadInventory(object):
         return new_chunk
 
     def __flat_slot_id(self, row_data, series_data_struct):
-        '''打平投放SlotID'''
+        '''打平投放SlotID，如果BoardID和SlotID不匹配，不打平'''
         try:
-            ad_list = row_data["ad_list"]
+            ad_list = urllib.unquote(row_data["ad_list"])
+            board_id = row_data["board_id"]
+            server_timestamp = float(row_data["server_timestamp"])
             if not ad_list:
                 return ad_list
             list_array = ad_list.split("|")
@@ -164,11 +167,31 @@ class ExtractTransformLoadInventory(object):
             for arr in list_array:
                 slot_id = arr.split(",")[0]
                 new_row["slot_id"] = slot_id
-                for key, value in series_data_struct.iteritems():
-                    value.append(new_row[key])
+                if self.__is_board_slot_id_match(board_id, slot_id, server_timestamp):
+                    for key, value in series_data_struct.iteritems():
+                        value.append(new_row[key])
+                else:
+                    # TODO record the row
+                    pass
         except Exception, exc:
             # TODO 记录出错的日志内容
             self.error("flat slot id error: %s\n%s", exc, list(row_data.values))
+
+    def __is_board_slot_id_match(self, board_id, slot_id, server_timestamp):
+        try:
+            slot_id = int(slot_id)
+            board_id = int(board_id)
+            player_info = self.__get_player_infos()
+            for v in player_info.values():
+                start = v.get('starttime')
+                end = v.get('endtime')
+                if server_timestamp > start and server_timestamp < end:
+                    if v['playerinfo'].has_key(board_id):
+                        if v['playerinfo'][board_id].has_key(slot_id):
+                            return True
+        except Exception, exc:
+            self.error("slot/board id match exception: %s", exc)
+        return False
 
     def __caculate_display(self, chunk, trans_type, output_file_path):
         '''计算展示机会'''
@@ -360,7 +383,7 @@ class ExtractTransformLoadInventory(object):
                                     .groupby(header, as_index=False, sort=False).sum()
             dataframe = pd.DataFrame(dataframe).rename(columns={'0':key})
             dataframe_list.append(dataframe)
-            self.info("save % to %", key, result_path)
+            self.info("save %s to %s", key, result_path)
             dataframe.to_csv(result_path, index=False, \
                              header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)

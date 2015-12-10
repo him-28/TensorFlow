@@ -106,7 +106,7 @@ def merge_file(input_paths, output_files):
         _group_item = CNF["algorithm"][metric]["group_item"]
         for _gi in _group_item:
             if _gi.startswith("query-"):
-                 _group_item[_group_item.index(_gi)] = _gi.replace("query-","")
+                _group_item[_group_item.index(_gi)] = _gi.replace("query-","")
         df1 = df1.groupby(_group_item).sum()
         df1.to_csv(output_filename, sep=output_column_sep, na_rep=CNF.get("na_rep"), header=True)
 

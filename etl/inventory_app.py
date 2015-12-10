@@ -20,9 +20,8 @@ METRICS = ["display_sale", "display_poss"]
 M_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}{hour:02d}"
 H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
 D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
-M_Logic1_Filename = "result_{metric}_ad_{minute:02d}.csv"
-H_Logic1_Filename = "result_{metric}_ad_{hour:02d}.csv"
-D_Logic1_Filename = "result_{metric}_ad_{day:02d}.csv"
+H_Logic1_Filename = "inventory_{hour:02d}.csv"
+D_Logic1_Filename = "inventory_{day:02d}.csv"
 
 data_prefix = Config["data_prefix"]
 data_output_prefix = Config["inventory_data_prefix"]
