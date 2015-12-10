@@ -270,10 +270,10 @@ class ExtractTransformLoadInventory(object):
             display_sale = dataframe["display_sale"].sum()
             display_poss = dataframe["display_poss"].sum()
         infos = {
-             "file_size": self.filesize,
-             "file_name": self.filename,
+             "file_name": "",
+             "file_size": "",
              "result_size": result_size,
-             "spend_time": self.spend_time,
+             "spend_time": "%0.2f" % (self.end_time - self.start_time),
              "display_sale": display_sale,
              "display_poss": display_poss
         }
