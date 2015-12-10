@@ -209,11 +209,19 @@ class AdInventoryTranform(AdTransformPandas):
 
 def flat_times(server_timestamp):
     '''flat times'''
-    return str(time.mktime(dt.date.fromtimestamp(float(server_timestamp)).timetuple()))
+    try:
+        return str(time.mktime(dt.date.fromtimestamp(float(server_timestamp)).timetuple()))
+    except Exception, exc:
+        LOG.error("转换server_timestamp出错：%s, %s" , server_timestamp, exc)
+        return '-1'
 
 def flat_city_id(ip_addr):
     '''flat city id'''
-    return IP_UTIL.get_cityInfo_from_ip(ip_addr, 3)
+    try:
+        return IP_UTIL.get_cityInfo_from_ip(ip_addr, 3)
+    except Exception, exc:
+        LOG.error("转换city_id出错：%s, %s" , ip_addr, exc)
+        return '-1'
 
 def split_insert_sql(db_columns, table_name):
     '''拼接 INSERT SQL'''
