@@ -78,18 +78,18 @@ if [ ! -f ${f12} ];then
 fi
 echo "find ${f12}"
 
-r1="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash00}"
-r2="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash15}"
-r3="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash30}"
-r4="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash45}"
-r5="/${prefix3}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash00}"
-r6="/${prefix3}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash15}"
-r7="/${prefix3}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash30}"
-r8="/${prefix3}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash45}"
-r9="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash00}"
-r10="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash15}"
-r11="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash30}"
-r12="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash45}"
+r1="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash00}"
+r2="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash15}"
+r3="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash30}"
+r4="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash45}"
+r5="/data6/inventory/${year}/${month}/${day}/inventory_${prefix3}_${year}${month}${day}${hour}${dash00}"
+r6="/data6/inventory/${year}/${month}/${day}/inventory_${prefix3}_${year}${month}${day}${hour}${dash15}"
+r7="/data6/inventory/${year}/${month}/${day}/inventory_${prefix3}_${year}${month}${day}${hour}${dash30}"
+r8="/data6/inventory/${year}/${month}/${day}/inventory_${prefix3}_${year}${month}${day}${hour}${dash45}"
+r9="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash00}"
+r10="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash15}"
+r11="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash30}"
+r12="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash45}"
 
 cd ../
 
