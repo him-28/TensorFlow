@@ -419,6 +419,7 @@ class ExtractTransformLoadInventory(object):
                             sep=self.get('csv_sep'))\
                                     .groupby(header, as_index=False, sort=False).sum()
             dataframe = pd.DataFrame(dataframe).rename(columns={'0':key})
+            dataframe[key] = dataframe[key].fillna(0).astype(int)
             dataframe_list.append(dataframe)
             self.info("save %s to %s", key, result_path)
             dataframe.to_csv(result_path, index=False, \
