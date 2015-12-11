@@ -20,15 +20,15 @@ from etl.calculate.etl_inventory import CFG, split_header
 
 if __name__ == '__main__':
     marks = sys.argv[1]
-    #for mark in marks.split(","):
-    #    if not os.path.exists(mark):
-    #        sys.exit(0)
+    for mark in marks.split(","):
+        if not os.path.exists(mark):
+            sys.exit(0)
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
 
     dtype = split_header(CFG["dtype"])
     header = CFG["group_item"]["result_header"]
-    header = header.append("pf")
+    header.append("pf")
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
