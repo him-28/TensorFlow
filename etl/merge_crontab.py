@@ -23,6 +23,11 @@ if __name__ == '__main__':
     for mark in marks.split(","):
         if not os.path.exists(mark):
             sys.exit(0)
+
+    for mark in marks.split(","):
+        if os.path.exists(mark):
+            os.remove(mark)
+
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
 
@@ -39,10 +44,6 @@ if __name__ == '__main__':
     result_df = pd.DataFrame(dfs.groupby(header,as_index=False).sum())
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype)
-
-    for mark in marks.split(","):
-        if os.path.exists(mark):
-            os.remove(mark)
 
 
     '''report result to BearyChat,Email'''
