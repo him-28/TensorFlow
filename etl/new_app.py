@@ -146,4 +146,4 @@ if __name__ == "__main__":
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         InventoryReportor().report_day(now, infos, channel="库存统计-天数据")
-        InventoryReportor().report_pdf(infos, now.strftime("%Y%M%d"))
+        InventoryReportor().report_pdf(infos, now.strftime("%Y%m%d"))

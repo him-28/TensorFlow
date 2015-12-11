@@ -104,7 +104,7 @@ class InventoryReportor:
         # 模板页面地址
         year = dtime[0:4]
         month = dtime[4:6]
-        prefix_path = os.path.join("/data6/ad/", year, month)
+        prefix_path = os.path.join("/data6/inventory/", year, month)
         if not os.path.exists(prefix_path):
             os.makedirs(prefix_path)
         temp_path = './report/pdf/inventory_report.prep'
@@ -133,7 +133,7 @@ class InventoryReportor:
                 msg = "【展示机会】： %s， 【投放】：%s" % \
                     (datas["display_poss"], datas["display_sale"])
                 bc.new_send_message(text=text, at_title=at_title, \
-                                    channel=REPORT_CHANNEL , at_text=msg)
+                                    channel=channel , at_text=msg)
 # {'result_size': 256912, 'display_sale': 1506208.0, 'spend_time': '104.68', 'file_name': '', 'details': {'010101': {'display_poss': 355840, 'display_sale': 1506208}}, 'file_size': '', 'display_poss': 355840.0}
     def report_day(self, data_date, infos, channel=REPORT_CHANNEL):
         '''Report ETL result data in text format
@@ -154,4 +154,4 @@ class InventoryReportor:
                 msg = "【展示机会】： %s， 【投放】：%s" % \
                     (datas["display_poss"], datas["display_sale"])
                 bc.new_send_message(text=text, at_title=at_title, \
-                                    channel=REPORT_CHANNEL , at_text=msg)
+                                    channel=channel , at_text=msg)
