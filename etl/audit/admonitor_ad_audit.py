@@ -163,7 +163,7 @@ class AdMonitor_audit:
         return  flag
 
     def validate_slot_id(self,row,index):
-        if not row[self.slotid_index]:
+        if not row[self.slotid_index] or not row[self.slotid_index].strip():
             return 0
         try:
             slot_id = int(row[self.slotid_index])
