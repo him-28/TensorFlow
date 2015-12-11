@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 dfs = df
             else:
                 dfs = dfs.append(df)
-    result_df = pd.date_range(dfs.groupby(header).sum())
+    result_df = pd.DataFrame(dfs.groupby(header).sum())
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype)
 
