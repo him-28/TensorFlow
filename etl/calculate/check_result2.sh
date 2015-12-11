@@ -1,3 +1,4 @@
+#encoding=utf8
 #!/bin/bash
 
 year=`date -d '-2 hour' +%Y`
