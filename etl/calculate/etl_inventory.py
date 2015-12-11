@@ -425,6 +425,8 @@ class ExtractTransformLoadInventory(object):
             dataframe.to_csv(result_path, index=False, \
                              header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)
+        for key in run_cfg.keys():
+            result_df[key] = result_df[key].fillna(0).astype(int)
         result_out_file = self.get("result_out_file")
         self.info("merge result to %s", result_out_file)
         result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
