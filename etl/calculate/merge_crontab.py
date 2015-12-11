@@ -19,7 +19,7 @@ if __name__ == '__main__':
     marks = sys.argv[1]
     for mark in marks.split(","):
         if not os.path.exists(mark):
-            return
+            sys.exit(0)
     result_files = sys.argv[2]
     result_path = sys.argv[3]
 
