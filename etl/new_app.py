@@ -128,8 +128,8 @@ if __name__ == "__main__":
         }
         etli = ExtractTransformLoadInventory(cfg)
         run_cfg = {
-            "display_poss": get_display_poss_out_file(now),
-            "display_sale": get_display_sale_out_file(now)
+            "display_poss": result_out_file + ".display_poss",
+            "display_sale": result_out_file + ".display_sale"
         }
         infos = etli.run(run_cfg)
         #InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
