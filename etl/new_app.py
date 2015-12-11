@@ -9,13 +9,13 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-from etl.conf.settings import Config,LOGGER
+from etl.conf.settings import Config, LOGGER
 
 from etl.util.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
 from etl.calculate.etl_inventory import ExtractTransformLoadInventory
 
-data_output_prefix = "/data6/inventory"#Config["inventory_data_prefix"]
+data_output_prefix = "/data6/inventory"
 D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
 H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
 H_Logic1_Filename = "inventory_{hour:02d}.csv"
@@ -42,6 +42,7 @@ def get_hour_ngx_files(the_date):
         result.append(ngx_files(the_date, i, 0))
         result.append(ngx_files(the_date, i, 15))
         result.append(ngx_files(the_date, i, 30))
+        result.append(ngx_files(the_date, i, 45))
     return result
 
 def get_result_out_file(the_date):
@@ -118,8 +119,9 @@ if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
         ngx_files = get_hour_ngx_files(now)
-    
         cfg = {
+              "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
+              "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
               "src_files" : ngx_files,
               "result_out_file": get_result_out_file(now),
         }
@@ -147,3 +149,5 @@ if __name__ == "__main__":
         LOGGER.info("merge file spend: %f s" % (end - start))
         InventoryReportor().report_day(now, infos, channel="库存统计-天数据")
         InventoryReportor().report_pdf(infos, now.strftime("%Y%m%d"))
+
+

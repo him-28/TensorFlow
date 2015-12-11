@@ -134,7 +134,7 @@ class InventoryReportor:
                     (datas["display_poss"], datas["display_sale"])
                 bc.new_send_message(text=text, at_title=at_title, \
                                     channel=channel , at_text=msg)
-# {'result_size': 256912, 'display_sale': 1506208.0, 'spend_time': '104.68', 'file_name': '', 'details': {'010101': {'display_poss': 355840, 'display_sale': 1506208}}, 'file_size': '', 'display_poss': 355840.0}
+
     def report_day(self, data_date, infos, channel=REPORT_CHANNEL):
         '''Report ETL result data in text format
         '''
