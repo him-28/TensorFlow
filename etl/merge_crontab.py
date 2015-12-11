@@ -5,6 +5,9 @@ Created on 2015年12月11日
 @author: Administrator
 '''
 import sys
+if 'amble' not in sys.modules and __name__ == '__main__':
+    import pythonpathsetter
+
 import os
 import pandas as pd
 
