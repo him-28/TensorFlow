@@ -93,7 +93,8 @@ class ExtractTransformLoadInventory(object):
         self.save()  # step 3
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
-        return self.report(result_df)  # step end
+        del result_df
+        #return self.report(result_df)  # step end
 
     def extract(self, run_cfg, before=None, after=None):
         '''extract data file'''
@@ -320,7 +321,6 @@ class ExtractTransformLoadInventory(object):
         if before:
             self.info("before report: %s", before)
             self.__handle_before(before)
-
 
         result_size = 0
         display_sale = 0

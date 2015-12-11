@@ -132,7 +132,7 @@ if __name__ == "__main__":
             "display_sale": get_display_sale_out_file(now)
         }
         infos = etli.run(run_cfg)
-        InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
+        #InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
         paths = _job_ready_by_day(now)

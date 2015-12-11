@@ -1,9 +1,9 @@
 #!/bin/bash
 
-year=`date -d '-1 hour' +%Y`
-month=`date -d '-1 hour' +%m`
-day=`date -d '-1 hour' +%d`
-hour=`date -d '-1 hour' +%H`
+year=`date -d '-2 hour' +%Y`
+month=`date -d '-2 hour' +%m`
+day=`date -d '-2 hour' +%d`
+hour=`date -d '-2 hour' +%H`
 
 prefix2="data2"
 prefix3="data3"
@@ -78,7 +78,6 @@ if [ ! -f ${f12} ];then
 fi
 echo "find ${f12}"
 
-
 r1="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash00}"
 r2="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash15}"
 r3="/${prefix2}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash30}"
@@ -92,5 +91,7 @@ r10="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${yea
 r11="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash30}"
 r12="/${prefix4}/ngx/${year}/${month}/${day}/log.da.hunantv.com-access.log-${year}${month}${day}${hour}${dash45}"
 
-python merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory2/${year}/${month}/${day}/inventory_${hour}.csv
+cd ../
+
+python calculate/merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory2/${year}/${month}/${day}/inventory_${hour}.csv
 
