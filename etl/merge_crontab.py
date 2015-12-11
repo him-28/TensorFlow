@@ -23,7 +23,7 @@ if __name__ == '__main__':
     for mark in marks.split(","):
         if not os.path.exists(mark):
             sys.exit(0)
-    result_files = sys.argv[2]
+    result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
 
     dtype = split_header(CFG["dtype"])
