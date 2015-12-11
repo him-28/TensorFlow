@@ -100,6 +100,7 @@ class InventoryReportor:
 
     def report_pdf(self, data_info, dtime):
         '''生成 PDF 报告'''
+        LOG.info("report pdf...")
         pdf_util = PDFUtils(data_info, dtime)
         # 模板页面地址
         year = dtime[0:4]
@@ -109,6 +110,7 @@ class InventoryReportor:
             os.makedirs(prefix_path)
         temp_path = './report/pdf/inventory_report.prep'
         pdf_path = os.path.join(prefix_path, 'inventory_report_%s.pdf' % dtime)
+        LOG.info("create PDF at %s", pdf_path)
         # 如果PDF不存在则重新生成
         if  os.path.exists(pdf_path):
             os.remove(pdf_path)
