@@ -28,7 +28,6 @@ if __name__ == '__main__':
 
     dtype = split_header(CFG["dtype"])
     header = CFG["group_item"]["result_header"]
-    header.append("pf")
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
@@ -37,12 +36,12 @@ if __name__ == '__main__':
                 dfs = df
             else:
                 dfs = dfs.append(df)
-    result_df = pd.DataFrame(dfs.groupby(header).sum())
+    result_df = pd.DataFrame(dfs.groupby(header,as_index=False).sum())
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype)
 
     for mark in marks.split(","):
-        if not os.path.exists(mark):
+        if os.path.exists(mark):
             os.remove(mark)
 
 
