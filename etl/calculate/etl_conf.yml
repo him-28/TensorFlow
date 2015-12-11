@@ -40,11 +40,13 @@ inventory:
         "session_id": "str",
         "ip": "str",
         "city_id": "str",
-        "tag": "int"
+        "tag": "int",
+        "display_poss": "int"
     }
     group_item: 
         display_poss: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
         display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+        result_header: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
     "read_csv_chunksize": 500000

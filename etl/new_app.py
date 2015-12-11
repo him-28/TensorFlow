@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-from etl.conf.settings import Config, LOGGER
+from etl.conf.settings import LOGGER
 
 from etl.util.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
@@ -118,12 +118,13 @@ def _job_ready_by_day(now):
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
-        ngx_files = get_hour_ngx_files(now)
+        ngx_files = [sys.argv[2]]
+        result_out_file = sys.argv[3]
         cfg = {
-              "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
-              "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
-              "src_files" : ngx_files,
-              "result_out_file": get_result_out_file(now),
+               "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
+               "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
+               "src_files" : ngx_files,
+               "result_out_file": result_out_file,
         }
         etli = ExtractTransformLoadInventory(cfg)
         run_cfg = {
