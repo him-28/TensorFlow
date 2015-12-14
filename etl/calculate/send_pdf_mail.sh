@@ -1,4 +1,5 @@
 #!/bin/bash
+export LANG=en_US.UTF-8
 src_path="/data2/amble/etl"
 
 year=$1
