@@ -416,10 +416,10 @@ class ExtractTransformLoadInventory(object):
         for key, result_path in run_cfg.iteritems():
             header = self.get("alg_info")[key]["header"]
             dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), \
-                            sep=self.get('csv_sep'))\
-                                    .groupby(header, as_index=False, sort=False).sum()
-            dataframe = pd.DataFrame(dataframe).rename(columns={'0':key})
-            dataframe[key] = dataframe[key].fillna(0).astype(int)
+                            sep=self.get('csv_sep'));
+            for h in header:
+                dataframe[h] = dataframe[h].fillna(-1)
+            dataframe = dataframe.groupby(header, as_index=False, sort=False).sum().rename(columns={'0':key})
             dataframe_list.append(dataframe)
             self.info("save %s to %s", key, result_path)
             dataframe.to_csv(result_path, index=False, \
