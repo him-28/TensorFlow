@@ -468,10 +468,13 @@ class ExtractTransformLoadInventory(object):
                 seri[key] = k_v[1]
 
         # 拆分IP
-        if not (np.isnan(http_x_forwarded_for) or http_x_forwarded_for.strip() == "-"):
+        if isinstance(http_x_forwarded_for, str):
+            if http_x_forwarded_for.strip() == "-":
+                seri["ip"] = remote_addr
+            else:  # 代理第一跳
+                seri["ip"] = http_x_forwarded_for.strip().split(",")[0]
+        else:
             seri["ip"] = remote_addr
-        else:  # 代理第一跳
-            seri["ip"] = http_x_forwarded_for.strip().split(",")[0]
 
         try:
             seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(seri["ip"], 3)
