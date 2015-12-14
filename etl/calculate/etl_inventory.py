@@ -468,7 +468,7 @@ class ExtractTransformLoadInventory(object):
                 seri[key] = k_v[1]
 
         # 拆分IP
-        if http_x_forwarded_for and http_x_forwarded_for.strip() == "-":
+        if not (np.isnan(http_x_forwarded_for) or http_x_forwarded_for.strip() == "-"):
             seri["ip"] = remote_addr
         else:  # 代理第一跳
             seri["ip"] = http_x_forwarded_for.strip().split(",")[0]
