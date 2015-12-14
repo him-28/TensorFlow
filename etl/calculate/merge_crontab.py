@@ -43,6 +43,10 @@ if __name__ == '__main__':
         if not os.path.exists(mark):
             os.remove(mark)
 
+    
+    for r_f in result_files:
+        if os.path.exists(r_f):
+            os.remove(r_f)
 
     '''report result to BearyChat,Email'''
     result_size = 0

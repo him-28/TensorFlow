@@ -422,8 +422,8 @@ class ExtractTransformLoadInventory(object):
             dataframe = dataframe.groupby(header, as_index=False, sort=False).sum().rename(columns={'0':key})
             dataframe_list.append(dataframe)
             self.info("save %s to %s", key, result_path)
-            dataframe.to_csv(result_path, index=False, \
-                             header=True, sep=self.get("csv_sep"))
+            #dataframe.to_csv(result_path, index=False, \
+            #                 header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)
         for key in run_cfg.keys():
             result_df[key] = result_df[key].fillna(0).astype(int)
