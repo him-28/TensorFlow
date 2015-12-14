@@ -120,6 +120,8 @@ if __name__ == "__main__":
         now = datetime.now() - timedelta(hours=1)
         ngx_files = [sys.argv[2]]
         result_out_file = sys.argv[3]
+        #/home/dingzheng/.inventory_${prefix}_${year}${month}${day}${hour}${dash}
+        dash_mark_path = sys.argv[4]
         cfg = {
                "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
                "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
@@ -132,6 +134,7 @@ if __name__ == "__main__":
             "display_sale": result_out_file + ".display_sale"
         }
         infos = etli.run(run_cfg)
+        os.mknod(dash_mark_path)
         #InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)

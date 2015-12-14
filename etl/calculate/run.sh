@@ -26,7 +26,7 @@ fi
 
 if [ "$hour" == "02" ];then
     day2=`date -d '-1 day' +%d`
-    nohup sh new_run_day.sh "${year}" "${month}" "${day2}" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
+    nohup sh /home/dingzheng/amble/etl/calculate/new_run_day.sh "${year}" "${month}" "${day2}" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
 fi
 
 nohup sh pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" >> /home/dingzheng/log/etl/ad_hour_run_2_00.log 2>&1 &

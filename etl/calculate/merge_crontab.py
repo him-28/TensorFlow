@@ -27,6 +27,7 @@ if __name__ == '__main__':
     header = CFG["group_item"]["result_header"]
 
     dfs = None
+    LOGGER.info("merge tasks : %s", result_files)
     for r_f in result_files:
         if os.path.exists(r_f):
             df = pd.read_csv(r_f, sep=CFG["csv_sep"], dtype=dtype)
