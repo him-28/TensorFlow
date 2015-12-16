@@ -45,8 +45,11 @@ if __name__ == '__main__':
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype)
 
+    for r_f in result_files:
+        if os.path.exists(r_f):
+            os.remove(r_f)
 
-    '''report result to BearyChat,Email'''
+    #report result to BearyChat,Email
     result_size = 0
     display_sale = 0
     display_poss = 0

@@ -207,7 +207,13 @@ class ExtractTransformLoadInventory(object):
                 new_row["slot_id"] = slot_id
                 if self.__is_board_slot_id_match(board_id, slot_id, server_timestamp):
                     for key, value in series_data_struct.iteritems():
-                        value.append(new_row[key])
+                        if key == "server_timestamp":
+                            s_ts = time.mktime(\
+                                        dt.datetime.fromtimestamp(server_timestamp)\
+                                        .date().timetuple())
+                            value.append(s_ts)
+                        else:
+                            value.append(new_row[key])
                 else:
                     # TODO record the row
                     pass
@@ -280,10 +286,14 @@ class ExtractTransformLoadInventory(object):
             if slot_ids is None:
                 self.debug("no slot data with the condition: board_id: %s, timestamp: %s"
                            , board_id, timestamp)
+                return row_data
             for slot_id in slot_ids:
                 for item, item_data in series_data_struct.iteritems():
                     if item == "slot_id":
                         item_data.append(slot_id)
+                    elif item == "server_timestamp":
+                        s_ts = time.mktime(dt.datetime.fromtimestamp(timestamp).date().timetuple())
+                        item_data.append(s_ts)
                     else:
                         item_data.append(row_data[item])
         except Exception, exc:
@@ -480,8 +490,8 @@ class ExtractTransformLoadInventory(object):
             seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(seri["ip"], 3)
         except:
             self.error("can not transfor city id from ip: %s", seri["ip"])
-        server_timestamp = time_iso8601  # [2015-12-04T14:00:02+08:00]
-        d_date = dt.datetime.strptime(server_timestamp, '[%Y-%m-%dT%H:%M:%S+08:00]').date()
+        # [2015-12-04T14:00:02+08]
+        d_date = dt.datetime.strptime(time_iso8601, '[%Y-%m-%dT%H:%M:%S+08:00]')
         seri["server_timestamp"] = time.mktime(d_date.timetuple())
         return seri
 
