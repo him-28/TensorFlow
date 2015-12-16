@@ -1,5 +1,5 @@
 inventory:
-    "original_sep": "\\^A"
+    "original_sep": "^A"
     "csv_sep": "\t"
     "original_header": ["remote_addr", "http_x_forwarded_for", "host", "time_iso8601",
          "request_time", "http_referer", "http_user_agent", "cookie", "server_addr",

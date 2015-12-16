@@ -390,9 +390,9 @@ class ExtractTransformLoadInventory(object):
         '''加载文件并计算'''
         self.info("extract file: %s", input_file_path)
         if os.path.exists(input_file_path):
-            chunks = pd.read_csv(input_file_path, names=CFG["original_header"], \
+            chunks = pd.read_csv(input_file_path, \
                          chunksize=CFG["read_csv_chunksize"], \
-                         sep=CFG["original_sep"], engine='python')
+                         engine='c', sep="\n")
 
             # error_pool = FilterWriterPool(original_error)
             for chunk in chunks:
@@ -442,21 +442,24 @@ class ExtractTransformLoadInventory(object):
         result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         return result_df
 
-    def __split_request_body(self, row_data, req_cols, keys, values, tag_list):
+    def __split_request_body(self, row_datas, req_cols, keys, values, tag_list):
         '''拆分reqeust body'''
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
         try:
-            request_body = row_data["request_body"]
-            remote_addr = row_data["remote_addr"]
-            http_x_forwarded_for = row_data["http_x_forwarded_for"]
-            time_iso8601 = row_data["time_iso8601"]
+            row_data = row_datas[0].split(CFG["original_sep"])
+            if len(row_data) != 13:
+                return row_datas
+            request_body = row_data[12]
+            remote_addr = row_data[0]
+            http_x_forwarded_for = row_data[1]
+            time_iso8601 = row_data[3]
             items = request_body.split("&")
             seri = self.__flat_datas(values, items, http_x_forwarded_for, remote_addr, time_iso8601)
         except Exception, exc:
             self.error("can not split request_body:%s\n%s", exc, list(row_data.values))
             # TODO 记录出错的日志内容
-            return request_body
+            return row_datas
         # 打平--------------------------------------End
 
         # 审计--------------------------------------Start
@@ -465,7 +468,7 @@ class ExtractTransformLoadInventory(object):
         seri["tag"] = tag
         for key, value in req_cols.iteritems():
             value.append(seri[key])
-        return request_body
+        return row_datas
 
     def __flat_datas(self, values, items, http_x_forwarded_for, remote_addr, time_iso8601):
         '''打平IP、CityID，server_timestamp'''
