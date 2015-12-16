@@ -6,15 +6,15 @@ month=$2
 day=$3
 
 if [ "$year" == "" ];then
-    year=`date -d '-1 hour' +%Y`
+    year=`date -d '-1 day' +%Y`
 fi
 
 if [ "$month" == "" ];then
-    month=`date -d '-1 hour' +%m`
+    month=`date -d '-1 day' +%m`
 fi
 
 if [ "$day" == "" ];then
-    day=`date -d '-1 hour' +%d`
+    day=`date -d '-1 day' +%d`
 fi
 
 pdf_file_path="/data2/ad/${year}/${month}/ad_report_${year}${month}${day}.pdf"
