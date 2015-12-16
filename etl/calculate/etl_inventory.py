@@ -457,7 +457,7 @@ class ExtractTransformLoadInventory(object):
             items = request_body.split("&")
             seri = self.__flat_datas(values, items, http_x_forwarded_for, remote_addr, time_iso8601)
         except Exception, exc:
-            self.error("can not split request_body:%s\n%s", exc, list(row_data.values))
+            self.error("can not split request_body:%s\n%s", exc, row_data)
             # TODO 记录出错的日志内容
             return row_datas
         # 打平--------------------------------------End
