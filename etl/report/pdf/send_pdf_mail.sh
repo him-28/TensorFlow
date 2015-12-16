@@ -1,5 +1,6 @@
 #!/bin/bash
 src_path="/data2/amble/etl"
+export LANG=en_US.UTF-8
 
 year=$1
 month=$2
