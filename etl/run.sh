@@ -69,5 +69,5 @@ if [ "${hour}" == "06" ];then
         sh send_mail.sh ${year}${month}${day} ad app day run error
         exit
     fi
-    sh ./report/pdf/send_pdf_mail.sh ${year} ${month} ${day}
+    sh ./report/pdf/send_pdf_mail.sh
 fi

@@ -110,7 +110,7 @@ field_rule:
         scene1:
             condition: 
                 ad_event_type: ['p']
-            required: True
+            required: False
             reg: 
             range: 
             vtype: int
