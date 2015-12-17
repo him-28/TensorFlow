@@ -1,5 +1,5 @@
 inventory:
-    "original_sep": "\\^A"
+    "original_sep": "^A"
     "csv_sep": "\t"
     "original_header": ["remote_addr", "http_x_forwarded_for", "host", "time_iso8601",
          "request_time", "http_referer", "http_user_agent", "cookie", "server_addr",
@@ -40,14 +40,16 @@ inventory:
         "session_id": "str",
         "ip": "str",
         "city_id": "str",
-        "tag": "int"
+        "tag": "int",
+        "display_poss": "int"
     }
     group_item: 
         display_poss: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
         display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+        result_header: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
-    "read_csv_chunksize": 1000000
+    "read_csv_chunksize": 500000
     "ipb_filepath": util/IPB.csv
     "city_filepath": util/city_province.csv
 
@@ -135,7 +137,7 @@ audit_cfg:
         scene1:
             condition: 
                 ad_event_type: ['p']
-            required: True 
+            required: False 
             dtype: int
     order:
         scene1:

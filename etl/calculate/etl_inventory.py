@@ -16,9 +16,11 @@ import logging.config
 import pandas as pd
 import yaml
 import numpy as np
+import urllib
 
 from etl.util.playerutil import getplayerInfo
 from etl.util.ip_convert import IP_Util
+from etl.util.admonitor_flat_data import player_info
 
 CONFIG_ALL = yaml.load(file("calculate/etl_conf.yml"))
 
@@ -42,6 +44,19 @@ def split_header(header):
     return target_dtype
 
 
+def getfilesize(filepath):
+    '''filesize = '%0.3f' % (size / 1024.0 / 1024.0)'''
+    if not os.path.exists(filepath):
+        return 0
+    return os.path.getsize(filepath)
+
+def player_info_not_changed(start_time, end_time, player_infos):
+    '''判断时间段内广告位是否发生过变更，如果发生过返回 False，否则返回广告位ID和播放器ID的对应关系'''
+    for items in player_infos.values():
+        if start_time >= items["starttime"] and end_time <= items["endtime"]:  # 满足任何一个时间段可以认为没有发生变更
+            return items["playerinfo"]
+    return False
+
 class ExtractTransformLoadInventory(object):
     '''
     Extract,Transform and Load tables of data
@@ -56,12 +71,20 @@ class ExtractTransformLoadInventory(object):
 
         self.params = {}
         self.config_parmas(configure)
-
-        self.player_id_cache = None
-
         # welcome
         self.welcome()
 
+        self.info("get player infos...")
+        self.player_infos = getplayerInfo()
+
+        self.player_index = player_info_not_changed(\
+                    configure["start_time"], configure["end_time"], self.player_infos)
+        self.info("get player info change status: %s", self.player_index)
+
+        self.player_slot_index = {}
+        if self.player_index:
+            for board_id, slots in self.player_index.iteritems():
+                self.player_slot_index.update({board_id: slots.keys()})
         self.info("params configed as : %s", self.params)
 
     def run(self, run_cfg):
@@ -70,7 +93,8 @@ class ExtractTransformLoadInventory(object):
         self.save()  # step 3
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
-        return self.report(result_df)  # step end
+        del result_df
+        #return self.report(result_df)  # step end
 
     def extract(self, run_cfg, before=None, after=None):
         '''extract data file'''
@@ -83,7 +107,12 @@ class ExtractTransformLoadInventory(object):
             os.remove(result_out_file)
             self.warn("output file exists, remove. %s", result_out_file)
 
+        self.set("filesize", 0)
+
+        self.regist_alg(run_cfg)
+
         for file_path in src_files:
+            self.set("filesize", self.get("filesize") + getfilesize(file_path))
             self.__extract_file(file_path, run_cfg)
         result_df = self.__merge_chunks_result(run_cfg)
 
@@ -97,8 +126,6 @@ class ExtractTransformLoadInventory(object):
 
         if before:
             self.__handle_before(before)
-
-        self.regist_alg(alg_file)
 
         for algorithm in alg_file.iterkeys():
             calcu_result = self.do_calculate(algorithm, alg_file[algorithm], \
@@ -134,6 +161,7 @@ class ExtractTransformLoadInventory(object):
         chunk = chunk[(chunk['tag'] < 100) & (chunk['ad_event_type'] == 'e')]
         try:
             if trans_type == "display_poss":
+                chunk = self.__extract_display_poss_data(chunk, trans_type)
                 return self.__caculate_display(chunk, trans_type, output_file_path)
             elif trans_type == "display_sale":
                 chunk = self.__extract_display_sale_data(chunk, trans_type)
@@ -143,8 +171,19 @@ class ExtractTransformLoadInventory(object):
             return -1
         return -1
 
+    def __extract_display_poss_data(self, chunk, trans_type):
+        '''提取投放数据'''
+        self.info("提取、打平数据库广告位ID")
+        header = self.get("alg_info")[trans_type]["header"]
+        series_data_struct = dict((key, []) for key in header)
+        chunk.apply(self.__fill_relation_list, axis=1, series_data_struct=series_data_struct)
+        self.__dtype_series(series_data_struct)
+        new_chunk = pd.DataFrame(series_data_struct)
+        return new_chunk
+
     def __extract_display_sale_data(self, chunk, trans_type):
         '''提取投放数据'''
+        self.info("提取、打平请求中的广告位ID")
         self.info("transform data to display sale format")
         header = self.get("alg_info")[trans_type]["header"]
         series_data_struct = dict((key, []) for key in header)
@@ -154,9 +193,11 @@ class ExtractTransformLoadInventory(object):
         return new_chunk
 
     def __flat_slot_id(self, row_data, series_data_struct):
-        '''打平投放SlotID'''
+        '''打平投放SlotID，如果BoardID和SlotID不匹配，不打平'''
         try:
-            ad_list = row_data["ad_list"]
+            ad_list = urllib.unquote(row_data["ad_list"])
+            board_id = row_data["board_id"]
+            server_timestamp = float(row_data["server_timestamp"])
             if not ad_list:
                 return ad_list
             list_array = ad_list.split("|")
@@ -164,24 +205,51 @@ class ExtractTransformLoadInventory(object):
             for arr in list_array:
                 slot_id = arr.split(",")[0]
                 new_row["slot_id"] = slot_id
-                for key, value in series_data_struct.iteritems():
-                    value.append(new_row[key])
+                if self.__is_board_slot_id_match(board_id, slot_id, server_timestamp):
+                    for key, value in series_data_struct.iteritems():
+                        if key == "server_timestamp":
+                            s_ts = time.mktime(\
+                                        dt.datetime.fromtimestamp(server_timestamp)\
+                                        .date().timetuple())
+                            value.append(s_ts)
+                        else:
+                            value.append(new_row[key])
+                else:
+                    # TODO record the row
+                    pass
         except Exception, exc:
             # TODO 记录出错的日志内容
             self.error("flat slot id error: %s\n%s", exc, list(row_data.values))
+
+    def __is_board_slot_id_match(self, board_id, slot_id, server_timestamp):
+        '''播放器ID和广告位ID是否匹配'''
+        try:
+            slot_id = int(slot_id)
+            board_id = int(board_id)
+            if self.player_index:
+                return slot_id in self.player_slot_index[board_id]
+            else:
+                player_info = self.player_infos
+                for v in player_info.values():
+                    start = v.get('starttime')
+                    end = v.get('endtime')
+                    if server_timestamp > start and server_timestamp < end:
+                        if v['playerinfo'].has_key(board_id):
+                            if v['playerinfo'][board_id].has_key(slot_id):
+                                return True
+        except Exception, exc:
+            self.error("slot/board id match exception: %s", exc)
+        return False
 
     def __caculate_display(self, chunk, trans_type, output_file_path):
         '''计算展示机会'''
         self.info("caculate display...")
         header = self.get("alg_info")[trans_type]["header"]
-        series_data_struct = dict((key, []) for key in header)
-        chunk.apply(self.__fill_relation_list, axis=1, \
-                     series_data_struct=series_data_struct)
-        self.__dtype_series(series_data_struct)
-        dataframe = pd.DataFrame(series_data_struct)
-        result = pd.DataFrame(dataframe.groupby(header, as_index=False, sort=False).size())
+        self.info("init empty data struct with header %s", header)
+        result = pd.DataFrame(chunk.groupby(header, as_index=False, sort=False).size())
         write_header = self.get("alg_info")[trans_type]["write_header"]
         if result.empty:
+            self.info("result is empty. write a empty result file with headers in.")
             if write_header:
                 out_file = open(output_file_path, "wb")
                 out_file.write(self.get("csv_sep").join(header))
@@ -195,10 +263,11 @@ class ExtractTransformLoadInventory(object):
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
             self.info("save result to %s", output_file_path)
+            self.info("the write model is %s", mode)
             result.to_csv(output_file_path, index=True, mode=mode, \
                           header=write_header, sep=self.get("csv_sep"))
         if write_header:
-            self.get("alg_info")[trans_type]["write_header"] = False
+            self.get("alg_info")[trans_type].update({"write_header":False})
         return 0
 
     def __dtype_series(self, series_data_struct):
@@ -207,9 +276,7 @@ class ExtractTransformLoadInventory(object):
             series_data_struct[item] = np.array(arr, dtype=self.get("dtype")[item])
 
     def __fill_relation_list(self, row_data, series_data_struct):
-        '''把查询到的需要打平字段的列表分割、组成Series
-            ex.目前需要打平的字段有：slot_id
-         '''
+        '''把查询到的需要打平字段的列表分割、组成Series'''
         try:
             board_id = row_data["board_id"]
             timestamp = float(row_data["server_timestamp"])
@@ -219,10 +286,14 @@ class ExtractTransformLoadInventory(object):
             if slot_ids is None:
                 self.debug("no slot data with the condition: board_id: %s, timestamp: %s"
                            , board_id, timestamp)
+                return row_data
             for slot_id in slot_ids:
                 for item, item_data in series_data_struct.iteritems():
                     if item == "slot_id":
                         item_data.append(slot_id)
+                    elif item == "server_timestamp":
+                        s_ts = time.mktime(dt.datetime.fromtimestamp(timestamp).date().timetuple())
+                        item_data.append(s_ts)
                     else:
                         item_data.append(row_data[item])
         except Exception, exc:
@@ -261,7 +332,6 @@ class ExtractTransformLoadInventory(object):
             self.info("before report: %s", before)
             self.__handle_before(before)
 
-
         result_size = 0
         display_sale = 0
         display_poss = 0
@@ -271,11 +341,11 @@ class ExtractTransformLoadInventory(object):
             display_poss = dataframe["display_poss"].sum()
         infos = {
              "file_name": "",
-             "file_size": "",
+             "file_size": '%0.3f MB' % (self.get("filesize") / 1024.0 / 1024.0),
              "result_size": result_size,
              "spend_time": "%0.2f" % (self.end_time - self.start_time),
-             "display_sale": display_sale,
-             "display_poss": display_poss
+             "display_sale": int(display_sale),
+             "display_poss": int(display_poss)
         }
         details = {}
         if not dataframe.empty:
@@ -320,9 +390,9 @@ class ExtractTransformLoadInventory(object):
         '''加载文件并计算'''
         self.info("extract file: %s", input_file_path)
         if os.path.exists(input_file_path):
-            chunks = pd.read_csv(input_file_path, names=CFG["original_header"], \
+            chunks = pd.read_csv(input_file_path, \
                          chunksize=CFG["read_csv_chunksize"], \
-                         sep=CFG["original_sep"], engine='python')
+                         engine='c', sep="\n")
 
             # error_pool = FilterWriterPool(original_error)
             for chunk in chunks:
@@ -356,34 +426,40 @@ class ExtractTransformLoadInventory(object):
         for key, result_path in run_cfg.iteritems():
             header = self.get("alg_info")[key]["header"]
             dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), \
-                            sep=self.get('csv_sep'))\
-                                    .groupby(header, as_index=False, sort=False).sum()
-            dataframe = pd.DataFrame(dataframe).rename(columns={'0':key})
+                            sep=self.get('csv_sep'));
+            for h in header:
+                dataframe[h] = dataframe[h].fillna(-1)
+            dataframe = dataframe.groupby(header, as_index=False, sort=False).sum().rename(columns={'0':key})
             dataframe_list.append(dataframe)
-            self.info("save % to %", key, result_path)
-            dataframe.to_csv(result_path, index=False, \
-                             header=True, sep=self.get("csv_sep"))
+            self.info("save %s to %s", key, result_path)
+            #dataframe.to_csv(result_path, index=False, \
+            #                 header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)
+        for key in run_cfg.keys():
+            result_df[key] = result_df[key].fillna(0).astype(int)
         result_out_file = self.get("result_out_file")
         self.info("merge result to %s", result_out_file)
         result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         return result_df
 
-    def __split_request_body(self, row_data, req_cols, keys, values, tag_list):
+    def __split_request_body(self, row_datas, req_cols, keys, values, tag_list):
         '''拆分reqeust body'''
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
         try:
-            request_body = row_data["request_body"]
-            remote_addr = row_data["remote_addr"]
-            http_x_forwarded_for = row_data["http_x_forwarded_for"]
-            time_iso8601 = row_data["time_iso8601"]
+            row_data = row_datas[0].split(CFG["original_sep"])
+            if len(row_data) != 13:
+                return row_datas
+            request_body = row_data[12]
+            remote_addr = row_data[0]
+            http_x_forwarded_for = row_data[1]
+            time_iso8601 = row_data[3]
             items = request_body.split("&")
             seri = self.__flat_datas(values, items, http_x_forwarded_for, remote_addr, time_iso8601)
         except Exception, exc:
-            self.error("can not split request_body:%s\n%s", exc, request_body)
+            self.error("can not split request_body:%s\n%s", exc, row_data)
             # TODO 记录出错的日志内容
-            return request_body
+            return row_datas
         # 打平--------------------------------------End
 
         # 审计--------------------------------------Start
@@ -392,7 +468,7 @@ class ExtractTransformLoadInventory(object):
         seri["tag"] = tag
         for key, value in req_cols.iteritems():
             value.append(seri[key])
-        return request_body
+        return row_datas
 
     def __flat_datas(self, values, items, http_x_forwarded_for, remote_addr, time_iso8601):
         '''打平IP、CityID，server_timestamp'''
@@ -405,14 +481,20 @@ class ExtractTransformLoadInventory(object):
                 seri[key] = k_v[1]
 
         # 拆分IP
-        if http_x_forwarded_for == "-":
+        if isinstance(http_x_forwarded_for, str):
+            if http_x_forwarded_for.strip() == "-":
+                seri["ip"] = remote_addr
+            else:  # 代理第一跳
+                seri["ip"] = http_x_forwarded_for.strip().split(",")[0]
+        else:
             seri["ip"] = remote_addr
-        else:  # 代理第一跳
-            seri["ip"] = http_x_forwarded_for.split(",")[0]
 
-        seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(seri["ip"], 3)
-        server_timestamp = time_iso8601  # [2015-12-04T14:00:02+08:00]
-        d_date = dt.datetime.strptime(server_timestamp, '[%Y-%m-%dT%H:%M:%S+08:00]').date()
+        try:
+            seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(seri["ip"], 3)
+        except:
+            self.error("can not transfor city id from ip: %s", seri["ip"])
+        # [2015-12-04T14:00:02+08]
+        d_date = dt.datetime.strptime(time_iso8601, '[%Y-%m-%dT%H:%M:%S+08:00]')
         seri["server_timestamp"] = time.mktime(d_date.timetuple())
         return seri
 
@@ -476,12 +558,9 @@ class ExtractTransformLoadInventory(object):
                     return False
         return True
 
-
     def __get_slot_ids(self, board_id, timestamp):
         '''查询board_id下对应的slot_id'''
-        player_infos = self.__get_player_infos()
-
-        for group in player_infos.values():
+        for group in self.player_infos.values():
             start = group['starttime']
             end = group['endtime']
             if start <= timestamp and end > timestamp:
@@ -489,12 +568,6 @@ class ExtractTransformLoadInventory(object):
                 if playerinfo.has_key(int(board_id)):
                     return playerinfo[int(board_id)].keys()
         return None
-
-    def __get_player_infos(self):
-        '''获取播放器信息，如果已经获取过，从缓存中拿'''
-        if self.player_id_cache is None:
-            self.player_id_cache = getplayerInfo()
-        return self.player_id_cache
 
     def __handle_before(self, before):
         '''apply before from_fun'''
