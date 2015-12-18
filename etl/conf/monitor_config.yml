@@ -244,7 +244,7 @@ release: #生产环境
             'tag':'int',
             'total':'int'
         }
-        read_csv_chunk: 10000000
+        read_csv_chunk: 1000000
         db_commit_chunk: 10000
         algorithm: 
             display_poss: #广告位展示机会
