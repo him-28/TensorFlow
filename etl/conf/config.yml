@@ -4,7 +4,7 @@ inventory_data_prefix: "/data6/ad"
 
 h_delay: 10
 d_delay: 1
-metrics: ['display', 'impression', 'impression_end', 'click', 'up', 'display_sale']
+metrics: ['display', 'impression', 'impression_end', 'click', 'display_sale']
 metrics_db_tablename_minute: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
 metrics_db_tablename_hour: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
 metrics_db_tablename_day: {'display_poss':'display_poss', 'display':'display', 'impression':'impression', 'impression_end':'impression_end', 'click':'click', 'up':'up'}
