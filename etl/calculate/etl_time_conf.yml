@@ -24,21 +24,21 @@ inventory:
         "tag": "tag"
     }
     "dtype": {
-        "ad_event_type": "str",
-        "video_id": "str",
-        "playlist_id": "str",
-        "board_id": "str",
-        "request_res": "str",
-        "ad_list": "str",
-        "slot_id": "str",
-        "mediabuy_id": "str",
-        "creator_id": "str",
-        "order": "str",
-        "play_event": "str",
-        "pf": "str",
-        "server_timestamp": "str",
-        "session_id": "str",
-        "ip": "str",
+        "ad_event_type": "string",
+        "video_id": "string",
+        "playlist_id": "string",
+        "board_id": "string",
+        "request_res": "string",
+        "ad_list": "string",
+        "slot_id": "string",
+        "mediabuy_id": "string",
+        "creator_id": "string",
+        "order": "string",
+        "play_event": "string",
+        "pf": "string",
+        "server_timestamp": "string",
+        "session_id": "string",
+        "ip": "string",
         "city_id": "int",
         "type_id": "int",
         "tag": "int",
@@ -88,6 +88,32 @@ tag_code:
     "AUDIT_EXCEPT": 103
     "AUDIT_CORRECT": 1
     "INIT_STATUS": 0
+
+db_reflect:
+    pv1:
+        table_name: inventory_adspace_pv_data
+        columns:
+            "date": "server_timestamp"
+            "playlist_id": "board_id"
+            "slot_id": "slot_id"
+            "city_id": "city_id"
+            "pv": "pv1"
+    pv2:
+        table_name: inventory_adspacetype_pv_data
+        columns:
+            "date": "server_timestamp"
+            "playlist_id": "board_id"
+            "adspace_type_id": "type_id"
+            "city_id": "city_id"
+            "pv": "pv2"
+    display_sale:
+        table_name: inventory_adspace_display_data
+        columns:
+            "date": "server_timestamp"
+            "playlist_id": "board_id"
+            "slot_id": "slot_id"
+            "city_id": "city_id"
+            "display": "display_sale"
 
 audit_cfg:
     ip:

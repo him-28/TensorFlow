@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from etl.conf.settings import LOGGER
 
-from etl.util.inventory_datautil import merge_file
+from etl.calculate.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
 from etl.calculate.etl_time_inventory import ExtractTransformLoadTimeInventory
 
@@ -137,20 +137,20 @@ if __name__ == "__main__":
         #os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
+        now = datetime(2015, 12, 15, 0, 0)
         paths = _job_ready_by_day(now)
 
-        LOGGER.info("Job hour paths: \r\n \
-                logic1_src_paths: %s \r\n \
-                logic1_output_path: %s \r\n \
-                " % (paths['logic1_src_paths'],
-                    paths['logic1_output_paths']))
+        trans_type = sys.argv[2]
+        src_files = sys.argv[3].split(",")
+        out_path = sys.argv[4]
 
         start = time.clock()
         # logic1 code
-        infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
+        infos = merge_file(trans_type, src_files, out_path, now)
+
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
-        InventoryReportor().report_day(now, infos, channel="库存统计-天数据")
-        InventoryReportor().report_pdf(infos, now.strftime("%Y%m%d"))
+        #InventoryReportor().report_day(now, infos, channel="库存统计-天数据")
+        #InventoryReportor().report_pdf(infos, now.strftime("%Y%m%d"))
 
 
