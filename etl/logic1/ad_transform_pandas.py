@@ -424,7 +424,7 @@ class AdTransformPandas(object):
                             return '-1'
                         if details[0] == int(group_id) and details[2] == int(seq):
                             return str(slot_id)
-        self.log.error("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
+        self.log.debug("can not find the slot with params:board_id: %s,timestamp: %s,seq: %s", \
                   board_id, timestamp, seq)
         return '-1'
 
