@@ -1,0 +1,108 @@
+beta: #测试环境
+    store: #管理后台
+        addon_item: ["province_id", "city_id", "year", "month", "day", "hour", "board_id", "mediabuy_id", "creator_id"]
+        addon_item_day: ["province_id", "city_id", "year", "month", "day", "board_id", "mediabuy_id", "creator_id"]
+        result_item: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        result_item_day: ["year", "month", "day", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        result_item_alias: {
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "hour": "hour",
+            "province_id": "province_id",
+            "player_id": "board_id",
+            "mediabuy_id": "mediabuy_id",
+            "creative_id": "creator_id",
+            "clicks": "click",
+            "impressions": "impression",
+            "end_impressions": "impression_end",
+            "slot_id": "slot_id",
+            "city_id": "city_id",
+            "display": "display_sale"
+        }
+        result_item_alias_day: {
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "province_id": "province_id",
+            "player_id": "board_id",
+            "mediabuy_id": "mediabuy_id",
+            "creative_id": "creator_id",
+            "clicks": "click",
+            "impressions": "impression",
+            "end_impressions": "impression_end",
+            "slot_id": "slot_id",
+            "city_id": "city_id",
+            "display": "display_sale"
+        }
+        table_name: "adlog_analysis_hour"
+        day_table_name: "adlog_analysis_day"
+        split_char: "\t"
+        db_host: "10.100.2.75"
+        db_username: "data_processing"
+        db_passwd: "123456@bigdata"
+        db_port: 3306
+        db_platform: "cubes"
+        bearychat_channel: "管理后台-小时数据"
+        bearychat_channel_day: "管理后台-天数据"
+        raw_header_dtype: {
+            'year':'int',
+            'month':'int',
+            'day':'int',
+            'hour':'int',
+            'province_id':'int'
+        }
+release: #生产环境
+    store: #管理后台
+        addon_item: ["province_id", "city_id", "year", "month", "day", "hour", "board_id", "mediabuy_id", "creator_id"]
+        addon_item_day: ["province_id", "city_id", "year", "month", "day", "board_id", "mediabuy_id", "creator_id"]
+        result_item: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        result_item_day: ["year", "month", "day", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        result_item_alias: {
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "hour": "hour",
+            "province_id": "province_id",
+            "player_id": "board_id",
+            "mediabuy_id": "mediabuy_id",
+            "creative_id": "creator_id",
+            "clicks": "click",
+            "impressions": "impression",
+            "end_impressions": "impression_end",
+            "slot_id": "slot_id",
+            "city_id": "city_id",
+            "display": "display_sale"
+        }
+        result_item_alias_day: {
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "province_id": "province_id",
+            "player_id": "board_id",
+            "mediabuy_id": "mediabuy_id",
+            "creative_id": "creator_id",
+            "clicks": "click",
+            "impressions": "impression",
+            "end_impressions": "impression_end",
+            "slot_id": "slot_id",
+            "city_id": "city_id",
+            "display": "display_sale"
+        }
+        table_name: "adlog_analysis_hour"
+        day_table_name: "adlog_analysis_day"
+        split_char: "\t"
+        db_host: "10.100.2.75"
+        db_username: "data_processing"
+        db_passwd: "123456@bigdata"
+        db_port: 3306
+        db_platform: "cubes"
+        bearychat_channel: "管理后台-小时数据"
+        bearychat_channel_day: "管理后台-天数据"
+        raw_header_dtype: {
+            'year':'int',
+            'month':'int',
+            'day':'int',
+            'hour':'int',
+            'province_id':'int'
+        }
