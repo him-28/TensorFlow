@@ -101,6 +101,8 @@ beta: #测试环境
                     count: {
                         filter: [
                             ['ad_event_type','==','e'],
+                            ['slot_id','!=',''],
+                            ['slot_id','!=',' '],
                             ['tag','<',100]
                         ],
                         output_name: 'total'
@@ -263,6 +265,8 @@ release: #生产环境
                     count: {
                         filter: [
                             ['ad_event_type','==','e'],
+                            ['slot_id','!=',''],
+                            ['slot_id','!=',' '],
                             ['tag','<',100]
                         ],
                         output_name: 'total'
