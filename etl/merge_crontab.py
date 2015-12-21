@@ -50,29 +50,29 @@ if __name__ == '__main__':
             os.remove(r_f)
 
     #report result to BearyChat,Email
-    result_size = 0
-    display_sale = 0
-    display_poss = 0
-    if not result_df.empty:
-        result_size = len(result_df)
-        display_sale = result_df["display_sale"].sum()
-        display_poss = result_df["display_poss"].sum()
-    infos = {
-         "file_name": "",
-         "file_size": "",
-         "result_size": result_size,
-         "spend_time": "小于10分种",
-         "display_sale": int(display_sale),
-         "display_poss": int(display_poss)
-    }
-    details = {}
-    if not result_df.empty:
-        df2 = result_df.groupby("pf").sum()
-        for the_pf, datas in df2.iterrows():
-            details[the_pf] = {
-                "display_sale" : int(datas["display_sale"]),
-                "display_poss" : int(datas["display_poss"])
-           }
-    infos["details"] = details
-    now = datetime.now() - timedelta(hours=1)
-    InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
+    #result_size = 0
+    #display_sale = 0
+    #display_poss = 0
+    #if not result_df.empty:
+    #    result_size = len(result_df)
+    #    display_sale = result_df["display_sale"].sum()
+    #    display_poss = result_df["display_poss"].sum()
+    #infos = {
+    #     "file_name": "",
+    #     "file_size": "",
+    #     "result_size": result_size,
+    #     "spend_time": "小于10分种",
+    #     "display_sale": int(display_sale),
+    #     "display_poss": int(display_poss)
+    #}
+    #details = {}
+    #if not result_df.empty:
+    #    df2 = result_df.groupby("pf").sum()
+    #    for the_pf, datas in df2.iterrows():
+    #        details[the_pf] = {
+    #            "display_sale" : int(datas["display_sale"]),
+    #            "display_poss" : int(datas["display_poss"])
+    #       }
+    #infos["details"] = details
+    #now = datetime.now() - timedelta(hours=1)
+    #InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
