@@ -110,8 +110,9 @@ def _job_ready_by_day(now):
 
     paths.update({
         'logic1_src_paths': logic1_src_paths,
-        'logic1_output_paths': logic1_output_paths
-        })
+        'logic1_output_paths': "{sep}data6{sep}inventory{sep}{year}{sep}{month:02d}{sep}pv1_{day:02d}.csv"\
+        .format(day=now.day,sep=os.sep,year=now.year,month=now.month)
+    })
     return paths
 
 
@@ -145,7 +146,7 @@ if __name__ == "__main__":
 
         start = time.clock()
         # logic1 code
-        infos = merge_file("pv1", paths['logic1_src_paths'], paths['logic1_output_paths'], now)
+        infos = merge_file("pv1", paths['logic1_src_paths']["inventory"], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         #InventoryReportor().report_day(now, infos, channel="库存统计-天数据")

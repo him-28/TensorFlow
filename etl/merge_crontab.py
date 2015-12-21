@@ -16,7 +16,8 @@ from datetime import datetime, timedelta
 
 from etl.conf.settings import LOGGER
 from etl.report.inventory_reporter import InventoryReportor
-from etl.calculate.etl_inventory import CFG, split_header
+from etl.calculate.etl_inventory import split_header
+from etl.calculate.etl_time_inventory import CFG
 
 if __name__ == '__main__':
     marks = sys.argv[1]
@@ -30,9 +31,10 @@ if __name__ == '__main__':
 
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
+    tp = sys.argv[4]
 
     dtype = split_header(CFG["dtype"])
-    header = CFG["group_item"]["result_header"]
+    header = CFG["group_item"][tp]
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
@@ -48,7 +50,24 @@ if __name__ == '__main__':
     for r_f in result_files:
         if os.path.exists(r_f):
             os.remove(r_f)
-
+    '''
+    
+    python merge_crontab.py /home/dingzheng/.inventory_data2_201512200400,/home/dingzheng/.inventory_data2_201512200415,/home/dingzheng/.inventory_data2_201512200430,/home/dingzheng/.inventory_data2_201512200445,/home/dingzheng/.inventory_data3_201512200400,/home/dingzheng/.inventory_data3_201512200415,/home/dingzheng/.inventory_data3_201512200430,/home/dingzheng/.inventory_data3_201512200445,/home/dingzheng/.inventory_data4_201512200400,/home/dingzheng/.inventory_data4_201512200415,/home/dingzheng/.inventory_data4_201512200430,/home/dingzheng/.inventory_data4_201512200445  /data6/inventory/2015/12/20/inventory_data2_201512200400.sale,/data6/inventory/2015/12/20/inventory_data2_201512200415.sale,/data6/inventory/2015/12/20/inventory_data2_201512200430.sale,/data6/inventory/2015/12/20/inventory_data2_201512200445.sale,/data6/inventory/2015/12/20/inventory_data3_201512200400.sale,/data6/inventory/2015/12/20/inventory_data3_201512200415.sale,/data6/inventory/2015/12/20/inventory_data3_201512200430.sale,/data6/inventory/2015/12/20/inventory_data3_201512200445.sale,/data6/inventory/2015/12/20/inventory_data4_201512200400.sale,/data6/inventory/2015/12/20/inventory_data4_201512200415.sale,/data6/inventory/2015/12/20/inventory_data4_201512200430.sale,/data6/inventory/2015/12/20/inventory_data4_201512200445.sale  /data6/inventory/2015/12/20/inventory_sale_04.csv
+    
+    
+touch /home/dingzheng/.inventory_data2_201512200400
+touch /home/dingzheng/.inventory_data2_201512200415
+touch /home/dingzheng/.inventory_data2_201512200430
+touch /home/dingzheng/.inventory_data2_201512200445
+touch /home/dingzheng/.inventory_data3_201512200400
+touch /home/dingzheng/.inventory_data3_201512200415
+touch /home/dingzheng/.inventory_data3_201512200430
+touch /home/dingzheng/.inventory_data3_201512200445
+touch /home/dingzheng/.inventory_data4_201512200400
+touch /home/dingzheng/.inventory_data4_201512200415
+touch /home/dingzheng/.inventory_data4_201512200430
+touch /home/dingzheng/.inventory_data4_201512200445
+    '''
     #report result to BearyChat,Email
     #result_size = 0
     #display_sale = 0
