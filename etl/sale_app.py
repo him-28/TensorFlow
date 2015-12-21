@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
         start = time.clock()
         # logic1 code
-        infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
+        infos = merge_file("display_sale", paths['logic1_src_paths'], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         #InventoryReportor().report_day(now, infos, channel="库存统计-天数据")
