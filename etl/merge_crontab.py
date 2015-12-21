@@ -20,13 +20,13 @@ from etl.calculate.etl_inventory import CFG, split_header
 
 if __name__ == '__main__':
     marks = sys.argv[1]
-    for mark in marks.split(","):
-        if not os.path.exists(mark):
-            sys.exit(0)
+    #for mark in marks.split(","):
+    #    if not os.path.exists(mark):
+    #        sys.exit(0)
 
-    for mark in marks.split(","):
-        if os.path.exists(mark):
-            os.remove(mark)
+    #for mark in marks.split(","):
+    #    if os.path.exists(mark):
+    #        os.remove(mark)
 
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
