@@ -34,15 +34,26 @@ fi
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" >> /dev/null 2>&1 &
 echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 00 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "15" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 15 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "30" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 30 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "45" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 45 >> /dev/null 2>&1 &"
 
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "00" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 00 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "15" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 15 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "30" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 30 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "45" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 45 >> /dev/null 2>&1 &"
 
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "00" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 00 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "15" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 15 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "30" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 30 >> /dev/null 2>&1 &"
 nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "45" >> /dev/null 2>&1 &
+echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 45 >> /dev/null 2>&1 &"

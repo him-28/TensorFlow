@@ -15,4 +15,3 @@ if [ $? -eq 255 ];then
     sh send_inventory_mail.sh ${year}${month}${day} ${hour} ad inventory hour run error
 fi
 cd calculate
-#touch /home/dingzheng/.inventory_${prefix}_${year}${month}${day}${hour}${dash}

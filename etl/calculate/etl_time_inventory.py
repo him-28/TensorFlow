@@ -195,8 +195,6 @@ class ExtractTransformLoadTimeInventory(object):
     def do_calculate(self, trans_type, output_file_path, chunk):
         '''计算一个维度的数据 '''
         self.info("prepare to calculate : " + trans_type)
-        self.info("filter ad_event_type == 'e'")
-        chunk = chunk[chunk['ad_event_type'] == 'e']
         try:
             if trans_type == "display_sale":
                 chunk = self.__extract_display_sale_data(chunk, trans_type)
@@ -531,11 +529,15 @@ class ExtractTransformLoadTimeInventory(object):
                 chunk.apply(self.__split_request_body, axis=1, \
                                 req_cols=req_cols, values=values, \
                                 val_len=val_len)
-
+                self.info("split completed. start to transform...")
                 for name, datas in req_cols.iteritems():
                     new_chunk[name] = datas
 
+                self.info("filter ad_event_type == 'e'")
+                new_chunk = new_chunk[new_chunk['ad_event_type'] == 'e']
+
                 self.transform(run_cfg, new_chunk)
+
                 self.info("del chunk ...")
                 del chunk
                 del new_chunk
