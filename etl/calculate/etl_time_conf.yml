@@ -50,7 +50,7 @@ inventory:
         result_header: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
-    "read_csv_chunksize": 500000
+    "read_csv_chunksize": 300000
     "ipb_filepath": util/IPB.csv
     "city_filepath": util/city_province.csv
 

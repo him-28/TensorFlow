@@ -20,7 +20,7 @@ import urllib
 from etl.util.playerutil import getplayerInfo
 from etl.util.mysqlutil import DBUtils
 from etl.calculate.etl_inventory import split_header, \
-getfilesize, player_info_not_changed, TAG_CODE, AUDIT_CFG, IP_UTIL
+getfilesize, TAG_CODE, AUDIT_CFG, IP_UTIL
 
 CONFIG_ALL = yaml.load(file("calculate/etl_time_conf.yml"))
 
@@ -29,8 +29,7 @@ CFG = CONFIG_ALL["inventory"]
 # 正一位广告位
 BOARD_CENTER_ONE = CFG["board_center_one"]
 
-from etl.util import init_log, playerutil
-LOG = init_log.init("util/logger.conf", 'inventoryLogger')
+from etl.util import playerutil
 
 def get_middle_slot_ids():
     '''获取所有中贴片'''

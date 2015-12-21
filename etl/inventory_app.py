@@ -137,7 +137,6 @@ if __name__ == "__main__":
         #os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
-        now = datetime(2015, 12, 15, 0, 0)
         paths = _job_ready_by_day(now)
 
         trans_type = sys.argv[2]
