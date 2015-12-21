@@ -20,8 +20,7 @@ inventory:
         "time_iso8601": "server_timestamp",
         "si": "session_id",
         "ip": "ip",
-        "city_id": "city_id",
-        "tag": "tag"
+        "city_id": "city_id"
     }
     "dtype": {
         "ad_event_type": "str",
@@ -41,18 +40,17 @@ inventory:
         "ip": "str",
         "city_id": "int",
         "type_id": "int",
-        "tag": "int",
         "display_poss": "int",
         "duration": "int"
     }
     group_item: 
-        pv1: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+        pv1: ["server_timestamp", "city_id", "pf", "playlist_id", "board_id"]
         pv2: ["server_timestamp", "city_id", "pf", "playlist_id", "type_id", "board_id"]
         display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
         result_header: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
-    "read_csv_chunksize": 1000000
+    "read_csv_chunksize": 500000
     "ipb_filepath": util/IPB.csv
     "city_filepath": util/city_province.csv
 

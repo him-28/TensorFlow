@@ -29,7 +29,7 @@ CFG = CONFIG_ALL["inventory"]
 # 正一位广告位
 BOARD_CENTER_ONE = CFG["board_center_one"]
 
-from etl.util import init_log
+from etl.util import init_log, playerutil
 LOG = init_log.init("util/logger.conf", 'inventoryLogger')
 
 def get_middle_slot_ids():
@@ -110,21 +110,29 @@ class ExtractTransformLoadTimeInventory(object):
         self.info("get player infos...")
         self.player_infos = getplayerInfo()
 
-        self.player_index = player_info_not_changed(\
-                    configure["start_time"], configure["end_time"], self.player_infos)
-        self.info("get player info change status: %s", self.player_index)
+        # self.player_index = player_info_not_changed(\
+        #            configure["start_time"], configure["end_time"], self.player_infos)
+        # self.info("get player info change status: %s", self.player_index)
 
-        self.player_slot_index = {}
-        if self.player_index:
-            for board_id, slots in self.player_index.iteritems():
-                self.player_slot_index.update({board_id: slots.keys()})
+        # self.player_slot_index = {}
+        # if self.player_index:
+        #    for board_id, slots in self.player_index.iteritems():
+        #        self.player_slot_index.update({board_id: slots.keys()})
 
         self.middle_slot_ids = get_middle_slot_ids()
         self.video_duration = get_video_durations()
         self.p_s_slot_ids = get_all_pause_start()
 
+        self.player_info = playerutil.getplayerInfo2()
+
+        self.board_slot_id_df = self.get_newest_slot_ids(self.player_info)
+
         self.info("params configed as : %s", self.params)
 
+    def get_newest_slot_ids(self, player_info):
+        '''最新的播放器ID、slot_id'''
+        info = [(x, y) for x, y in player_info]
+        return pd.DataFrame(info, columns=['board_id', 'slot_id'], dtype=int)
 
     def run(self, run_cfg):
         '''Run the ETL !!!'''
@@ -187,14 +195,14 @@ class ExtractTransformLoadTimeInventory(object):
     def do_calculate(self, trans_type, output_file_path, chunk):
         '''计算一个维度的数据 '''
         self.info("prepare to calculate : " + trans_type)
-        self.info("filter tag < 100 and ad_event_type == 'e'")
-        chunk = chunk[(chunk['tag'] < 100) & (chunk['ad_event_type'] == 'e')]
+        self.info("filter ad_event_type == 'e'")
+        chunk = chunk[chunk['ad_event_type'] == 'e']
         try:
             if trans_type == "display_sale":
                 chunk = self.__extract_display_sale_data(chunk, trans_type)
                 return self.__caculate_display(chunk, trans_type, output_file_path)
             elif trans_type == "pv1":
-                chunk = self.__extract_pv1_data(chunk, trans_type)
+                # chunk = self.__extract_pv1_data(chunk, trans_type)
                 return self.__caculate_display(chunk, trans_type, \
                                         output_file_path)
             elif trans_type == "pv2":
@@ -331,11 +339,9 @@ class ExtractTransformLoadTimeInventory(object):
         return new_chunk
 
     def __flat_slot_id(self, row_data, series_data_struct):
-        '''打平投放SlotID，如果BoardID和SlotID不匹配，不打平'''
+        '''打平投放SlotID'''
         try:
             ad_list = urllib.unquote(row_data["ad_list"])
-            board_id = row_data["board_id"]
-            server_timestamp = float(row_data["server_timestamp"])
             if not ad_list:
                 return ad_list
             list_array = ad_list.split("|")
@@ -344,12 +350,8 @@ class ExtractTransformLoadTimeInventory(object):
                 slot_id = arr.split(",")[0]
                 if (long(slot_id),) in self.p_s_slot_ids:
                     new_row["slot_id"] = slot_id
-                    if self.__is_board_slot_id_match(board_id, slot_id, server_timestamp):
-                        for key, value in series_data_struct.iteritems():
-                            value.append(new_row[key])
-                    else:
-                        # TODO record the row
-                        pass
+                    for key, value in series_data_struct.iteritems():
+                        value.append(new_row[key])
         except Exception, exc:
             # TODO 记录出错的日志内容
             self.error("flat slot id error: %s\n%s", exc, list(row_data.values))
@@ -515,10 +517,10 @@ class ExtractTransformLoadTimeInventory(object):
                          sep="\n", engine='c')
 
             val_len = len(CFG["original_header"])
-
+            chunk_index = 0
             # error_pool = FilterWriterPool(original_error)
             for chunk in chunks:
-                self.info("handle %s records...", len(chunk))
+                self.info("handle section[%02d] %s records...", chunk_index, len(chunk))
                 new_chunk = pd.DataFrame()
 
                 values = CFG["usefull_request_body_header"].values()
@@ -534,6 +536,24 @@ class ExtractTransformLoadTimeInventory(object):
                     new_chunk[name] = datas
 
                 self.transform(run_cfg, new_chunk)
+                self.info("del chunk ...")
+                del chunk
+                del new_chunk
+                chunk_index = chunk_index + 1
+            for algorithm in run_cfg.iterkeys():
+                if algorithm == "pv1":  # pv1需要添加数据库映射
+                    df = pd.read_csv(run_cfg[algorithm], dtype=self.get("dtype"), \
+                                     sep=self.get("csv_sep"))
+                    if df.empty:
+                        break
+                    df["board_id"] = df["board_id"].astype(int)
+                    new_df = pd.merge(df, self.board_slot_id_df)
+                    new_df["pv1"] = new_df["pv1"].fillna(0)
+                    new_df = new_df.fillna(-1)
+                    del df
+                    new_df.to_csv(run_cfg[algorithm], sep=self.get("csv_sep"), header=True, \
+                        index=False)
+                    del new_df
         else:
             self.error("failed to extract file :%s, file not exists.", input_file_path)
             return False
@@ -560,9 +580,9 @@ class ExtractTransformLoadTimeInventory(object):
         # 打平--------------------------------------End
 
         # 审计--------------------------------------Start
-        tag = self.__audit_orign_rows(seri)
+        # tag = self.__audit_orign_rows(seri)
         # 审计--------------------------------------End
-        seri["tag"] = tag
+        # seri["tag"] = tag
         for key, value in req_cols.iteritems():
             value.append(seri[key])
         return row_datas

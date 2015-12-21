@@ -27,6 +27,38 @@ config.update({
     'port': Config['database']['port']
     })
 
+def getplayerInfo2():
+    try:
+        _playersql = " select p.code,ad_id from ad_space as s \
+                join player p on s.player_id=p.id and p.online=1 and s.status='1' \
+                order by s.player_id,node_id,priority asc"
+        _conn = None
+        _cur = None
+        try:
+            _conn = psy.connect(db=config['database'], user=config['user'], \
+                passwd=config['password'], host=config['host'], \
+                port=config['port'])
+            _cur = _conn.cursor()
+            _cur.execute(_playersql)
+            splitrows = _cur.fetchall()
+        except Exception, e:
+            LOGGER.error('pg bulk insert error: %s' % e)
+            if _conn:
+                _conn.rollback()
+            return None
+        finally:
+            if _conn:
+                _cur.close()
+                _conn.close()
+            del _conn
+        if not splitrows or not len(splitrows):
+            LOGGER.error("can't get player info time split info errors")
+            raise Exception("can't get player info time split info errors")
+        return splitrows
+    except Exception, e:
+        LOGGER.error("get player info errors, message: %s" % e.message)
+    return []
+
 def getplayerInfo():
     '''
         get latest player info
