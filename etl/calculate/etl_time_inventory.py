@@ -135,6 +135,7 @@ class ExtractTransformLoadTimeInventory(object):
 
     def run(self, run_cfg):
         '''Run the ETL !!!'''
+        self.info("start to run with params: \n %s", run_cfg)
         result_df = self.extract(run_cfg)  # step 1
         self.set("end_time", time.clock())
         self.info("all task completed in [%0.2f] seconds", \
