@@ -18,8 +18,8 @@ from etl.calculate.etl_time_inventory import ExtractTransformLoadTimeInventory
 data_output_prefix = "/data6/inventory"
 D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
 H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
-H_Logic1_Filename = "inventory_pv2_{hour:02d}.csv"
-D_Logic1_Filename = "inventory_pv2_{day:02d}.csv"
+H_Logic1_Filename = "inventory_sale_{hour:02d}.csv"
+D_Logic1_Filename = "inventory_sale_{day:02d}.csv"
 
 def ngx_files(the_date, data_index, time2d):
     '''get ngx files'''
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         }
         etli = ExtractTransformLoadTimeInventory(cfg)
         run_cfg = {
-            "pv2": result_out_file + ".pv2"
+            "pv1": result_out_file + ".pv1"
         }
         infos = etli.run(run_cfg)
         os.mknod(dash_mark_path)
