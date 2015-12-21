@@ -68,9 +68,9 @@ inventory:
         5132: 106780
     }
 
-    db_host: "10.100.2.75"
-    db_username: "data_processing"
-    db_passwd: "123456@bigdata"
+    db_host: "10.100.10.75"
+    db_username: "ad_inv_data"
+    db_passwd: "ad_inventory_data@@)!^"
     db_port: 3306
     db_inventory: "inventory"
 
