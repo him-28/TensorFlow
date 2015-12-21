@@ -31,29 +31,29 @@ if [ "$hour" == "02" ];then
     nohup sh /home/dingzheng/amble/etl/calculate/new_run_day.sh "${year}" "${month}" "${day2}" "pv1" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
 fi
 
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 00 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "15" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 15 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "30" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 30 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "45" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 45 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 00 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "15" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 15 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "30" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 30 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "45" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data2 45 "pv1" >> /dev/null 2>&1 &"
 
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "00" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 00 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "15" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 15 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "30" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 30 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "45" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 45 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "00" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 00 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "15" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 15 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "30" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 30 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data3" "45" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data3 45 "pv1" >> /dev/null 2>&1 &"
 
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "00" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 00 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "15" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 15 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "30" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 30 "pv1" >> /dev/null 2>&1 &"
-nohup sh time_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "45" "pv1" >> /dev/null 2>&1 &
-echo "nohup sh time_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 45 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "00" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 00 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "15" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 15 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "30" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 30 "pv1" >> /dev/null 2>&1 &"
+nohup sh pv1_pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data4" "45" "pv1" >> /dev/null 2>&1 &
+echo "nohup sh pv1_pretty_dash.sh ${year} ${month} ${day} ${hour} data4 45 "pv1" >> /dev/null 2>&1 &"
