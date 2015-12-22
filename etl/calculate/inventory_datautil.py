@@ -70,6 +70,7 @@ def merge_file(trans_type, src_files, output_filename, data_date):
         LOG.warn("error output file exists, remove")
 
     output_column_sep = CFG.get("csv_sep")
+    
     daydata_dataframe = load_files(src_files, output_column_sep, dtype)
 
     LOG.info("sum merged datas")
@@ -134,6 +135,9 @@ def report_infos(df1, spend_time):
 
 def load_files(input_list, output_column_sep, dtype):
     '''加载24个小时的文件到一个DataFrame里'''
+    print "#######################################"
+    print dtype
+
     df1 = None
     df3 = None
     readed = False

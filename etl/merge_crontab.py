@@ -34,15 +34,18 @@ if __name__ == '__main__':
     tp = sys.argv[4]
 
     dtype = split_header(CFG["dtype"])
+    print dtype
     header = CFG["group_item"][tp]
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
-            df = pd.read_csv(r_f, sep=CFG["csv_sep"], dtype=dtype)
+            print r_f
+            df = pd.read_csv(r_f, sep=CFG["csv_sep"],dtype=dtype)
             if dfs is None:
                 dfs = df
             else:
                 dfs = dfs.append(df)
+    print header
     result_df = pd.DataFrame(dfs.groupby(header,as_index=False).sum())
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype, index=False)

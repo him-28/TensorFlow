@@ -130,7 +130,7 @@ if __name__ == "__main__":
         }
         etli = ExtractTransformLoadTimeInventory(cfg)
         run_cfg = {
-            "pv1": result_out_file + ".pv1"
+            "sale": result_out_file + ".sale"
         }
         infos = etli.run(run_cfg)
         os.mknod(dash_mark_path)

@@ -16,6 +16,7 @@ dash30="30"
 dash45="45"
 
 f1="/home/dingzheng/.inventory_${prefix2}_${year}${month}${day}${hour}${dash00}.pv1"
+echo $f1
 f2="/home/dingzheng/.inventory_${prefix2}_${year}${month}${day}${hour}${dash15}.pv1"
 f3="/home/dingzheng/.inventory_${prefix2}_${year}${month}${day}${hour}${dash30}.pv1"
 f4="/home/dingzheng/.inventory_${prefix2}_${year}${month}${day}${hour}${dash45}.pv1"

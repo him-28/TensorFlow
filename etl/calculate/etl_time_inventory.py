@@ -392,7 +392,7 @@ class ExtractTransformLoadTimeInventory(object):
             result = chunk.groupby(header, as_index=True, sort=False).sum()
         else:
             result = pd.DataFrame(chunk.groupby(header, as_index=False, sort=False).size())
-        result = result.rename(columns={sum_key:trans_type})
+        result = result.rename(columns={sum_key:trans_type}).fillna(-1)
         if write_header:
             mode = 'w'
         else:

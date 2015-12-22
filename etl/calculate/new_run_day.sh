@@ -18,4 +18,4 @@ if [ $? -eq 255 ];then
     #sh send_inventory_mail.sh ${year}${month}${day} ad inventory day run error
     exit
 fi
-sh calculate/send_pdf_mail.sh ${year} ${month} ${day}
+#sh calculate/send_pdf_mail.sh ${year} ${month} ${day}
