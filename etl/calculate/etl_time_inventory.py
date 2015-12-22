@@ -133,11 +133,10 @@ class ExtractTransformLoadTimeInventory(object):
     def run(self, run_cfg):
         '''Run the ETL !!!'''
         self.info("start to run with params: \n %s", run_cfg)
-        result_df = self.extract(run_cfg)  # step 1
+        self.extract(run_cfg)  # step 1
         self.set("end_time", time.clock())
         self.info("all task completed in [%0.2f] seconds", \
                   (self.get("end_time") - self.get("start_time")))
-        del result_df
         # return self.report(result_df)  # step end
 
     def extract(self, run_cfg):
@@ -391,9 +390,10 @@ class ExtractTransformLoadTimeInventory(object):
                 self.get("alg_info")[trans_type].update({"write_header":False})
                 return 0
         if is_sum:
-            result = chunk.groupby(header, as_index=True, sort=False).sum()
+            result = chunk.groupby(header, as_index=False, sort=False).sum()
         else:
             result = pd.DataFrame(chunk.groupby(header, as_index=False, sort=False).size())
+            result.reset_index(inplace=True)
         result = result.rename(columns={sum_key:trans_type}).fillna(-1)
         if write_header:
             mode = 'w'
@@ -404,7 +404,7 @@ class ExtractTransformLoadTimeInventory(object):
             os.makedirs(out_path)
         self.info("save result to %s", output_file_path)
         self.info("the write model is %s", mode)
-        result.to_csv(output_file_path, index=True, mode=mode, \
+        result.to_csv(output_file_path, index=False, mode=mode, \
                       header=write_header, sep=self.get("csv_sep"))
         if write_header:
             self.get("alg_info")[trans_type].update({"write_header":False})

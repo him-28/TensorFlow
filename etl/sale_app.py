@@ -8,8 +8,9 @@ import os
 import time
 from datetime import datetime
 from datetime import timedelta
-
-from etl.conf.settings import LOGGER
+import logging.config
+logging.config.fileConfig("calculate/logger.conf")
+LOGGER = logging.getLogger('etlLogger')
 
 from etl.calculate.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
@@ -133,7 +134,7 @@ if __name__ == "__main__":
             "display_sale": result_out_file + ".sale"
         }
         infos = etli.run(run_cfg)
-        LOGGER.info("creact touch: %s" % dash_mark_path)
+        LOGGER.info("create touch: %s" % dash_mark_path)
         if not os.path.exists(dash_mark_path):
             os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':

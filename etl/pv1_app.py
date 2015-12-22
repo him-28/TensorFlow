@@ -9,7 +9,9 @@ import time
 from datetime import datetime
 from datetime import timedelta
 
-from etl.conf.settings import LOGGER
+import logging.config
+logging.config.fileConfig("calculate/logger.conf")
+LOGGER = logging.getLogger('etlLogger')
 
 from etl.calculate.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
