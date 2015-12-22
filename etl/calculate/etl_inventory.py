@@ -35,7 +35,7 @@ def split_header(header):
     for name, the_type in header.iteritems():
         if the_type == 'int':
             target_dtype[name] = int
-        elif the_type == 'str':
+        elif the_type == 'str' or the_type == 'string':
             target_dtype[name] = str
         elif the_type == 'list':
             target_dtype[name] = str
