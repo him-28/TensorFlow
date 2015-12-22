@@ -548,7 +548,7 @@ class ExtractTransformLoadTimeInventory(object):
                                      sep=self.get("csv_sep"))
                     if dataf.empty:
                         break
-                    dataf["board_id"] = dataf["board_id"].astype(int)
+                    dataf["board_id"] = dataf["board_id"].fillna(-1).astype(int)
                     new_df = pd.merge(dataf, self.board_slot_id_df, on="board_id")
                     new_df["pv1"] = new_df["pv1"].fillna(0)
                     new_df = new_df.fillna(-1)
