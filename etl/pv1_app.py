@@ -133,7 +133,10 @@ if __name__ == "__main__":
             "pv1": result_out_file + ".pv1"
         }
         infos = etli.run(run_cfg)
-        os.mknod(dash_mark_path)
+
+        LOGGER.info("creact touch: %s" % dash_mark_path)
+        if not os.path.exists(dash_mark_path):
+            os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
         paths = _job_ready_by_day(now)
