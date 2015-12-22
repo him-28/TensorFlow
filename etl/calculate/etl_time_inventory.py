@@ -614,6 +614,7 @@ class ExtractTransformLoadTimeInventory(object):
             seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(seri["ip"], 3)
         except:
             self.error("can not transfor city id from ip: %s", seri["ip"])
+            seri["city_id"] = -1
         server_timestamp = time_iso8601  # [2015-12-04T14:00:02+08:00]
         d_date = dt.datetime.strptime(server_timestamp, '[%Y-%m-%dT%H:%M:%S+08:00]').date()
         seri["server_timestamp"] = time.mktime(d_date.timetuple())
