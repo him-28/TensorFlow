@@ -82,7 +82,7 @@ db_reflect:
         table_name: inventory_adspace_pv_data
         columns:
             "date": "server_timestamp"
-            "playlist_id": "board_id"
+            "playlist_id": "playlist_id"
             "slot_id": "slot_id"
             "city_id": "city_id"
             "pv": "pv1"
@@ -90,7 +90,7 @@ db_reflect:
         table_name: inventory_adspacetype_pv_data
         columns:
             "date": "server_timestamp"
-            "playlist_id": "board_id"
+            "playlist_id": "playlist_id"
             "adspace_type_id": "type_id"
             "city_id": "city_id"
             "pv": "pv2"
@@ -98,7 +98,7 @@ db_reflect:
         table_name: inventory_adspace_display_data
         columns:
             "date": "server_timestamp"
-            "playlist_id": "board_id"
+            "playlist_id": "playlist_id"
             "slot_id": "slot_id"
             "city_id": "city_id"
             "display": "display_sale"
