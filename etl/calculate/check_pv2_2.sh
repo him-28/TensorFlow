@@ -79,7 +79,7 @@ if [ ! -f ${f12} ];then
 fi
 echo "find ${f12}"
 
-cd /home/dingzheng/amble/etl/
+cd /home/dingzheng/inventory/etl/
 
 r1="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash00}.pv2"
 r2="/data6/inventory/${year}/${month}/${day}/inventory_${prefix2}_${year}${month}${day}${hour}${dash15}.pv2"
