@@ -36,7 +36,7 @@ if __name__ == '__main__':
     dtype = split_header(CFG["dtype"])
     header = CFG["group_item"][tp]
     if tp == "pv1":
-        header.remove("slot_id")
+        header.remove("board_id")
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
