@@ -77,6 +77,8 @@ def merge_file(trans_type, src_files, output_filename, data_date):
     addon_item = REF[trans_type]["columns"].values()
     addon_item.remove(trans_type)
     addon_item.append("pf")
+    if trans_type == "pv1":
+        addon_item.remove("board_id")
     for item in addon_item:
         daydata_dataframe[item] = daydata_dataframe[item].fillna(-1)
     daydata_dataframe["server_timestamp"] = daydata_dataframe["server_timestamp"].astype(float)
