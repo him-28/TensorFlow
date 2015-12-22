@@ -133,8 +133,6 @@ def report_infos(df1, spend_time):
 
 def load_files(input_list, output_column_sep, dtype):
     '''加载24个小时的文件到一个DataFrame里'''
-    print "#######################################"
-    print dtype
 
     df1 = None
     df3 = None
