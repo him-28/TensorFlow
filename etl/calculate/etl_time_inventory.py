@@ -404,7 +404,7 @@ class ExtractTransformLoadTimeInventory(object):
             os.makedirs(out_path)
         self.info("save result to %s", output_file_path)
         self.info("the write model is %s", mode)
-        result.to_csv(output_file_path, index=is_sum, mode=mode, \
+        result.to_csv(output_file_path, index=True, mode=mode, \
                       header=write_header, sep=self.get("csv_sep"))
         if write_header:
             self.get("alg_info")[trans_type].update({"write_header":False})
