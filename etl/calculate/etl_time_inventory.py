@@ -548,7 +548,10 @@ class ExtractTransformLoadTimeInventory(object):
                                      sep=self.get("csv_sep"))
                     if dataf.empty:
                         break
-                    dataf["board_id"] = dataf["board_id"].fillna(-1).astype(int)
+                    try:
+                        dataf["board_id"] = dataf["board_id"].fillna(-1).astype(int)
+                    except:
+                        dataf["board_id"] = dataf["board_id"].fillna(-1).apply(self.trans_2_int).astype(int)
                     del dataf["slot_id"]
                     new_df = pd.merge(dataf, self.board_slot_id_df, on="board_id")
                     new_df["pv1"] = new_df["pv1"].fillna(0)
@@ -562,6 +565,13 @@ class ExtractTransformLoadTimeInventory(object):
             self.error("failed to extract file :%s, file not exists.", input_file_path)
             return False
         return True
+
+    def trans_2_int(self, board_id):
+        '''转换成int'''
+        try:
+            return int(board_id)
+        except:
+            return -1
 
     def __split_request_body(self, row_datas, req_cols, values, val_len):
         '''拆分reqeust body'''
