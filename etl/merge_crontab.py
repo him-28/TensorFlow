@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     for mark in marks.split(","):
         if os.path.exists(mark):
-            pass#os.remove(mark)
+            os.remove(mark)
 
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     for r_f in result_files:
         if os.path.exists(r_f):
-            pass#os.remove(r_f)
+            os.remove(r_f)
     '''
     
     python merge_crontab.py /home/dingzheng/.inventory_data2_201512200400,/home/dingzheng/.inventory_data2_201512200415,/home/dingzheng/.inventory_data2_201512200430,/home/dingzheng/.inventory_data2_201512200445,/home/dingzheng/.inventory_data3_201512200400,/home/dingzheng/.inventory_data3_201512200415,/home/dingzheng/.inventory_data3_201512200430,/home/dingzheng/.inventory_data3_201512200445,/home/dingzheng/.inventory_data4_201512200400,/home/dingzheng/.inventory_data4_201512200415,/home/dingzheng/.inventory_data4_201512200430,/home/dingzheng/.inventory_data4_201512200445  /data6/inventory/2015/12/20/inventory_data2_201512200400.sale,/data6/inventory/2015/12/20/inventory_data2_201512200415.sale,/data6/inventory/2015/12/20/inventory_data2_201512200430.sale,/data6/inventory/2015/12/20/inventory_data2_201512200445.sale,/data6/inventory/2015/12/20/inventory_data3_201512200400.sale,/data6/inventory/2015/12/20/inventory_data3_201512200415.sale,/data6/inventory/2015/12/20/inventory_data3_201512200430.sale,/data6/inventory/2015/12/20/inventory_data3_201512200445.sale,/data6/inventory/2015/12/20/inventory_data4_201512200400.sale,/data6/inventory/2015/12/20/inventory_data4_201512200415.sale,/data6/inventory/2015/12/20/inventory_data4_201512200430.sale,/data6/inventory/2015/12/20/inventory_data4_201512200445.sale  /data6/inventory/2015/12/20/inventory_sale_04.csv
