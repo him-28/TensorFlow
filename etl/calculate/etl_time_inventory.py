@@ -119,13 +119,10 @@ class ExtractTransformLoadTimeInventory(object):
         #        self.player_slot_index.update({board_id: slots.keys()})
 
         self.middle_slot_ids = get_middle_slot_ids()
-        self.video_duration = get_video_durations()
+        self.video_duration = {}
         self.p_s_slot_ids = get_all_pause_start()
-
         self.player_info = playerutil.getplayerInfo2()
-
         self.board_slot_id_df = self.get_newest_slot_ids(self.player_info)
-
         self.info("params configed as : %s", self.params)
 
     def get_newest_slot_ids(self, player_info):
@@ -146,6 +143,11 @@ class ExtractTransformLoadTimeInventory(object):
     def extract(self, run_cfg):
         '''extract data file'''
         src_files = self.get("src_files")
+
+        if run_cfg.has_key("pv2"):
+            v_d_row = get_video_durations()
+            for video, duration in v_d_row:
+                self.video_duration[int(video)] = int(duration)
 
         result_out_file = self.get("result_out_file")
         if os.path.exists(result_out_file):
@@ -256,16 +258,16 @@ class ExtractTransformLoadTimeInventory(object):
         '''把视频时长转换成PV'''
         if not video_id:
             return None
-        duration = self.get_video_duration(video_id, self.video_duration)
-        if duration:
-            if duration < 301:  # 大于0分钟小于等于5分钟
-                duration = 1
-            elif duration > 300 and duration < 601:  # 大于5分钟小于等于10分钟
-                duration = 2
-            elif duration > 600 and duration < 1201:  # 大于10分钟小于等于20分钟
-                duration = 3
-            elif duration > 1200:
-                duration = 4
+        # duration = self.get_video_duration(video_id, self.video_duration)
+        duration = self.video_duration[video_id]
+        if duration < 301:  # 大于0分钟小于等于5分钟
+            duration = 1
+        elif duration > 300 and duration < 601:  # 大于5分钟小于等于10分钟
+            duration = 2
+        elif duration > 600 and duration < 1201:  # 大于10分钟小于等于20分钟
+            duration = 3
+        elif duration > 1200:
+            duration = 4
         return duration
 
     def __fill_pv1_slot_list(self, row_data, series_data_struct):
@@ -290,7 +292,7 @@ class ExtractTransformLoadTimeInventory(object):
         try:
             if not row_data["video_id"]:
                 return row_data
-            duration = self.trans_duration_2_pv(long(row_data["video_id"]))
+            duration = self.trans_duration_2_pv(int(row_data["video_id"]))
             if duration:
                 type_id = 1  # 前贴
                 for item, item_data in series_data_struct.iteritems():
@@ -402,7 +404,7 @@ class ExtractTransformLoadTimeInventory(object):
             os.makedirs(out_path)
         self.info("save result to %s", output_file_path)
         self.info("the write model is %s", mode)
-        result.to_csv(output_file_path, index=True, mode=mode, \
+        result.to_csv(output_file_path, index=is_sum, mode=mode, \
                       header=write_header, sep=self.get("csv_sep"))
         if write_header:
             self.get("alg_info")[trans_type].update({"write_header":False})
