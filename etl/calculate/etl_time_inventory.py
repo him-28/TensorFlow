@@ -521,7 +521,6 @@ class ExtractTransformLoadTimeInventory(object):
             # error_pool = FilterWriterPool(original_error)
             for chunk in chunks:
                 self.info("handle section[%02d] %s records...", chunk_index, len(chunk))
-                new_chunk = pd.DataFrame()
 
                 values = CFG["usefull_request_body_header"].values()
                 req_cols = collections.OrderedDict(\
@@ -532,8 +531,7 @@ class ExtractTransformLoadTimeInventory(object):
                                 req_cols=req_cols, values=values, \
                                 val_len=val_len)
                 self.info("split completed. start to transform...")
-                for name, datas in req_cols.iteritems():
-                    new_chunk[name] = datas
+                new_chunk = pd.DataFrame(req_cols)
 
                 self.info("filter ad_event_type == 'e'")
                 new_chunk = new_chunk[new_chunk['ad_event_type'] == 'e']
@@ -546,16 +544,16 @@ class ExtractTransformLoadTimeInventory(object):
                 chunk_index = chunk_index + 1
             for algorithm in run_cfg.iterkeys():
                 if algorithm == "pv1":  # pv1需要添加数据库映射
-                    df = pd.read_csv(run_cfg[algorithm], dtype=self.get("dtype"), \
+                    dataf = pd.read_csv(run_cfg[algorithm], dtype=self.get("dtype"), \
                                      sep=self.get("csv_sep"))
-                    if df.empty:
+                    if dataf.empty:
                         break
-                    df["board_id"] = df["board_id"].astype(int)
-                    new_df = pd.merge(df, self.board_slot_id_df)
+                    dataf["board_id"] = dataf["board_id"].astype(int)
+                    new_df = pd.merge(dataf, self.board_slot_id_df, on="board_id")
                     new_df["pv1"] = new_df["pv1"].fillna(0)
                     new_df = new_df.fillna(-1)
                     del new_df["board_id"]
-                    del df
+                    del dataf
                     new_df.to_csv(run_cfg[algorithm], sep=self.get("csv_sep"), header=True, \
                         index=False)
                     del new_df

@@ -1,4 +1,4 @@
-#encoding=utf8
+# encoding=utf8
 '''
 Created on 2015年12月11日
 
@@ -34,19 +34,19 @@ if __name__ == '__main__':
     tp = sys.argv[4]
 
     dtype = split_header(CFG["dtype"])
-    print dtype
     header = CFG["group_item"][tp]
+    if tp == "pv1":
+        header.remove("board_id")
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
             print r_f
-            df = pd.read_csv(r_f, sep=CFG["csv_sep"],dtype=dtype)
+            df = pd.read_csv(r_f, sep=CFG["csv_sep"], dtype=dtype)
             if dfs is None:
                 dfs = df
             else:
                 dfs = dfs.append(df)
-    print header
-    result_df = pd.DataFrame(dfs.groupby(header,as_index=False).sum())
+    result_df = pd.DataFrame(dfs.groupby(header, as_index=False).sum())
     LOGGER.info("save result to %s", result_path)
     result_df.to_csv(result_path, sep=CFG["csv_sep"], dtype=dtype, index=False)
 
@@ -71,30 +71,30 @@ touch /home/dingzheng/.inventory_data4_201512200415
 touch /home/dingzheng/.inventory_data4_201512200430
 touch /home/dingzheng/.inventory_data4_201512200445
     '''
-    #report result to BearyChat,Email
-    #result_size = 0
-    #display_sale = 0
-    #display_poss = 0
-    #if not result_df.empty:
+    # report result to BearyChat,Email
+    # result_size = 0
+    # display_sale = 0
+    # display_poss = 0
+    # if not result_df.empty:
     #    result_size = len(result_df)
     #    display_sale = result_df["display_sale"].sum()
     #    display_poss = result_df["display_poss"].sum()
-    #infos = {
+    # infos = {
     #     "file_name": "",
     #     "file_size": "",
     #     "result_size": result_size,
     #     "spend_time": "小于10分种",
     #     "display_sale": int(display_sale),
     #     "display_poss": int(display_poss)
-    #}
-    #details = {}
-    #if not result_df.empty:
+    # }
+    # details = {}
+    # if not result_df.empty:
     #    df2 = result_df.groupby("pf").sum()
     #    for the_pf, datas in df2.iterrows():
     #        details[the_pf] = {
     #            "display_sale" : int(datas["display_sale"]),
     #            "display_poss" : int(datas["display_poss"])
     #       }
-    #infos["details"] = details
-    #now = datetime.now() - timedelta(hours=1)
-    #InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
+    # infos["details"] = details
+    # now = datetime.now() - timedelta(hours=1)
+    # InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")

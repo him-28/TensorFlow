@@ -134,7 +134,7 @@ if __name__ == "__main__":
         }
         infos = etli.run(run_cfg)
 
-        LOGGER.info("creact touch: %s" % dash_mark_path)
+        LOGGER.info("create touch: %s" % dash_mark_path)
         if not os.path.exists(dash_mark_path):
             os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':
