@@ -44,10 +44,9 @@ inventory:
         "duration": "int"
     }
     group_item: 
-        pv1: ["server_timestamp", "city_id", "pf", "playlist_id", "board_id"]
-        pv2: ["server_timestamp", "city_id", "pf", "playlist_id", "type_id", "board_id"]
-        display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
-        result_header: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id", "board_id"]
+        pv1: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id","board_id"]
+        pv2: ["server_timestamp", "city_id", "pf", "playlist_id", "type_id"]
+        display_sale: ["server_timestamp", "city_id", "pf", "playlist_id", "slot_id"]
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
     "read_csv_chunksize": 300000

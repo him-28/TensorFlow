@@ -554,6 +554,7 @@ class ExtractTransformLoadTimeInventory(object):
                     new_df = pd.merge(df, self.board_slot_id_df)
                     new_df["pv1"] = new_df["pv1"].fillna(0)
                     new_df = new_df.fillna(-1)
+                    del new_df["board_id"]
                     del df
                     new_df.to_csv(run_cfg[algorithm], sep=self.get("csv_sep"), header=True, \
                         index=False)
