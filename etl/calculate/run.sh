@@ -5,7 +5,7 @@ month=$2
 day=$3
 hour=$4
 
-src_path="/home/dingzheng/amble/etl/calculate"
+src_path="/home/dingzheng/inventory/etl/calculate"
 cd ${src_path}
 
 if [ "$year" == "" ];then
@@ -26,7 +26,7 @@ fi
 
 if [ "$hour" == "02" ];then
     day2=`date -d '-1 day' +%d`
-    nohup sh /home/dingzheng/amble/etl/calculate/new_run_day.sh "${year}" "${month}" "${day2}" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
+    nohup sh /home/dingzheng/inventory/etl/calculate/new_run_day.sh "${year}" "${month}" "${day2}" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
 fi
 
 nohup sh pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" >> /dev/null 2>&1 &
