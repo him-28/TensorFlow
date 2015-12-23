@@ -18,7 +18,7 @@ import yaml
 import numpy as np
 import urllib
 
-from etl.util.playerutil import getplayerInfo
+from etl.util.playerutil import getplayerInfo2
 from etl.util.ip_convert import IP_Util
 from etl.util.admonitor_flat_data import player_info
 
@@ -26,6 +26,7 @@ from etl.logic1.ad_calculate_platform import insert_hour
 from etl.logic1.ad_calculate_platform import insert_day
 from datetime import date
 from __builtin__ import True
+from _collections import defaultdict
 
 CONFIG_ALL = yaml.load(file("calculate/etl_conf_platform_xyda.yml"))
 
@@ -54,12 +55,17 @@ def getfilesize(filepath):
         return 0
     return os.path.getsize(filepath)
 
-def player_info_not_changed(start_time, end_time, player_infos):
-    '''判断时间段内广告位是否发生过变更，如果发生过返回 False，否则返回广告位ID和播放器ID的对应关系'''
-    for items in player_infos.values():
-        #if start_time >= items["starttime"] and end_time <= items["endtime"]:  # 满足任何一个时间段可以认为没有发生变更
-        return items["playerinfo"]
-    return False
+def player_info_not_changed(player_infos):
+    '''每次只会同步一次播放器和和广告位的对应关系'''
+    bslot_dict = {}
+    for items in player_infos:
+        key = str(items[0])
+        value = int(items[1])
+        if bslot_dict.has_key(key):
+            bslot_dict[key].append(value)
+        else:
+            bslot_dict[key] = [value]
+    return bslot_dict
 
 class ExtractTransformLoadPlatform(object):
     '''
@@ -79,17 +85,10 @@ class ExtractTransformLoadPlatform(object):
         self.welcome()
 
         self.info("get player infos...")
-        self.player_infos = getplayerInfo()
-
-        self.player_index = player_info_not_changed(\
-                    configure["start_time"], configure["end_time"], self.player_infos)
-        self.info("get player info change status: %s", self.player_index)
+        self.player_infos = getplayerInfo2()
 
         self.player_slot_index = {}
-        if self.player_index:
-            for board_id, slots in self.player_index.iteritems():
-                self.player_slot_index.update({board_id: slots.keys()})
-        self.info("params configed as : %s", self.params)
+        self.player_slot_index = player_info_not_changed(self.player_infos)
 
     def run(self, run_cfg,merge_cfg):
         '''Run the ETL !!!'''
@@ -153,8 +152,6 @@ class ExtractTransformLoadPlatform(object):
             self.warn("output file exists, remove. %s", result_out_file)
 
         self.set("filesize", 0)
-
-        #self.regist_alg(run_cfg)
 
         for file_path in src_files:
             self.set("filesize", self.get("filesize") + getfilesize(file_path))
@@ -256,7 +253,7 @@ class ExtractTransformLoadPlatform(object):
         '''打平投放SlotID，如果BoardID和SlotID不匹配，不打平'''
         try:
             ad_list = urllib.unquote(row_data["ad_list"])
-            #board_id = row_data["board_id"]
+            board_id = row_data["board_id"]
             if not ad_list:
                 return ad_list
             list_array = ad_list.split("col")
@@ -278,34 +275,20 @@ class ExtractTransformLoadPlatform(object):
                         new_row['creator_id'] = _d["cid"]
                 except Exception ,e:
                     self.error("eval adinfo error [%s]"%arr)
-                #if self.__is_board_slot_id_match(board_id, slot_id, server_timestamp):
-                for key, value in series_data_struct.iteritems():
-                    value.append(new_row[key])
-                #else:
-                    # TODO record the row
-                    #pass
+                if self.__is_board_slot_id_match(board_id, _d["aid"]):
+                    for key, value in series_data_struct.iteritems():
+                        value.append(new_row[key])
+                        
         except Exception, exc:
             # TODO 记录出错的日志内容
             self.error("flat slot id error: %s\n%s", exc, list(row_data.values))
 
-    def __is_board_slot_id_match(self, board_id, slot_id, server_timestamp):
+    def __is_board_slot_id_match(self, board_id, slot_id):
         '''播放器ID和广告位ID是否匹配'''
-        try:
-            slot_id = int(slot_id)
-            board_id = int(board_id)
-            if self.player_index:
-                return slot_id in self.player_slot_index[board_id]
-            else:
-                player_info = self.player_infos
-                for v in player_info.values():
-                    start = v.get('starttime')
-                    end = v.get('endtime')
-                    if server_timestamp > start and server_timestamp < end:
-                        if v['playerinfo'].has_key(board_id):
-                            if v['playerinfo'][board_id].has_key(slot_id):
-                                return True
-        except Exception, exc:
-            self.error("slot/board id match exception: %s", exc)
+        slot_id = int(slot_id)
+        board_id = board_id
+        if slot_id in self.player_slot_index[board_id]:
+            return True
         return False
 
     def __caculate_display(self, chunk, trans_type, output_file_path):

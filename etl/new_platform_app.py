@@ -259,4 +259,4 @@ if __name__ == "__main__":
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         PlatformReportor().report_day(now, infos)
-        PlatformReportor().report_pdf(infos, now.strftime("%Y%m%d"))
+        #PlatformReportor().report_pdf(infos, now.strftime("%Y%m%d"))
