@@ -71,6 +71,20 @@ def get_hour_ngx_files(the_date):
         result.append(ngx_files(the_date, i, 45)) # 30 ~ 45
     return result
 
+def get_type_result_out_file(the_date,type,num):
+    '''result out file'''
+    r_f = "{sep}data6{sep}platform{sep}{year}{sep}{month:02d}{sep}\
+{day:02d}{sep}{type}_{hour:02d}_{num}.csv".format(
+                year=the_date.year,
+                month=the_date.month,
+                day=the_date.day,
+                sep=os.sep,
+                type=type,
+                hour=the_date.hour,
+                num=num
+            )
+    return r_f
+
 def get_result_out_file(the_date):
     '''result out file'''
     r_f = "{sep}data6{sep}platform{sep}{year}{sep}{month:02d}{sep}\
@@ -176,6 +190,7 @@ def _job_ready_by_day(now):
         })
     return paths
 
+
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
@@ -185,21 +200,39 @@ if __name__ == "__main__":
         #result_out_file = sys.argv[3]
         #/home/dingzheng/.platform_${prefix}_${year}${month}${day}${hour}${dash}
         #dash_mark_path = sys.argv[4]
+        num = int(sys.argv[2])
+        cnt = int(sys.argv[3])
+        arr_result_out_file = []
+        arr_result_out_done_file = []
+        for i in range(1,cnt+1):
+            arr_result_out_file.append(get_type_result_out_file(now,"platform",i))
+            arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
+        #print arr_result_out_file
+        #print arr_result_out_done_file
         cfg = {
                "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
                "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
                "src_files" : ngx_files,
                #"result_out_file": result_out_file,
-               "result_out_file": get_result_out_file(now)
+               "result_out_file": get_type_result_out_file(now,"platform",num),
+               "result_out_done_file": get_type_result_out_file(now,"platform_done",num)
         }
         etli = ExtractTransformLoadPlatform(cfg)
         run_cfg = {
             #"display_poss": get_display_poss_out_file(now),
-            "display_sale": get_display_sale_out_file(now),
-            "impression": get_impression_out_file(now),
+            "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
+            "impression": get_type_result_out_file(now,"platform_impression",num),
             #"impression_end": get_impression_end_out_file(now),
-            "click": get_click_out_file(now)
+            "click": get_type_result_out_file(now,"platform_click",num)
         }
+        merge_cfg = {
+            "result_out_all_file": get_result_out_file(now),
+            "result_out_file": arr_result_out_file,
+            "result_out_done_file": arr_result_out_done_file
+        }
+        #print run_cfg
+        #print cfg
+        #sys.exit()
         """
         "display_poss": result_out_file + ".display_poss",
         "display_sale": result_out_file + ".display_sale",
@@ -207,14 +240,13 @@ if __name__ == "__main__":
         "impression_end": result_out_file + ".impression_end",
         "click": result_out_file + ".click"
         """
-        infos = etli.run(run_cfg)
+        infos = etli.run(run_cfg,merge_cfg)
         #os.mknod(dash_mark_path)
         PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
         now = datetime(2015,12,13,4,1,1)
         paths = _job_ready_by_day(now)
-
         LOGGER.info("Job hour paths: \r\n \
                 logic1_src_paths: %s \r\n \
                 logic1_output_path: %s \r\n \

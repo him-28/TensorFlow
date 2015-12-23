@@ -60,6 +60,7 @@ platform:
         display_sale: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
         impression: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
         click: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        merge: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
     result_item_alias: {
         "year": "year",
         "month": "month",

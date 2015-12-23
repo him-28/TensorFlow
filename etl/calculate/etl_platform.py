@@ -91,14 +91,54 @@ class ExtractTransformLoadPlatform(object):
                 self.player_slot_index.update({board_id: slots.keys()})
         self.info("params configed as : %s", self.params)
 
-    def run(self, run_cfg):
+    def run(self, run_cfg,merge_cfg):
         '''Run the ETL !!!'''
         result_df = self.extract(run_cfg)  # step 1
+        result_df = self.merge_file(merge_cfg)
+        #import sys
+        #sys.exit()
+        if result_df == -1 :
+            return -1
         self.save(result_df)  # step 3
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
         return self.report(result_df)  # step end
 
+    def merge_file(self, merge_cfg):
+        result_out_all_file=merge_cfg["result_out_all_file"]
+        result_out_file=merge_cfg["result_out_file"]
+        result_out_done_file=merge_cfg["result_out_done_file"]
+        for done_path in result_out_done_file :
+            if not os.path.exists(done_path):
+                return -1;
+
+
+        for out_path in result_out_file :
+            if not os.path.exists(out_path):
+                return -1;
+        dataframe_list = []
+        header = self.get("merge_header")
+        #print "-------------------*-------------"
+        #print header
+        #import sys
+        #sys.exit()
+        for result_path in result_out_file:
+            dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), \
+                            sep=self.get('csv_sep'))
+            if dataframe.empty:
+                continue
+            #如果经过广告位和播放器对应打平后，dataframe为空，此处应该重新做处理
+            dataframe_list.append(dataframe)
+            self.info("save %s to %s", key, result_path)
+        result_df = pd.concat(dataframe_list, ignore_index=True)
+        for key in header : 
+            result_df[key] = result_df[key].fillna(0).astype(int)
+        result_df = result_df.groupby(header, as_index=False, sort=False).sum()
+        self.info("merge result to %s", result_out_all_file)
+        result_df.to_csv(result_out_all_file, sep=self.get("csv_sep"), index=False)
+        return result_df
+       
+                
     def extract(self, run_cfg, before=None, after=None):
         '''extract data file'''
         if before:
@@ -178,6 +218,10 @@ class ExtractTransformLoadPlatform(object):
             }
             info.update(addon)
         self.set("alg_info", info)
+
+        self.set("merge_header", CFG["group_item"]["merge"])
+        #print "######################"
+        #print  CFG["group_item"]["merge"]
 
     def do_calculate(self, trans_type, output_file_path, chunk):
         '''计算一个维度的数据 '''
@@ -406,6 +450,7 @@ class ExtractTransformLoadPlatform(object):
         self.set("dtype", split_header(CFG["dtype"]))
         self.set("original_error", src_file_paths[0] + CFG["original_error"])
         self.set("result_out_file", configures["result_out_file"])
+        self.set("result_out_done_file", configures["result_out_done_file"])
         self.set("csv_sep", CFG["csv_sep"])
 
         return True
@@ -502,7 +547,11 @@ class ExtractTransformLoadPlatform(object):
             result_df[key] = result_df[key].fillna(0).astype(int)
         result_df = result_df.groupby(header, as_index=False, sort=False).sum()
         result_out_file = self.get("result_out_file")
+        result_out_done_file = self.get("result_out_done_file")
         self.info("merge result to %s", result_out_file)
+        with open(result_out_done_file,"wb") as create_file:
+            pass
+
         result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         return result_df
 
