@@ -530,12 +530,12 @@ class ExtractTransformLoadPlatform(object):
             result_df[key] = result_df[key].fillna(0).astype(int)
         result_df = result_df.groupby(header, as_index=False, sort=False).sum()
         result_out_file = self.get("result_out_file")
+        result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         result_out_done_file = self.get("result_out_done_file")
         self.info("merge result to %s", result_out_file)
+        self.info(".done merge result to %s", result_out_done_file)
         with open(result_out_done_file,"wb") as create_file:
             pass
-
-        result_df.to_csv(result_out_file, sep=self.get("csv_sep"), index=False)
         return result_df
 
     def __split_request_body_xda(self, row_datas, req_cols, keys, values, tag_list):
@@ -548,7 +548,8 @@ class ExtractTransformLoadPlatform(object):
             # 检查时间有效性
             row_data_date = row_data_all[0].split(" ")
             seri["year"] = row_data_date[0][0:4]
-            seri["month"] = row_data_date[0][5:7]
+            #seri["month"] = row_data_date[0][5:7]
+            seri["month"] = 12
             seri["day"] = row_data_date[0][8:10]
             seri["hour"] = row_data_date[1][0:2]
             # 检查其它字段
@@ -604,11 +605,19 @@ class ExtractTransformLoadPlatform(object):
             # 检查时间有效性
             if len(row_data_all) != 14:
                 return row_datas
+            d_date = dt.datetime.strptime(row_data_all[1], '[%Y-%m-%dT%H:%M:%S+08:00]') #%datetime类型
+            d_date = dt.datetime(d_date.year,d_date.month,d_date.day,d_date.hour,00) #%只取小时数
+            seri["year"] = d_date.year
+            seri["month"] = d_date.month
+            seri["day"] = d_date.day
+            seri["hour"] = d_date.hour
+            """
             seri["day"] = row_data_all[1][0:2]
             #seri["month"] = row_data_all[1][3:6]
             seri["month"] = '12'
             seri["year"] = row_data_all[1][7:11]
             seri["hour"] = row_data_all[1][12:14]
+            """
             if row_data_all[0]:
                 try:
                     seri["province_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[0], 1)

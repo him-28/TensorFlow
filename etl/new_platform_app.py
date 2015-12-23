@@ -21,43 +21,58 @@ H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
 H_Logic1_Filename = "platform_{hour:02d}.csv"
 D_Logic1_Filename = "platform_{day:02d}.csv"
 
-def xda_files(the_date, data_index):
+def xda_files(the_date, data_index,time2d):
     '''get xda files'''
-    xda_file = "{sep}data{data_index}{sep}xda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\{hour:02d}.log".format(
+    xda_file = "{sep}data{sep}data{data_index}{sep}xda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
+adserver.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
                 day=the_date.day,
                 sep=os.sep,
-                hour=the_date.hour
+                hour=the_date.hour,
+                time2d=time2d
             )
     return xda_file
 
-def yda_files(the_date, data_index):
+def yda_files(the_date, data_index,time2d):
     '''get ngx files'''
-    yda_file = "{sep}data{data_index}{sep}yda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\{hour:02d}.log".format(
+    yda_file = "{sep}data{sep}data{data_index}{sep}yda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
+y.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
                 day=the_date.day,
                 sep=os.sep,
-                hour=the_date.hour
+                hour=the_date.hour,
+                time2d=time2d
             )
     return yda_file
 
-def get_hour_da_files(the_date):
+def get_hour_da_files(the_date, order, size):
     '''get hour ngx files'''
     result = []
-    result.append(xda_files(the_date, 2)) # 0 ~1
-    result.append(yda_files(the_date, 2)) # 0 ~1
+    result_x = []
+    result_y = []
+    for i in range(1,6):
+        result_x.append(xda_files(the_date, i, 0)) # 0 ~1
+        result_x.append(xda_files(the_date, i, 15)) # 0 ~15
+        result_x.append(xda_files(the_date, i, 30)) # 0 ~30
+        result_x.append(xda_files(the_date, i, 45)) # 0 ~45
+    for i in range(1,4): 
+        result_y.append(yda_files(the_date, i, 00)) # 0 ~00
+        result_y.append(yda_files(the_date, i, 15)) # 0 ~15
+        result_y.append(yda_files(the_date, i, 30)) # 0 ~15
+        result_y.append(yda_files(the_date, i, 45)) # 0 ~15
+    len_x = len(result_x)
+    len_y = len(result_y)
+    for i in range(0,len_x):
+        if ((i % size) == (order - 1)):
+            result.append(result_x[i])
+    for i in range(0,len_y):
+        if ((i % size) == (order - 1)):
+            result.append(result_y[i])
     
-    """
-    for i in range(2, 5):
-        result.append(ngx_files(the_date, i, 0)) # 0 ~1
-        result.append(ngx_files(the_date, i, 15)) # 0 ~15
-        result.append(ngx_files(the_date, i, 30)) # 15 ~ 30
-        result.append(ngx_files(the_date, i, 45)) # 30 ~ 45
-    """
     return result
 
 def get_hour_ngx_files(the_date):
@@ -194,8 +209,7 @@ def _job_ready_by_day(now):
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
-        now = datetime(2015,12,13,4,1,1)
-        ngx_files = get_hour_da_files(now)
+        now = datetime(2015,12,16,18,1,1)
         #ngx_files = [sys.argv[2]]
         #result_out_file = sys.argv[3]
         #/home/dingzheng/.platform_${prefix}_${year}${month}${day}${hour}${dash}
@@ -209,6 +223,7 @@ if __name__ == "__main__":
             arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
         #print arr_result_out_file
         #print arr_result_out_done_file
+        ngx_files = get_hour_da_files(now, num, cnt)
         cfg = {
                "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
                "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
