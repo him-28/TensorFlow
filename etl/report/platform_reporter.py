@@ -108,8 +108,8 @@ class PlatformReportor:
         LOG.info("report infos : %s " % infos)
         text = "小时管理后台统计【%s】" % (data_date.strftime('%Y%m%d %H'))
         at_title = "【%s时数据汇总报告】" % (data_date.strftime('%H'))
-        msg = "文件名：%s，文件大小：%s，统计耗时：%ss\n【投放】：%s，【开始播放】： %s， 【结束播放】：%s， 【点击数】：%s" % \
-            (infos["file_name"], infos["file_size"], infos["spend_time"],  infos["display_sale"], infos["impression"], infos["impression_end"], infos["click"])
+        msg = "文件名：%s，文件大小：%s，统计耗时：%ss\n【投放】：%s，【开始播放】： %s， 【点击数】：%s" % \
+            (infos["file_name"], infos["file_size"], infos["spend_time"],  infos["display_sale"], infos["impression"], infos["click"])
         bc.new_send_message(text=text, at_title=at_title, \
                             channel=REPORT_CHANNEL , at_text=msg)
 
@@ -119,7 +119,7 @@ class PlatformReportor:
         LOG.info("report infos : %s " % infos)
         text = "天管理后台统计【%s】" % (data_date.strftime('%Y%m%d'))
         at_title = "【今日00时-23时数据汇总报告】"
-        msg = "统计耗时：%ss\n【投放】：%s，【开始播放】： %s， 【结束播放】：%s， 【点击数】：%s" % \
-            (infos["spend_time"], infos["display_sale"], infos["impression"], infos["impression_end"], infos["click"])
+        msg = "统计耗时：%ss\n【投放】：%s，【开始播放】： %s， 【点击数】：%s" % \
+            (infos["spend_time"], infos["display_sale"], infos["impression"], infos["click"])
         bc.new_send_message(text=text, at_title=at_title, \
                             channel=REPORT_CHANNEL_DAY , at_text=msg)

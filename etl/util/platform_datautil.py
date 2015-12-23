@@ -46,7 +46,6 @@ def merge_file(input_paths, output_files, data_date):
                 'creator_id':'string',
                 'slot_id':'string',
                 'click':'int',
-                #'display_poss':'int',
                 'display_sale':'int',
                 'impression':'int',
                 'impression_end':'int'
@@ -62,7 +61,6 @@ def merge_file(input_paths, output_files, data_date):
                 'creative_id':'string',
                 'slot_id':'string',
                 'clicks':'int',
-                'pv':'int',
                 'display':'int',
                 'impressions':'int',
                 'end_impressions':'int'
@@ -97,7 +95,10 @@ def merge_file(input_paths, output_files, data_date):
         daydata_dataframe.to_csv(output_filename, sep=output_column_sep, na_rep=CNF.get("na_rep"), \
                    dtype=save_dtype, header=True, index=False)
         LOG.info("merged result saved at : %s, insert to db...", output_filename)
-        insert_day(daydata_dataframe)
+        daydata_dataframe['year'] = daydata_dataframe['year'].astype(int)
+        daydata_dataframe['month'] = daydata_dataframe['month'].astype(int)
+        daydata_dataframe['day'] = daydata_dataframe['day'].astype(int)
+        #insert_day(daydata_dataframe)
         end = time.clock()
         spend_time = "%0.2f" % (end - start)
         return report_infos(daydata_dataframe, spend_time)
@@ -124,16 +125,15 @@ def report_infos(df1, spend_time):
     '''返回结果报告'''
     result_size = 0
     display_sale = 0
-    #display_poss = 0
     impression = 0
-    impression_end = 0
+    #impression_end = 0
     click = 0
     if not df1.empty:
         result_size = len(df1)
         display_sale = df1["display_sale"].sum()
         #display_poss = df1["display_poss"].sum()
         impression = df1["impression"].sum()
-        impression_end = df1["impression_end"].sum()
+        #impression_end = df1["impression_end"].sum()
         click = df1["click"].sum()
     infos = {
          "result_size": result_size,
@@ -141,7 +141,7 @@ def report_infos(df1, spend_time):
          #"display_poss": display_poss,
          "spend_time": spend_time,
          "impression": impression,
-         "impression_end": impression_end,
+         #"impression_end": impression_end,
          "click": click,
     }
     return infos

@@ -15,7 +15,6 @@ beta: #测试环境
             "creative_id": "creator_id",
             "clicks": "click",
             "impressions": "impression",
-            "end_impressions": "impression_end",
             "slot_id": "slot_id",
             "city_id": "city_id",
             "display": "display_sale"
@@ -30,7 +29,6 @@ beta: #测试环境
             "creative_id": "creator_id",
             "clicks": "click",
             "impressions": "impression",
-            "end_impressions": "impression_end",
             "slot_id": "slot_id",
             "city_id": "city_id",
             "display": "display_sale"
@@ -69,7 +67,6 @@ release: #生产环境
             "creative_id": "creator_id",
             "clicks": "click",
             "impressions": "impression",
-            "end_impressions": "impression_end",
             "slot_id": "slot_id",
             "city_id": "city_id",
             "display": "display_sale"
@@ -84,7 +81,6 @@ release: #生产环境
             "creative_id": "creator_id",
             "clicks": "click",
             "impressions": "impression",
-            "end_impressions": "impression_end",
             "slot_id": "slot_id",
             "city_id": "city_id",
             "display": "display_sale"

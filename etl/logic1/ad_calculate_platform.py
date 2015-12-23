@@ -278,14 +278,6 @@ DAY_INSERT_KEY = "PLATFORM_DAY_INSERT"
 def insert_data_frames(row_data, db_alias_info, sql_key, db_pool, db_columns):
     '''把数据插入数据库'''
     db_pool.put(sql_key, [row_data[db_alias_info[x]] for x in db_columns])
-    """
-    '''把数据插入数据库'''
-    value_arr = []
-    for col in db_columns:
-        value = row_data[db_alias_info[col]]
-        value_arr.append(value)
-    db_pool.put(value_arr)
-    """
 
 def split_insert_sql(db_columns, table_name):
     '''拼接 INSERT SQL'''
@@ -396,7 +388,7 @@ def insert_day(datas):
         port = SCNF["db_port"]
         LOG.info("connect %s@%s:%s...", database, host, port)
         conn = DBUtils.get_connection(database, user, passwd, host, port)
-        pool = DataInsertPool(conn, commit_size=30000)
+        pool = DataInsertPool(conn, commit_size=30)
         pool.regist_sql(DAY_INSERT_KEY, \
                         split_insert_sql(db_columns, tablename))
         datas.apply(insert_data_frames, axis=1, db_alias_info=db_alias_info, \

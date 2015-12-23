@@ -21,19 +21,44 @@ H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
 H_Logic1_Filename = "platform_{hour:02d}.csv"
 D_Logic1_Filename = "platform_{day:02d}.csv"
 
-def ngx_files(the_date, data_index, time2d):
-    '''get ngx files'''
-    ngx_file = "{sep}data{data_index}{sep}ngx{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
-log.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
+def xda_files(the_date, data_index):
+    '''get xda files'''
+    xda_file = "{sep}data{data_index}{sep}xda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\{hour:02d}.log".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
                 day=the_date.day,
                 sep=os.sep,
-                hour=the_date.hour,
-                time2d=time2d
+                hour=the_date.hour
             )
-    return ngx_file
+    return xda_file
+
+def yda_files(the_date, data_index):
+    '''get ngx files'''
+    yda_file = "{sep}data{data_index}{sep}yda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\{hour:02d}.log".format(
+                data_index=data_index,
+                year=the_date.year,
+                month=the_date.month,
+                day=the_date.day,
+                sep=os.sep,
+                hour=the_date.hour
+            )
+    return yda_file
+
+def get_hour_da_files(the_date):
+    '''get hour ngx files'''
+    result = []
+    result.append(xda_files(the_date, 2)) # 0 ~1
+    result.append(yda_files(the_date, 2)) # 0 ~1
+    
+    """
+    for i in range(2, 5):
+        result.append(ngx_files(the_date, i, 0)) # 0 ~1
+        result.append(ngx_files(the_date, i, 15)) # 0 ~15
+        result.append(ngx_files(the_date, i, 30)) # 15 ~ 30
+        result.append(ngx_files(the_date, i, 45)) # 30 ~ 45
+    """
+    return result
 
 def get_hour_ngx_files(the_date):
     '''get hour ngx files'''
@@ -155,14 +180,14 @@ if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
         now = datetime(2015,12,13,4,1,1)
-        ngx_files = get_hour_ngx_files(now)
+        ngx_files = get_hour_da_files(now)
         #ngx_files = [sys.argv[2]]
         #result_out_file = sys.argv[3]
         #/home/dingzheng/.platform_${prefix}_${year}${month}${day}${hour}${dash}
         #dash_mark_path = sys.argv[4]
         cfg = {
-               #"start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
-               #"end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
+               "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
+               "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
                "src_files" : ngx_files,
                #"result_out_file": result_out_file,
                "result_out_file": get_result_out_file(now)
@@ -172,7 +197,7 @@ if __name__ == "__main__":
             #"display_poss": get_display_poss_out_file(now),
             "display_sale": get_display_sale_out_file(now),
             "impression": get_impression_out_file(now),
-            "impression_end": get_impression_end_out_file(now),
+            #"impression_end": get_impression_end_out_file(now),
             "click": get_click_out_file(now)
         }
         """
@@ -187,9 +212,8 @@ if __name__ == "__main__":
         PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
-        #paths = _job_ready_by_day(now)
         now = datetime(2015,12,13,4,1,1)
-        ngx_files = get_hour_ngx_files(now)
+        paths = _job_ready_by_day(now)
 
         LOGGER.info("Job hour paths: \r\n \
                 logic1_src_paths: %s \r\n \

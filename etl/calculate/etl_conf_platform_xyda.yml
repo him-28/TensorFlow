@@ -1,0 +1,249 @@
+platform:
+    "original_sep_x": "INFO"
+    "original_sep_y": "|"
+    "csv_sep": "\t"
+    "original_header_x": [" "]
+    "original_header_y": ["impression", "click"]
+    "usefull_request_body_header_x": {
+        "pid": "board_id",
+        "adlen": "adlen",
+        "adinfo": "ad_list",
+        "c": "order",
+        "aid": "slot_id",
+        "mid": "mediabuy_id",
+        "cid": "creator_id",
+        "ip": "ip",
+        "city_id": "city_id",
+        "province_id": "province_id",
+        "year": "year",
+        "month": "month",
+        "day": "day",
+        "hour": "hour",
+        "tag": "tag"
+    }
+    "usefull_request_body_header_y": {
+        "b": "board_id",
+        "sp": "ad_list",
+        "o": "order",
+        "s": "slot_id",
+        "cd": "mediabuy_id",
+        "ct": "creator_id",
+        "ip": "ip",
+        "city_id": "city_id",
+        "province_id": "province_id",
+        "year": "year",
+        "month": "month",
+        "day": "day",
+        "hour": "hour",
+        "tag": "tag",
+        "event":"event"
+    }
+    "dtype": {
+        "board_id": "str",
+        "adlen": "int",
+        "ad_list": "str",
+        "order": "str",
+        "slot_id": "str",
+        "mediabuy_id": "str",
+        "creator_id": "str",
+        "ip": "str",
+        "city_id": "str",
+        "province_id": "str",
+        "year": "int",
+        "month": "int",
+        "day": "int",
+        "hour": "int",
+        "tag": "int",
+        "event":"str"
+    }
+    group_item:
+        display_sale: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        impression: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+        click: ["year", "month", "day", "hour", "province_id", "city_id", "board_id", "mediabuy_id", "creator_id", "slot_id"]
+    result_item_alias: {
+        "year": "year",
+        "month": "month",
+        "day": "day",
+        "hour": "hour",
+        "province_id": "province_id",
+        "city_id": "city_id",
+        "player_id": "board_id",
+        "mediabuy_id": "mediabuy_id",
+        "creative_id": "creator_id",
+        "slot_id": "slot_id",
+        "clicks": "click",
+        "impressions": "impression",
+        "end_impressions": "impression_end",
+        "display": "display_sale"
+    }
+    result_item_alias_day: {
+        "year": "year",
+        "month": "month",
+        "day": "day",
+        "province_id": "province_id",
+        "city_id": "city_id",
+        "player_id": "board_id",
+        "mediabuy_id": "mediabuy_id",
+        "creative_id": "creator_id",
+        "slot_id": "slot_id",
+        "clicks": "click",
+        "impressions": "impression",
+        "end_impressions": "impression_end",
+        "display": "display_sale"
+    }
+    "original_out_suffix": ".src"
+    "original_error": ".orign.err"
+    "read_csv_chunksize": 1000000
+    "ipb_filepath": util/IPB.csv
+    "city_filepath": util/city_province.csv
+
+tag_code:
+    "ILLEGAL_REQUEST_BODY": 101
+    "AUDIT_ERROR": 102
+    "AUDIT_EXCEPT": 103
+    "AUDIT_CORRECT": 1
+    "INIT_STATUS": 0
+
+audit_cfg:
+    ip:
+        scene1:
+            condition:
+            required: True
+    ad_event_type:
+        scene1:
+            condition:
+            required: True
+            range: ['e','p']
+    url:
+        scene1:
+            condition:
+            required: False
+    video_id:
+        scene1:
+            condition:
+            required: False      #图片广告除外
+            dtype: int
+    playlist_id:
+        scene1:
+            condition:
+            required: False      #图片广告除外
+            dtype: int
+    board_id:
+        scene1:
+            condition:
+            required: True
+            dtype: int
+    request_res:
+        scene1:
+            condition:
+                ad_event_type: ['e']
+            required: True
+            range: ['0','1']
+    ad_list:
+        scene1:
+            condition:
+            required: False
+    time_delay:
+        scene1:
+            condition:
+                ad_event_type: ['e']
+            required: True
+            dtype: int
+    request_str:
+        scene1:
+            condition:
+                ad_event_type: ['e']
+            required: True
+    slot_id:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            dtype: int
+        scene2:
+            condition:
+                ad_event_type: ['e']
+            required: False
+            dtype: int
+    mediabuy_id:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            dtype: int
+    creator_id:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            dtype: int
+    video_play_time:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            dtype: int
+    order:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            dtype: int
+    play_event:
+        scene1:
+            condition:
+                ad_event_type: ['p']
+            required: True
+            range: ["s", "1q","2q","3q","e", "c", "sk", "p", "up", "m", "um"]
+    pf:
+        scene1:
+            condition:
+            required: True
+            range: ["000000", "000100", "000101", "010000", "010001", "010100", "010101", "010200","010201","020000"]
+    device_id:
+        scene1:
+            condition:
+                pf: ["010000", "010001", "010100", "010101", "010200","010201"]
+            required: True
+    uid:
+        scene1:
+            condition:
+            required: False
+    net:
+        scene1:
+            condition:
+            required: False
+            range: ['1','2','3','4','5']
+            dtype: int
+    os:
+        scene1:
+            condition:
+            required: False
+    manufacturer:
+        scene1:
+            condition:
+            required: False
+    model:
+        scene1:
+            condition:
+            required: False
+    app:
+        scene1:
+            condition:
+                pf: ["010000", "010001", "010100", "010101"]
+            required: True
+    timestamp:
+        scene1:
+            condition:
+            required: True
+            dtype: float
+    server_timestamp:
+        scene1:
+            condition:
+            required: True
+            dtype: float
+    session_id:
+        scene1:
+            condition:
+            required: True
+            range:
