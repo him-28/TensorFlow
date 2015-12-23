@@ -94,47 +94,46 @@ class ExtractTransformLoadPlatform(object):
         '''Run the ETL !!!'''
         result_df = self.extract(run_cfg)  # step 1
         result_df = self.merge_file(merge_cfg)
-        #import sys
-        #sys.exit()
-        if result_df == -1 :
-            return -1
+        if result_df is None :
+            self.info("result_df is None ")
+            return None
         self.save(result_df)  # step 3
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
         return self.report(result_df)  # step end
 
     def merge_file(self, merge_cfg):
+        self.info("merge_file start ")
         result_out_all_file=merge_cfg["result_out_all_file"]
         result_out_file=merge_cfg["result_out_file"]
         result_out_done_file=merge_cfg["result_out_done_file"]
         for done_path in result_out_done_file :
             if not os.path.exists(done_path):
-                return -1;
+        	self.info("merge_file %s is not exist ",done_path)
+                return None;
 
 
         for out_path in result_out_file :
             if not os.path.exists(out_path):
-                return -1;
+        	self.info("merge_file %s is not exist ",out_path)
+                return None;
         dataframe_list = []
         header = self.get("merge_header")
-        #print "-------------------*-------------"
-        #print header
-        #import sys
-        #sys.exit()
         for result_path in result_out_file:
             dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), \
                             sep=self.get('csv_sep'))
+            self.info("read %s ", result_path)
             if dataframe.empty:
                 continue
             #如果经过广告位和播放器对应打平后，dataframe为空，此处应该重新做处理
             dataframe_list.append(dataframe)
-            self.info("save %s to %s", key, result_path)
         result_df = pd.concat(dataframe_list, ignore_index=True)
         for key in header : 
             result_df[key] = result_df[key].fillna(0).astype(int)
         result_df = result_df.groupby(header, as_index=False, sort=False).sum()
-        self.info("merge result to %s", result_out_all_file)
+        self.info("merge file  result to %s", result_out_all_file)
         result_df.to_csv(result_out_all_file, sep=self.get("csv_sep"), index=False)
+        self.info("save  result to %s", result_out_all_file)
         return result_df
        
                 
@@ -147,9 +146,13 @@ class ExtractTransformLoadPlatform(object):
         self.regist_alg(run_cfg)
 
         result_out_file = self.get("result_out_file")
+        result_out_done_file = self.get("result_out_done_file")
         if os.path.exists(result_out_file):
             os.remove(result_out_file)
             self.warn("output file exists, remove. %s", result_out_file)
+        if os.path.exists(result_out_done_file):
+            os.remove(result_out_done_file)
+            self.warn("output done file exists, remove. %s", result_out_done_file)
 
         self.set("filesize", 0)
 
@@ -509,9 +512,8 @@ class ExtractTransformLoadPlatform(object):
         tag_key = "xx"
         for key, result_path in run_cfg.iteritems():
             header = self.get("alg_info")[key]["header"]
-            dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), \
-                            sep=self.get('csv_sep'))
-            if dataframe.empty:
+            dataframe = pd.read_csv(result_path, engine='c', dtype=self.get("dtype"), sep=self.get('csv_sep'))
+	    if dataframe.empty:
                 tag_key = key
                 continue
             for h in header:
@@ -605,6 +607,7 @@ class ExtractTransformLoadPlatform(object):
             # 检查时间有效性
             if len(row_data_all) != 14:
                 return row_datas
+            """
             d_date = dt.datetime.strptime(row_data_all[1], '[%Y-%m-%dT%H:%M:%S+08:00]') #%datetime类型
             d_date = dt.datetime(d_date.year,d_date.month,d_date.day,d_date.hour,00) #%只取小时数
             seri["year"] = d_date.year
@@ -612,12 +615,11 @@ class ExtractTransformLoadPlatform(object):
             seri["day"] = d_date.day
             seri["hour"] = d_date.hour
             """
-            seri["day"] = row_data_all[1][0:2]
-            #seri["month"] = row_data_all[1][3:6]
-            seri["month"] = '12'
-            seri["year"] = row_data_all[1][7:11]
-            seri["hour"] = row_data_all[1][12:14]
-            """
+            seri["year"] = row_data_all[1][0:4]
+            seri["month"] = row_data_all[1][5:7]
+            seri["day"] = row_data_all[1][8:10]
+            seri["hour"] = row_data_all[1][11:13]
+
             if row_data_all[0]:
                 try:
                     seri["province_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[0], 1)

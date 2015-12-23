@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/data/code/amble/scripts/../etl/new_platform_app.py", line 12, in <module>
+    from etl.conf.settings import LOGGER
+  File "/data/code/amble/etl/conf/settings.py", line 7, in <module>
+    import yaml
+ImportError: No module named yaml
+Traceback (most recent call last):
+  File "/data/code/amble/scripts/../etl/new_platform_app.py", line 12, in <module>
+    from etl.conf.settings import LOGGER
+  File "/data/code/amble/etl/conf/settings.py", line 9, in <module>
+    Config = yaml.load(file("conf/config.yml"))
+IOError: [Errno 2] No such file or directory: 'conf/config.yml'

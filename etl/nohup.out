@@ -1,0 +1,104 @@
+Traceback (most recent call last):
+  File "new_platform_app.py", line 14, in <module>
+    from etl.util.platform_datautil import merge_file
+  File "/data/code/amble/etl/util/platform_datautil.py", line 10, in <module>
+    from etl.logic1.ad_calculate_platform import insert_day
+  File "/data/code/amble/etl/logic1/ad_calculate_platform.py", line 25, in <module>
+    from etl.app import getfilesize
+  File "/data/code/amble/etl/app.py", line 17, in <module>
+    from etl.logic0.ad_etl_transform import calc_etl
+  File "/data/code/amble/etl/logic0/ad_etl_transform.py", line 7, in <module>
+    import petl as etl
+  File "/usr/local/lib/python2.7/site-packages/petl/__init__.py", line 9, in <module>
+    from petl import util
+  File "/usr/local/lib/python2.7/site-packages/petl/util/__init__.py", line 13, in <module>
+    from petl.util.vis import look, lookall, lookstr, lookallstr, see
+  File "/usr/local/lib/python2.7/site-packages/petl/util/vis.py", line 12, in <module>
+    from petl.io.sources import MemorySource
+  File "/usr/local/lib/python2.7/site-packages/petl/io/__init__.py", line 3, in <module>
+    from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
+  File "/usr/local/lib/python2.7/site-packages/petl/io/sources.py", line 9, in <module>
+    import bz2
+ImportError: No module named bz2
+Traceback (most recent call last):
+  File "new_platform_app.py", line 14, in <module>
+    from etl.util.platform_datautil import merge_file
+  File "/data/code/amble/etl/util/platform_datautil.py", line 10, in <module>
+    from etl.logic1.ad_calculate_platform import insert_day
+  File "/data/code/amble/etl/logic1/ad_calculate_platform.py", line 25, in <module>
+    from etl.app import getfilesize
+  File "/data/code/amble/etl/app.py", line 17, in <module>
+    from etl.logic0.ad_etl_transform import calc_etl
+  File "/data/code/amble/etl/logic0/ad_etl_transform.py", line 7, in <module>
+    import petl as etl
+  File "/usr/local/lib/python2.7/site-packages/petl/__init__.py", line 9, in <module>
+    from petl import util
+  File "/usr/local/lib/python2.7/site-packages/petl/util/__init__.py", line 13, in <module>
+    from petl.util.vis import look, lookall, lookstr, lookallstr, see
+  File "/usr/local/lib/python2.7/site-packages/petl/util/vis.py", line 12, in <module>
+    from petl.io.sources import MemorySource
+  File "/usr/local/lib/python2.7/site-packages/petl/io/__init__.py", line 3, in <module>
+    from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
+  File "/usr/local/lib/python2.7/site-packages/petl/io/sources.py", line 9, in <module>
+    import bz2
+ImportError: No module named bz2
+Traceback (most recent call last):
+  File "new_platform_app.py", line 14, in <module>
+    from etl.util.platform_datautil import merge_file
+  File "/data/code/amble/etl/util/platform_datautil.py", line 10, in <module>
+    from etl.logic1.ad_calculate_platform import insert_day
+  File "/data/code/amble/etl/logic1/ad_calculate_platform.py", line 25, in <module>
+    from etl.app import getfilesize
+  File "/data/code/amble/etl/app.py", line 17, in <module>
+    from etl.logic0.ad_etl_transform import calc_etl
+  File "/data/code/amble/etl/logic0/ad_etl_transform.py", line 7, in <module>
+    import petl as etl
+  File "/usr/local/lib/python2.7/site-packages/petl/__init__.py", line 9, in <module>
+    from petl import util
+  File "/usr/local/lib/python2.7/site-packages/petl/util/__init__.py", line 13, in <module>
+    from petl.util.vis import look, lookall, lookstr, lookallstr, see
+  File "/usr/local/lib/python2.7/site-packages/petl/util/vis.py", line 12, in <module>
+    from petl.io.sources import MemorySource
+  File "/usr/local/lib/python2.7/site-packages/petl/io/__init__.py", line 3, in <module>
+    from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
+  File "/usr/local/lib/python2.7/site-packages/petl/io/sources.py", line 9, in <module>
+    import bz2
+ImportError: No module named bz2
+Traceback (most recent call last):
+  File "new_platform_app.py", line 14, in <module>
+    from etl.util.platform_datautil import merge_file
+  File "/data/code/amble/etl/util/platform_datautil.py", line 10, in <module>
+    from etl.logic1.ad_calculate_platform import insert_day
+  File "/data/code/amble/etl/logic1/ad_calculate_platform.py", line 25, in <module>
+    from etl.app import getfilesize
+  File "/data/code/amble/etl/app.py", line 17, in <module>
+    from etl.logic0.ad_etl_transform import calc_etl
+  File "/data/code/amble/etl/logic0/ad_etl_transform.py", line 7, in <module>
+    import petl as etl
+  File "/usr/local/lib/python2.7/site-packages/petl/__init__.py", line 9, in <module>
+    from petl import util
+  File "/usr/local/lib/python2.7/site-packages/petl/util/__init__.py", line 13, in <module>
+    from petl.util.vis import look, lookall, lookstr, lookallstr, see
+  File "/usr/local/lib/python2.7/site-packages/petl/util/vis.py", line 12, in <module>
+    from petl.io.sources import MemorySource
+  File "/usr/local/lib/python2.7/site-packages/petl/io/__init__.py", line 3, in <module>
+    from petl.io.sources import FileSource, GzipSource, BZ2Source, ZipSource, \
+  File "/usr/local/lib/python2.7/site-packages/petl/io/sources.py", line 9, in <module>
+    import bz2
+ImportError: No module named bz2
+Traceback (most recent call last):
+  File "new_platform_app.py", line 16, in <module>
+    from etl.calculate.etl_platform import ExtractTransformLoadPlatform
+  File "/data/code/amble/etl/calculate/etl_platform.py", line 37, in <module>
+    city_filepath=CFG['city_filepath'])
+  File "/data/code/amble/etl/util/ip_convert.py", line 16, in __init__
+    self.load_ipb_file(ipb_filepath)
+  File "/data/code/amble/etl/util/ip_convert.py", line 45, in load_ipb_file
+    ip_dic=self.ipb_parse_row(line)
+  File "/data/code/amble/etl/util/ip_convert.py", line 69, in ipb_parse_row
+    ip_end=self.convert_ip_to_value(ipb_a[1])
+  File "/data/code/amble/etl/util/ip_convert.py", line 33, in convert_ip_to_value
+    int_s = self.ip2long(ip)
+  File "/data/code/amble/etl/util/ip_convert.py", line 127, in ip2long
+    hexn = ''.join(["%02X" % long(i) for i in ip.split('.')])
+KeyboardInterrupt

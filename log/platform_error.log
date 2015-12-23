@@ -6,3 +6,33 @@
 [ERROR] 2015-12-23 16:15:30,104 [platformLogger] [error] failed to extract file :/data2/yda/2015/12/13/\04.log, file not exists.
 [ERROR] 2015-12-23 16:17:50,231 [platformLogger] [error] failed to extract file :/data2/xda/2015/12/13/\04.log, file not exists.
 [ERROR] 2015-12-23 16:17:50,232 [platformLogger] [error] failed to extract file :/data2/yda/2015/12/13/\04.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,427 [platformLogger] [error] failed to extract file :/data/wennu/data1/xda/2015/12/16/adserver.log-201512161800.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,427 [platformLogger] [error] failed to extract file :/data/wennu/data1/xda/2015/12/16/adserver.log-201512161845.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,428 [platformLogger] [error] failed to extract file :/data/wennu/data2/xda/2015/12/16/adserver.log-201512161830.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,428 [platformLogger] [error] failed to extract file :/data/wennu/data3/xda/2015/12/16/adserver.log-201512161815.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,428 [platformLogger] [error] failed to extract file :/data/wennu/data4/xda/2015/12/16/adserver.log-201512161800.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,429 [platformLogger] [error] failed to extract file :/data/wennu/data4/xda/2015/12/16/adserver.log-201512161845.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,429 [platformLogger] [error] failed to extract file :/data/wennu/data5/xda/2015/12/16/adserver.log-201512161830.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,429 [platformLogger] [error] failed to extract file :/data/wennu/data1/yda/2015/12/16/y.da.hunantv.com-access.log-201512161800.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,430 [platformLogger] [error] failed to extract file :/data/wennu/data1/yda/2015/12/16/y.da.hunantv.com-access.log-201512161845.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,430 [platformLogger] [error] failed to extract file :/data/wennu/data2/yda/2015/12/16/y.da.hunantv.com-access.log-201512161830.log, file not exists.
+[ERROR] 2015-12-23 21:02:08,430 [platformLogger] [error] failed to extract file :/data/wennu/data3/yda/2015/12/16/y.da.hunantv.com-access.log-201512161815.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,780 [platformLogger] [error] failed to extract file :/data/wennu/data1/xda/2015/12/23/adserver.log-201512232000.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,781 [platformLogger] [error] failed to extract file :/data/wennu/data1/xda/2015/12/23/adserver.log-201512232045.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,781 [platformLogger] [error] failed to extract file :/data/wennu/data2/xda/2015/12/23/adserver.log-201512232030.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,781 [platformLogger] [error] failed to extract file :/data/wennu/data3/xda/2015/12/23/adserver.log-201512232015.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,782 [platformLogger] [error] failed to extract file :/data/wennu/data4/xda/2015/12/23/adserver.log-201512232000.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,782 [platformLogger] [error] failed to extract file :/data/wennu/data4/xda/2015/12/23/adserver.log-201512232045.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,782 [platformLogger] [error] failed to extract file :/data/wennu/data5/xda/2015/12/23/adserver.log-201512232030.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,783 [platformLogger] [error] failed to extract file :/data/wennu/data1/yda/2015/12/23/y.da.hunantv.com-access.log-201512232000.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,783 [platformLogger] [error] failed to extract file :/data/wennu/data1/yda/2015/12/23/y.da.hunantv.com-access.log-201512232045.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,783 [platformLogger] [error] failed to extract file :/data/wennu/data2/yda/2015/12/23/y.da.hunantv.com-access.log-201512232030.log, file not exists.
+[ERROR] 2015-12-23 21:02:54,784 [platformLogger] [error] failed to extract file :/data/wennu/data3/yda/2015/12/23/y.da.hunantv.com-access.log-201512232015.log, file not exists.
+[ERROR] 2015-12-23 23:36:41,693 [platformLogger] [error] can not split request_body:list index out of range
+['/app/impression?d=9c20a977bc82db25a66bfb6dcde5dd13b315bf3b', 'v=1564374', 'ct=1271', 'cd=1549', 's=106754', 'b=4580', 't=0', 'o=200', 's']
+[ERROR] 2015-12-23 23:36:54,313 [platformLogger] [error] can not split request_body:list index out of range
+['/app/impression?d=01563a3e92543f1e680aa68e7cf4b0656566fba1', 'v=1564382', 'ct=1272', 'cd=1550', 's=106752', 'b=4580', 't=0', 'o=201', 's']
+[ERROR] 2015-12-23 23:37:00,998 [platformLogger] [error] can not split request_body:list index out of range
+['/app/impression?d=142b084866b002d73a4dc10d1fd629cf25080257', 'v=1862635', 'ct=1271', 'cd=1549', 's=106754', 'b=4580', 't=0', 'o=200', 's']
+[ERROR] 2015-12-23 23:37:16,959 [platformLogger] [error] can not split request_body:list index out of range
+['/app/impression?d=ca7b87eb3553379a43fbf0a3bff25128184d8ec7', 'v=1563452', 'ct=1274', 'cd=1553', 's=106750', 'b=4580', 't=0', 'o=202', 's']

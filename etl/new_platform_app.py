@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from etl.conf.settings import LOGGER
 
-from etl.util.platform_datautil import merge_file
+from etl.util.platform_datautil import merge_file_day
 from etl.report.platform_reporter import PlatformReportor
 from etl.calculate.etl_platform import ExtractTransformLoadPlatform
 
@@ -23,8 +23,8 @@ D_Logic1_Filename = "platform_{day:02d}.csv"
 
 def xda_files(the_date, data_index,time2d):
     '''get xda files'''
-    xda_file = "{sep}data{sep}data{data_index}{sep}xda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
-adserver.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
+    xda_file = "{sep}data{sep}wennu{sep}data{data_index}{sep}xda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
+adserver.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}.log".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
@@ -37,8 +37,8 @@ adserver.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
 
 def yda_files(the_date, data_index,time2d):
     '''get ngx files'''
-    yda_file = "{sep}data{sep}data{data_index}{sep}yda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
-y.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}".format(
+    yda_file = "{sep}data{sep}wennu{sep}data{data_index}{sep}yda{sep}{year}{sep}{month:02d}{sep}{day:02d}{sep}\
+y.da.hunantv.com-access.log-{year}{month:02d}{day:02d}{hour:02d}{time2d:02d}.log".format(
                 data_index=data_index,
                 year=the_date.year,
                 month=the_date.month,
@@ -209,7 +209,7 @@ def _job_ready_by_day(now):
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
         now = datetime.now() - timedelta(hours=1)
-        now = datetime(2015,12,16,18,1,1)
+        #now = datetime(2015,12,23,22,1,1)
         #ngx_files = [sys.argv[2]]
         #result_out_file = sys.argv[3]
         #/home/dingzheng/.platform_${prefix}_${year}${month}${day}${hour}${dash}
@@ -245,9 +245,6 @@ if __name__ == "__main__":
             "result_out_file": arr_result_out_file,
             "result_out_done_file": arr_result_out_done_file
         }
-        #print run_cfg
-        #print cfg
-        #sys.exit()
         """
         "display_poss": result_out_file + ".display_poss",
         "display_sale": result_out_file + ".display_sale",
@@ -260,7 +257,7 @@ if __name__ == "__main__":
         PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
-        now = datetime(2015,12,13,4,1,1)
+        #now = datetime(2015,12,23,22,1,1)
         paths = _job_ready_by_day(now)
         LOGGER.info("Job hour paths: \r\n \
                 logic1_src_paths: %s \r\n \
@@ -270,7 +267,7 @@ if __name__ == "__main__":
 
         start = time.clock()
         # logic1 code
-        infos = merge_file(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
+        infos = merge_file_day(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         PlatformReportor().report_day(now, infos)

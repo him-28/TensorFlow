@@ -363,7 +363,7 @@ def insert_hour(datas):
         port = SCNF["db_port"]
         LOG.info("connect %s@%s:%s...", database, host, port)
         conn = DBUtils.get_connection(database, user, passwd, host, port)
-        pool = DataInsertPool(conn, commit_size=30)
+        pool = DataInsertPool(conn, commit_size=30000)
         pool.regist_sql(HOUR_INSERT_KEY, \
                         split_insert_sql(db_columns, tablename))
         datas.apply(insert_data_frames, axis=1, db_alias_info=db_alias_info, \
@@ -388,7 +388,7 @@ def insert_day(datas):
         port = SCNF["db_port"]
         LOG.info("connect %s@%s:%s...", database, host, port)
         conn = DBUtils.get_connection(database, user, passwd, host, port)
-        pool = DataInsertPool(conn, commit_size=30)
+        pool = DataInsertPool(conn, commit_size=30000)
         pool.regist_sql(DAY_INSERT_KEY, \
                         split_insert_sql(db_columns, tablename))
         datas.apply(insert_data_frames, axis=1, db_alias_info=db_alias_info, \

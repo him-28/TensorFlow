@@ -94,7 +94,7 @@ platform:
     }
     "original_out_suffix": ".src"
     "original_error": ".orign.err"
-    "read_csv_chunksize": 1000000
+    "read_csv_chunksize": 500000
     "ipb_filepath": util/IPB.csv
     "city_filepath": util/city_province.csv
 

@@ -15,7 +15,7 @@ LOG = init_log.init("util/logger.conf", 'platformLogger')
 ENV_CONF = yaml.load(file("conf/platform_monitor_config.yml"))
 SCNF = ENV_CONF[CURRENT_ENV]["store"]
 
-def merge_file(input_paths, output_files, data_date):
+def merge_file_day(input_paths, output_files, data_date):
     """
     @param input_paths:
     {
@@ -98,7 +98,7 @@ def merge_file(input_paths, output_files, data_date):
         daydata_dataframe['year'] = daydata_dataframe['year'].astype(int)
         daydata_dataframe['month'] = daydata_dataframe['month'].astype(int)
         daydata_dataframe['day'] = daydata_dataframe['day'].astype(int)
-        #insert_day(daydata_dataframe)
+        insert_day(daydata_dataframe)
         end = time.clock()
         spend_time = "%0.2f" % (end - start)
         return report_infos(daydata_dataframe, spend_time)
