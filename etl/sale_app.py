@@ -8,8 +8,9 @@ import os
 import time
 from datetime import datetime
 from datetime import timedelta
-
-from etl.conf.settings import LOGGER
+import logging.config
+logging.config.fileConfig("calculate/logger.conf")
+LOGGER = logging.getLogger('etlLogger')
 
 from etl.calculate.inventory_datautil import merge_file
 from etl.report.inventory_reporter import InventoryReportor
@@ -18,8 +19,8 @@ from etl.calculate.etl_time_inventory import ExtractTransformLoadTimeInventory
 data_output_prefix = "/data6/inventory"
 D_Dir = "{prefix}{sep}{year}{sep}{month:02d}"
 H_Dir = "{prefix}{sep}{year}{sep}{month:02d}{sep}{day:02d}"
-H_Logic1_Filename = "inventory_{hour:02d}.csv"
-D_Logic1_Filename = "inventory_{day:02d}.csv"
+H_Logic1_Filename = "inventory_sale_{hour:02d}.csv"
+D_Logic1_Filename = "inventory_sale_{day:02d}.csv"
 
 def ngx_files(the_date, data_index, time2d):
     '''get ngx files'''
@@ -110,7 +111,8 @@ def _job_ready_by_day(now):
 
     paths.update({
         'logic1_src_paths': logic1_src_paths,
-        'logic1_output_paths': logic1_output_paths
+        'logic1_output_paths': "{sep}data6{sep}inventory{sep}{year}{sep}{month:02d}{sep}sale_{day:02d}.csv"\
+        .format(day=now.day,sep=os.sep,year=now.year,month=now.month)
         })
     return paths
 
@@ -129,24 +131,25 @@ if __name__ == "__main__":
         }
         etli = ExtractTransformLoadTimeInventory(cfg)
         run_cfg = {
-            "pv1": result_out_file + ".pv1",
-            "pv2": result_out_file + ".pv2",
-            "display_sale": result_out_file + ".display_sale"
+            "display_sale": result_out_file + ".sale"
         }
         infos = etli.run(run_cfg)
-        os.mknod(dash_mark_path)
+        LOGGER.info("create touch: %s" % dash_mark_path)
+        if not os.path.exists(dash_mark_path):
+            os.mknod(dash_mark_path)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
         paths = _job_ready_by_day(now)
 
-        trans_type = sys.argv[2]
-        src_files = sys.argv[3].split(",")
-        out_path = sys.argv[4]
+        LOGGER.info("Job hour paths: \r\n \
+                logic1_src_paths: %s \r\n \
+                logic1_output_path: %s \r\n \
+                " % (paths['logic1_src_paths'],
+                    paths['logic1_output_paths']))
 
         start = time.clock()
         # logic1 code
-        infos = merge_file(trans_type, src_files, out_path, now)
-
+        infos = merge_file("display_sale", paths['logic1_src_paths']["inventory"], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
         #InventoryReportor().report_day(now, infos, channel="库存统计-天数据")

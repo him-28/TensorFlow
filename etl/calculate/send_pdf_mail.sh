@@ -14,4 +14,4 @@ if [ ! -f ${pdf_file_path} ];then
     exit
 fi
 
-mutt -s "广告库存数据统计日报" martin@e.hunantv.com,jinyibin@e.hunantv.com,dingzheng@mgtv.com,scientsong@e.hunantv.com,dandanhjj@e.hunantv.com,wangqiang@e.hunantv.com -a ${pdf_file_path} < ./calculate/mail_text.txt
+#mutt -s "广告库存数据统计日报" martin@e.hunantv.com,jinyibin@e.hunantv.com,dingzheng@mgtv.com,scientsong@e.hunantv.com,dandanhjj@e.hunantv.com,wangqiang@e.hunantv.com -a ${pdf_file_path} < ./calculate/mail_text.txt
