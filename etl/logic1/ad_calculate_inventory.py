@@ -297,11 +297,21 @@ class DataInsertPool(object):
 def insert_data_frames(row_data, db_alias_info, the_pf, db_pool, db_columns):
     '''把数据插入数据库'''
     value_arr = []
-    for col in db_columns:
-        value = row_data[db_alias_info[col]]
-        if col == 'date':
-            value = datetime.fromtimestamp(float(value))
-        value_arr.append(value)
+    try:
+        for col in db_columns:
+            value = row_data[db_alias_info[col]]
+            if col == 'date':
+                value = datetime.fromtimestamp(float(value))
+            elif col == 'playlist_id':
+                value = int(value)
+            elif col == 'slot_id':
+                value = int(value)
+            elif col == 'city_id':
+                value = int(value)
+            value_arr.append(value)
+    except:
+        LOG.error("error insert value: %s", row_data)
+        return
     db_pool.put(the_pf, value_arr)
 
 def insert(dataframe, commit_size=30000):
