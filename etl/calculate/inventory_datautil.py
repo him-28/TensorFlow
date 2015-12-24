@@ -70,7 +70,6 @@ def merge_file(trans_type, src_files, output_filename, data_date):
         LOG.warn("error output file exists, remove")
 
     output_column_sep = CFG.get("csv_sep")
-    
     daydata_dataframe = load_files(src_files, output_column_sep, dtype)
 
     LOG.info("sum merged datas")
@@ -135,24 +134,21 @@ def load_files(input_list, output_column_sep, dtype):
     '''加载24个小时的文件到一个DataFrame里'''
 
     df1 = None
-    df3 = None
-    readed = False
     for input_file in input_list:
-        if readed:
+        if not df1 is None:
             if os.path.exists(input_file):
                 LOG.info("merge file: %s " , input_file)
                 df2 = pd.read_csv(input_file, sep=output_column_sep, \
                                encoding="utf8", index_col=False, dtype=dtype)
-                df3 = pd.concat([df1, df2])
+                df1 = df1.append(df2)
+                del df2
             else:
                 LOG.error("merge file did not exists:%s", input_file)
-            df1 = df3
         else:
             if os.path.exists(input_file):
                 LOG.info("load file: %s " , input_file)
                 df1 = pd.read_csv(input_file, sep=output_column_sep, \
                               encoding="utf8", index_col=False, dtype=dtype)
-                readed = True
             else:
                 LOG.error("merge file did not exists:%s", input_file)
     return df1

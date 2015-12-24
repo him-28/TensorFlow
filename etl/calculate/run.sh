@@ -24,11 +24,6 @@ if [ "$hour" == "" ];then
     hour=`date -d '-1 hour' +%H`
 fi
 
-if [ "$hour" == "02" ];then
-    day2=`date -d '-1 day' +%d`
-    nohup sh /home/dingzheng/inventory/etl/calculate/new_run_day.sh "${year}" "${month}" "${day2}" >> /home/dingzheng/log/etl/ad_day_run.log 2>&1 &
-fi
-
 nohup sh pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "00" >> /dev/null 2>&1 &
 nohup sh pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "15" >> /dev/null 2>&1 &
 nohup sh pretty_dash.sh "${year}" "${month}" "${day}" "${hour}" "data2" "30" >> /dev/null 2>&1 &
