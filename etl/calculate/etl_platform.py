@@ -90,9 +90,9 @@ class ExtractTransformLoadPlatform(object):
         self.player_slot_index = {}
         self.player_slot_index = player_info_not_changed(self.player_infos)
 
-    def run(self, run_cfg,merge_cfg):
+    def run(self, run_cfg, merge_cfg, file_time):
         '''Run the ETL !!!'''
-        result_df = self.extract(run_cfg)  # step 1
+        result_df = self.extract(run_cfg, file_time)  # step 1
         result_df = self.merge_file(merge_cfg)
         if result_df is None :
             self.info("result_df is None ")
@@ -137,7 +137,7 @@ class ExtractTransformLoadPlatform(object):
         return result_df
        
                 
-    def extract(self, run_cfg, before=None, after=None):
+    def extract(self, run_cfg, file_time, before=None, after=None):
         '''extract data file'''
         if before:
             self.__handle_before(before)
@@ -159,9 +159,9 @@ class ExtractTransformLoadPlatform(object):
         for file_path in src_files:
             self.set("filesize", self.get("filesize") + getfilesize(file_path))
             if ( file_path.find("yda") == -1):
-                self.__extract_file_xda(file_path, run_cfg)
+                self.__extract_file_xda(file_path, run_cfg, file_time)
             else:
-                self.__extract_file_yda(file_path, run_cfg)
+                self.__extract_file_yda(file_path, run_cfg, file_time)
         result_df = self.__merge_chunks_result(run_cfg)
 
         if after:
@@ -278,9 +278,9 @@ class ExtractTransformLoadPlatform(object):
                         new_row['creator_id'] = _d["cid"]
                 except Exception ,e:
                     self.error("eval adinfo error [%s]"%arr)
-                if self.__is_board_slot_id_match(board_id, _d["aid"]):
-                    for key, value in series_data_struct.iteritems():
-                        value.append(new_row[key])
+                #if self.__is_board_slot_id_match(board_id, _d["aid"]):
+                for key, value in series_data_struct.iteritems():
+                    value.append(new_row[key])
                         
         except Exception, exc:
             # TODO 记录出错的日志内容
@@ -442,7 +442,7 @@ class ExtractTransformLoadPlatform(object):
         return True
 
 
-    def __extract_file_xda(self, input_file_path, run_cfg):
+    def __extract_file_xda(self, input_file_path, run_cfg, file_time):
         '''加载文件并计算'''
         self.info("extract file: %s", input_file_path)
         if os.path.exists(input_file_path):
@@ -462,7 +462,7 @@ class ExtractTransformLoadPlatform(object):
                 tag_list = []
                 # 打平、转换、审计,用于展示机会统计
                 chunk.apply(self.__split_request_body_xda, axis=1, \
-                                req_cols=req_cols, keys=keys, values=values, tag_list=tag_list)
+                                req_cols=req_cols, keys=keys, values=values, tag_list=tag_list, file_time=file_time)
 
                 for name, datas in req_cols.iteritems():
                     new_chunk[name] = datas
@@ -474,7 +474,7 @@ class ExtractTransformLoadPlatform(object):
             return False
         return True
     
-    def __extract_file_yda(self, input_file_path, run_cfg):
+    def __extract_file_yda(self, input_file_path, run_cfg, file_time):
         '''加载文件并计算'''
         self.info("extract file: %s", input_file_path)
         if os.path.exists(input_file_path):
@@ -494,7 +494,7 @@ class ExtractTransformLoadPlatform(object):
                 tag_list = []
                 # 打平、转换、审计,用于展示机会统计
                 chunk.apply(self.__split_request_body_yda, axis=1, \
-                                req_cols=req_cols, keys=keys, values=values, tag_list=tag_list)
+                                req_cols=req_cols, keys=keys, values=values, tag_list=tag_list, file_time=file_time)
 
                 for name, datas in req_cols.iteritems():
                     new_chunk[name] = datas
@@ -540,7 +540,7 @@ class ExtractTransformLoadPlatform(object):
             pass
         return result_df
 
-    def __split_request_body_xda(self, row_datas, req_cols, keys, values, tag_list):
+    def __split_request_body_xda(self, row_datas, req_cols, keys, values, tag_list, file_time):
         '''拆分reqeust body'''
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
@@ -548,12 +548,11 @@ class ExtractTransformLoadPlatform(object):
         try:                    
             row_data_all = row_datas[0].split(CFG["original_sep_x"])
             # 检查时间有效性
-            row_data_date = row_data_all[0].split(" ")
-            seri["year"] = row_data_date[0][0:4]
-            #seri["month"] = row_data_date[0][5:7]
-            seri["month"] = 12
-            seri["day"] = row_data_date[0][8:10]
-            seri["hour"] = row_data_date[1][0:2]
+	    ftime = file_time.strftime("%Y%m%d%H")
+            seri["year"] = ftime[0:4]
+            seri["month"] = ftime[4:6]
+            seri["day"] = ftime[6:8]
+            seri["hour"] = ftime[8:10]
             # 检查其它字段
             row_data = row_data_all[1].split(" ")
             for kvalues in row_data:
@@ -597,7 +596,7 @@ class ExtractTransformLoadPlatform(object):
 
         return row_datas
     
-    def __split_request_body_yda(self, row_datas, req_cols, keys, values, tag_list):
+    def __split_request_body_yda(self, row_datas, req_cols, keys, values, tag_list, file_time):
         '''拆分reqeust body'''
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
@@ -615,15 +614,15 @@ class ExtractTransformLoadPlatform(object):
             seri["day"] = d_date.day
             seri["hour"] = d_date.hour
             """
-            seri["year"] = row_data_all[1][0:4]
-            seri["month"] = row_data_all[1][5:7]
-            seri["day"] = row_data_all[1][8:10]
-            seri["hour"] = row_data_all[1][11:13]
-
-            if row_data_all[0]:
+	    ftime = file_time.strftime("%Y%m%d%H")
+            seri["year"] = ftime[0:4]
+            seri["month"] = ftime[4:6]
+            seri["day"] = ftime[6:8]
+            seri["hour"] = ftime[8:10]
+            if row_data_all[7]:
                 try:
-                    seri["province_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[0], 1)
-                    seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[0], 3)
+                    seri["province_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[7], 1)
+                    seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(row_data_all[7], 3)
                 except Exception, exc:
                     seri["province_id"] = -1
                     seri["city_id"] = -1

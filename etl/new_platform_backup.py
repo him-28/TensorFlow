@@ -59,7 +59,7 @@ def get_hour_da_files(the_date, order, size):
         result_x.append(xda_files(the_date, i, 15)) # 0 ~15
         result_x.append(xda_files(the_date, i, 30)) # 0 ~30
         result_x.append(xda_files(the_date, i, 45)) # 0 ~45
-    for i in range(1,4): 
+    for i in range(1,4):
         result_y.append(yda_files(the_date, i, 00)) # 0 ~00
         result_y.append(yda_files(the_date, i, 15)) # 0 ~15
         result_y.append(yda_files(the_date, i, 30)) # 0 ~15
@@ -72,7 +72,7 @@ def get_hour_da_files(the_date, order, size):
     for i in range(0,len_y):
         if ((i % size) == (order - 1)):
             result.append(result_y[i])
-    
+
     return result
 
 def get_hour_ngx_files(the_date):
@@ -208,53 +208,60 @@ def _job_ready_by_day(now):
 
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
-        now = datetime.now() - timedelta(hours=1)
-        #now = datetime(2015,12,29,0,1,1)
+        #now = datetime(2015,12,23,22,1,1)
         #ngx_files = [sys.argv[2]]
         #result_out_file = sys.argv[3]
         #/home/dingzheng/.platform_${prefix}_${year}${month}${day}${hour}${dash}
         #dash_mark_path = sys.argv[4]
         num = int(sys.argv[2])
         cnt = int(sys.argv[3])
-        arr_result_out_file = []
-        arr_result_out_done_file = []
-        for i in range(1,cnt+1):
-            arr_result_out_file.append(get_type_result_out_file(now,"platform",i))
-            arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
-        #print arr_result_out_file
-        #print arr_result_out_done_file
-        ngx_files = get_hour_da_files(now, num, cnt)
-        cfg = {
-               "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
-               "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
-               "src_files" : ngx_files,
-               #"result_out_file": result_out_file,
-               "result_out_file": get_type_result_out_file(now,"platform",num),
-               "result_out_done_file": get_type_result_out_file(now,"platform_done",num)
-        }
-        etli = ExtractTransformLoadPlatform(cfg)
-        run_cfg = {
-            #"display_poss": get_display_poss_out_file(now),
-            "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
-            "impression": get_type_result_out_file(now,"platform_impression",num),
-            #"impression_end": get_impression_end_out_file(now),
-            "click": get_type_result_out_file(now,"platform_click",num)
-        }
-        merge_cfg = {
-            "result_out_all_file": get_result_out_file(now),
-            "result_out_file": arr_result_out_file,
-            "result_out_done_file": arr_result_out_done_file
-        }
-        """
-        "display_poss": result_out_file + ".display_poss",
-        "display_sale": result_out_file + ".display_sale",
-        "impression": result_out_file + ".impression",
-        "impression_end": result_out_file + ".impression_end",
-        "click": result_out_file + ".click"
-        """
-        infos = etli.run(run_cfg,merge_cfg, now)
-        #os.mknod(dash_mark_path)
-        #PlatformReportor().report_hour(now, infos)
+    	now_time = sys.argv[4]
+    	#d_year = int(now_time[0:4])
+    	#d_day = int(now_time[6:8])
+    	#d_hour = int(now_time[8:10])
+    	#now = datetime( d_year, d_month, d_day, d_hour, 1, 1)
+        for j in range(27,28):
+	    for k in range(19,24):
+                now = datetime(2015,12,j,k,1,1)
+                arr_result_out_file = []
+                arr_result_out_done_file = []
+                for i in range(1,cnt+1):
+                    arr_result_out_file.append(get_type_result_out_file(now,"platform",i))
+                    arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
+                #print arr_result_out_file
+                #print arr_result_out_done_file
+                ngx_files = get_hour_da_files(now, num, cnt)
+                cfg = {
+                       "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
+                       "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
+                       "src_files" : ngx_files,
+                       #"result_out_file": result_out_file,
+                       "result_out_file": get_type_result_out_file(now,"platform",num),
+                       "result_out_done_file": get_type_result_out_file(now,"platform_done",num)
+                }
+                etli = ExtractTransformLoadPlatform(cfg)
+                run_cfg = {
+                    #"display_poss": get_display_poss_out_file(now),
+                    "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
+                    "impression": get_type_result_out_file(now,"platform_impression",num),
+                    #"impression_end": get_impression_end_out_file(now),
+                    "click": get_type_result_out_file(now,"platform_click",num)
+                }
+                merge_cfg = {
+                    "result_out_all_file": get_result_out_file(now),
+                    "result_out_file": arr_result_out_file,
+                    "result_out_done_file": arr_result_out_done_file
+                }
+                """
+                "display_poss": result_out_file + ".display_poss",
+                "display_sale": result_out_file + ".display_sale",
+                "impression": result_out_file + ".impression",
+                "impression_end": result_out_file + ".impression_end",
+                "click": result_out_file + ".click"
+                """
+                infos = etli.run(run_cfg,merge_cfg, now)
+                #os.mknod(dash_mark_path)
+                #PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
         #now = datetime(2015,12,23,22,1,1)

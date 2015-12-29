@@ -38,9 +38,9 @@ beta: #测试环境
         table_name: "adlog_analysis_hour"
         day_table_name: "adlog_analysis_day"
         split_char: "\t"
-        db_host: "10.100.2.75"
-        db_username: "data_processing"
-        db_passwd: "123456@bigdata"
+        db_host: "10.100.10.75"
+        db_username: "ad_inv_data"
+        db_passwd: "ad_inventory_data@@)!^"
         db_port: 3306
         db_platform: "cubes"
         bearychat_channel: "管理后台-小时数据"
@@ -92,8 +92,8 @@ release: #生产环境
         day_table_name: "adlog_analysis_day"
         split_char: "\t"
         db_host: "10.100.10.75"
-        db_username: "data_processing"
-        db_passwd: "123456@bigdata"
+        db_username: "ad_inv_data"
+        db_passwd: "ad_inventory_data@@)!^"
         db_port: 3306
         db_platform: "cubes"
         bearychat_channel: "管理后台-小时数据"
