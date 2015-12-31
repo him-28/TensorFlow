@@ -11,13 +11,25 @@ if 'amble' not in sys.modules and __name__ == '__main__':
 import os
 import pandas as pd
 
-from datetime import datetime, timedelta
-
-
 from etl.conf.settings import LOGGER
+from etl.report.reporter import PF,get_pf_name
 from etl.report.inventory_reporter import InventoryReportor
+from etl.util import bearychat as bc
 from etl.calculate.etl_inventory import split_header
 from etl.calculate.etl_time_inventory import CFG
+
+def report(dataf, key, datetime_str):
+    groups = dataf.groupby("pf")
+    at_title = "%s 【%s】 指标统计" % (datetime_str, key)
+    msg = ""
+    for pf,datas in groups:
+        if PF.has_key(pf):
+            total = datas[key].sum ()
+            pf_name = get_pf_name(pf)
+            msg += "【%s】共计  %s " % pf_name, total
+    bc.new_send_message(text="库存小进数据统计", at_title=at_title, \
+                        channel="Test-Dico" , at_text=msg)
+
 
 if __name__ == '__main__':
     marks = sys.argv[1]
@@ -32,6 +44,7 @@ if __name__ == '__main__':
     result_files = sys.argv[2].split(",")
     result_path = sys.argv[3]
     tp = sys.argv[4]
+    datatime_str = sys.argv[5]
 
     dtype = split_header(CFG["dtype"])
     header = CFG["group_item"][tp]
@@ -40,7 +53,6 @@ if __name__ == '__main__':
     dfs = None
     for r_f in result_files:
         if os.path.exists(r_f):
-            print r_f
             df = pd.read_csv(r_f, sep=CFG["csv_sep"], dtype=dtype)
             if dfs is None:
                 dfs = df
@@ -53,48 +65,4 @@ if __name__ == '__main__':
     for r_f in result_files:
         if os.path.exists(r_f):
             os.remove(r_f)
-    '''
-    
-    python merge_crontab.py /home/dingzheng/.inventory_data2_201512200400,/home/dingzheng/.inventory_data2_201512200415,/home/dingzheng/.inventory_data2_201512200430,/home/dingzheng/.inventory_data2_201512200445,/home/dingzheng/.inventory_data3_201512200400,/home/dingzheng/.inventory_data3_201512200415,/home/dingzheng/.inventory_data3_201512200430,/home/dingzheng/.inventory_data3_201512200445,/home/dingzheng/.inventory_data4_201512200400,/home/dingzheng/.inventory_data4_201512200415,/home/dingzheng/.inventory_data4_201512200430,/home/dingzheng/.inventory_data4_201512200445  /data6/inventory/2015/12/20/inventory_data2_201512200400.sale,/data6/inventory/2015/12/20/inventory_data2_201512200415.sale,/data6/inventory/2015/12/20/inventory_data2_201512200430.sale,/data6/inventory/2015/12/20/inventory_data2_201512200445.sale,/data6/inventory/2015/12/20/inventory_data3_201512200400.sale,/data6/inventory/2015/12/20/inventory_data3_201512200415.sale,/data6/inventory/2015/12/20/inventory_data3_201512200430.sale,/data6/inventory/2015/12/20/inventory_data3_201512200445.sale,/data6/inventory/2015/12/20/inventory_data4_201512200400.sale,/data6/inventory/2015/12/20/inventory_data4_201512200415.sale,/data6/inventory/2015/12/20/inventory_data4_201512200430.sale,/data6/inventory/2015/12/20/inventory_data4_201512200445.sale  /data6/inventory/2015/12/20/inventory_sale_04.csv
-    
-    
-touch /home/dingzheng/.inventory_data2_201512200400
-touch /home/dingzheng/.inventory_data2_201512200415
-touch /home/dingzheng/.inventory_data2_201512200430
-touch /home/dingzheng/.inventory_data2_201512200445
-touch /home/dingzheng/.inventory_data3_201512200400
-touch /home/dingzheng/.inventory_data3_201512200415
-touch /home/dingzheng/.inventory_data3_201512200430
-touch /home/dingzheng/.inventory_data3_201512200445
-touch /home/dingzheng/.inventory_data4_201512200400
-touch /home/dingzheng/.inventory_data4_201512200415
-touch /home/dingzheng/.inventory_data4_201512200430
-touch /home/dingzheng/.inventory_data4_201512200445
-    '''
-    # report result to BearyChat,Email
-    # result_size = 0
-    # display_sale = 0
-    # display_poss = 0
-    # if not result_df.empty:
-    #    result_size = len(result_df)
-    #    display_sale = result_df["display_sale"].sum()
-    #    display_poss = result_df["display_poss"].sum()
-    # infos = {
-    #     "file_name": "",
-    #     "file_size": "",
-    #     "result_size": result_size,
-    #     "spend_time": "小于10分种",
-    #     "display_sale": int(display_sale),
-    #     "display_poss": int(display_poss)
-    # }
-    # details = {}
-    # if not result_df.empty:
-    #    df2 = result_df.groupby("pf").sum()
-    #    for the_pf, datas in df2.iterrows():
-    #        details[the_pf] = {
-    #            "display_sale" : int(datas["display_sale"]),
-    #            "display_poss" : int(datas["display_poss"])
-    #       }
-    # infos["details"] = details
-    # now = datetime.now() - timedelta(hours=1)
-    # InventoryReportor().report_hour(now, infos, channel="库存统计-小时数据")
+    report(result_df, tp, datatime_str)
