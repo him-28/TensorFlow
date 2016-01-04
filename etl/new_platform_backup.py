@@ -216,55 +216,56 @@ if __name__ == "__main__":
         num = int(sys.argv[2])
         cnt = int(sys.argv[3])
     	now_time = sys.argv[4]
-    	#d_year = int(now_time[0:4])
-    	#d_day = int(now_time[6:8])
-    	#d_hour = int(now_time[8:10])
-    	#now = datetime( d_year, d_month, d_day, d_hour, 1, 1)
-        for j in range(27,28):
-	    for k in range(19,24):
-                now = datetime(2015,12,j,k,1,1)
-                arr_result_out_file = []
-                arr_result_out_done_file = []
-                for i in range(1,cnt+1):
-                    arr_result_out_file.append(get_type_result_out_file(now,"platform",i))
-                    arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
-                #print arr_result_out_file
-                #print arr_result_out_done_file
-                ngx_files = get_hour_da_files(now, num, cnt)
-                cfg = {
-                       "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
-                       "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
-                       "src_files" : ngx_files,
-                       #"result_out_file": result_out_file,
-                       "result_out_file": get_type_result_out_file(now,"platform",num),
-                       "result_out_done_file": get_type_result_out_file(now,"platform_done",num)
-                }
-                etli = ExtractTransformLoadPlatform(cfg)
-                run_cfg = {
-                    #"display_poss": get_display_poss_out_file(now),
-                    "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
-                    "impression": get_type_result_out_file(now,"platform_impression",num),
-                    #"impression_end": get_impression_end_out_file(now),
-                    "click": get_type_result_out_file(now,"platform_click",num)
-                }
-                merge_cfg = {
-                    "result_out_all_file": get_result_out_file(now),
-                    "result_out_file": arr_result_out_file,
-                    "result_out_done_file": arr_result_out_done_file
-                }
-                """
-                "display_poss": result_out_file + ".display_poss",
-                "display_sale": result_out_file + ".display_sale",
-                "impression": result_out_file + ".impression",
-                "impression_end": result_out_file + ".impression_end",
-                "click": result_out_file + ".click"
-                """
-                infos = etli.run(run_cfg,merge_cfg, now)
-                #os.mknod(dash_mark_path)
-                #PlatformReportor().report_hour(now, infos)
+    	d_year = int(now_time[0:4])
+	d_month = int(now_time[4:6])
+    	d_day = int(now_time[6:8])
+    	d_hour = int(now_time[8:10])
+    	now = datetime(d_year, d_month, d_day, d_hour, 1, 1)
+        #for j in range(27,28):
+	#for k in range(20,24):
+	#now = datetime(2015,12,30,11,1,1)
+	arr_result_out_file = []
+	arr_result_out_done_file = []
+	for i in range(1,cnt+1):
+	    arr_result_out_file.append(get_type_result_out_file(now,"platform",i))
+	    arr_result_out_done_file.append(get_type_result_out_file(now,"platform_done",i))
+	#print arr_result_out_file
+	#print arr_result_out_done_file
+	ngx_files = get_hour_da_files(now, num, cnt)
+	cfg = {
+	       "start_time": time.mktime((now.year, now.month, now.day, now.hour, 0, 0, 0, 0, 0)),
+	       "end_time": time.mktime((now.year, now.month, now.day, now.hour + 1, 0, 0, 0, 0, 0)),
+	       "src_files" : ngx_files,
+	       #"result_out_file": result_out_file,
+	       "result_out_file": get_type_result_out_file(now,"platform",num),
+	       "result_out_done_file": get_type_result_out_file(now,"platform_done",num)
+	}
+	etli = ExtractTransformLoadPlatform(cfg)
+	run_cfg = {
+	    #"display_poss": get_display_poss_out_file(now),
+	    "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
+	    "impression": get_type_result_out_file(now,"platform_impression",num),
+	    #"impression_end": get_impression_end_out_file(now),
+	    "click": get_type_result_out_file(now,"platform_click",num)
+	}
+	merge_cfg = {
+	    "result_out_all_file": get_result_out_file(now),
+	    "result_out_file": arr_result_out_file,
+	    "result_out_done_file": arr_result_out_done_file
+	}
+	"""
+	"display_poss": result_out_file + ".display_poss",
+	"display_sale": result_out_file + ".display_sale",
+	"impression": result_out_file + ".impression",
+	"impression_end": result_out_file + ".impression_end",
+	"click": result_out_file + ".click"
+	"""
+	infos = etli.run(run_cfg,merge_cfg, now)
+	#os.mknod(dash_mark_path)
+	#PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
         now = datetime.now() - timedelta(days=1)
-        #now = datetime(2015,12,23,22,1,1)
+        now = datetime(2015,12,27,22,1,1)
         paths = _job_ready_by_day(now)
         LOGGER.info("Job hour paths: \r\n \
                 logic1_src_paths: %s \r\n \
@@ -277,5 +278,5 @@ if __name__ == "__main__":
         infos = merge_file_day(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
-        PlatformReportor().report_day(now, infos)
+        #PlatformReportor().report_day(now, infos)
         #PlatformReportor().report_pdf(infos, now.strftime("%Y%m%d"))

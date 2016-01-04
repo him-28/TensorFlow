@@ -579,7 +579,7 @@ class ExtractTransformLoadPlatform(object):
                         seri["province_id"] = -1
                         seri["city_id"] = -1
                 if kv_row[0] == 'pid':
-                    seri["board_id"] = kv_row[1]
+                    seri["board_id"] = int(kv_row[1])
                 
         except Exception, exc:
             self.error("can not split request_body:%s\n%s", exc, row_data)
@@ -632,20 +632,20 @@ class ExtractTransformLoadPlatform(object):
             row_data = row_data_all[3].split("&")
             for kvalues in row_data:
                 kv_row = kvalues.split("=")
-                if kv_row[0].find("impression") != -1:
+		if kv_row[0].find("app/impression") != -1 or kv_row[0].find("json/cst/ip") != -1:
                     seri["event"] = "impression"
-                elif kv_row[0].find("click") != -1:
+		elif kv_row[0].find("app/click") != -1 or kv_row[0].find("json/cst/ck") != -1:
                     seri["event"] = "click"
                 if kv_row[0] == 'b':
-                    seri["board_id"] = kv_row[1]
+                    seri["board_id"] = int(kv_row[1])
                 if kv_row[0] == 's':
-                    seri["slot_id"] = kv_row[1]
+                    seri["slot_id"] = int(kv_row[1])
                 if kv_row[0] == 'cd':
-                    seri["mediabuy_id"] = kv_row[1]
+                    seri["mediabuy_id"] = int(kv_row[1])
                 if kv_row[0] == 'ct':
-                    seri["creator_id"] = kv_row[1]
+                    seri["creator_id"] = int(kv_row[1])
                 if kv_row[0] == 'o':
-                    seri["order"] = kv_row[1]
+                    seri["order"] = int(kv_row[1])
         except Exception, exc:
             self.error("can not split request_body:%s\n%s", exc, row_data)
             # TODO 记录出错的日志内容
