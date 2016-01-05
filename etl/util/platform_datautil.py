@@ -48,7 +48,8 @@ def merge_file_day(input_paths, output_files, data_date):
                 'click':'int',
                 'display_sale':'int',
                 'impression':'int',
-                'impression_end':'int'
+                'impression_end':'int',
+		'display_poss':'int'
     }
 
     save_type = {'year':'int',
@@ -63,7 +64,8 @@ def merge_file_day(input_paths, output_files, data_date):
                 'clicks':'int',
                 'display':'int',
                 'impressions':'int',
-                'end_impressions':'int'
+                'end_impressions':'int',
+		'pv':'int'
     }
 
     load_dtype = split_header(load_type)
@@ -158,7 +160,8 @@ def load_files(input_list, output_column_sep, dtype):
                 LOG.info("merge file: %s " , input_file)
                 df2 = pd.read_csv(input_file, sep=output_column_sep, \
                                encoding="utf8", index_col=False, dtype=dtype)
-                df3 = pd.concat([df1, df2])
+                #df2['display_poss'] = 0
+		df3 = pd.concat([df1, df2])
             else:
                 LOG.error("merge file did not exists:%s", input_file)
             if not df3 is None and not df3.empty:
@@ -168,6 +171,7 @@ def load_files(input_list, output_column_sep, dtype):
                 LOG.info("load file: %s " , input_file)
                 df1 = pd.read_csv(input_file, sep=output_column_sep, \
                               encoding="utf8", index_col=False, dtype=dtype)
+		#df1['display_poss'] = 0
                 readed = True
             else:
                 LOG.error("merge file did not exists:%s", input_file)

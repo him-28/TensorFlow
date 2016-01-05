@@ -97,7 +97,24 @@ class ExtractTransformLoadPlatform(object):
         if result_df is None :
             self.info("result_df is None ")
             return None
-        self.save(result_df)  # step 3
+        self.save(result_df, "table_name")  # step 3
+        """
+        new_result = result_df
+        del new_result['display_poss']
+        self.save(new_result, "table_name")  # step 3
+        header = self.get("alg_info")["display_poss"]["header"]
+        header.remove('slot_id')
+        header.remove('mediabuy_id')
+        header.remove('creator_id')
+        del result_df['slot_id']
+        del result_df['mediabuy_id']
+        del result_df['creator_id']
+        del result_df['display_sale']
+        del result_df['impression']
+        del result_df['click']
+        pv_chuck = result_df.groupby(header, as_index=False, sort=False).sum().rename(columns={'0':"display_poss"})
+        self.save(pv_chuck, "table_pv_name")  # step 3
+        """
         self.end_time = time.clock()
         self.info("all task completed in [%0.2f] seconds", (self.end_time - self.start_time))
         return self.report(result_df)  # step end
@@ -128,15 +145,15 @@ class ExtractTransformLoadPlatform(object):
             #如果经过广告位和播放器对应打平后，dataframe为空，此处应该重新做处理
             dataframe_list.append(dataframe)
         result_df = pd.concat(dataframe_list, ignore_index=True)
-        for key in header : 
+        for key in header :
             result_df[key] = result_df[key].fillna(0).astype(int)
         result_df = result_df.groupby(header, as_index=False, sort=False).sum()
         self.info("merge file  result to %s", result_out_all_file)
         result_df.to_csv(result_out_all_file, sep=self.get("csv_sep"), index=False)
         self.info("save  result to %s", result_out_all_file)
         return result_df
-       
-                
+
+
     def extract(self, run_cfg, file_time, before=None, after=None):
         '''extract data file'''
         if before:
@@ -179,16 +196,34 @@ class ExtractTransformLoadPlatform(object):
         self.info("prepare to calculate : %s", trans_type)
         self.info("according metric to filter data")
         try:
+            """
             if trans_type == "display_sale":
                 chunk = self.__extract_display_sale_data(chunk, trans_type)
                 return self.__caculate_display(chunk, trans_type, alg_file[trans_type])
+            """
+            if trans_type == "xda":
+                for algorithm in alg_file.iterkeys():
+                    if algorithm == "display_poss":
+                        new_chunk = chunk
+                        new_chunk["slot_id"] = -1
+                        new_chunk["mediabuy_id"] = -1
+                        new_chunk["creator_id"] = -1
+                        del new_chunk["ad_list"]
+                        calcu_resul = self.__caculate_display(new_chunk, algorithm, alg_file[algorithm])
+                        if calcu_resul == -1:
+                            self.error("calculate [" + algorithm + "] failed.")
+                    if algorithm == "display_sale":
+                        new_chunk = self.__extract_display_sale_data(chunk, algorithm)
+                        calcu_resul = self.__caculate_display(new_chunk, algorithm, alg_file[algorithm])
+                        if calcu_resul == -1:
+                            self.error("calculate [" + algorithm + "] failed.")
             else:
                 for algorithm in alg_file.iterkeys():
                     if algorithm == "impression":
                         new_chunk = chunk[chunk['event'] == 'impression']
                         calcu_resul = self.__caculate_display(new_chunk, algorithm, alg_file[algorithm])
                         if calcu_resul == -1:
-                            self.error("calculate [" + algorithm + "] failed.")                        
+                            self.error("calculate [" + algorithm + "] failed.")
                     if algorithm == "click":
                         new_chunk = chunk[chunk['event'] == 'click']
                         calcu_resul = self.__caculate_display(new_chunk, algorithm, alg_file[algorithm])
@@ -205,7 +240,7 @@ class ExtractTransformLoadPlatform(object):
 
         self.info("process complete in [" + str(exec_takes.seconds) + "] seconds (" + \
                 str(exec_takes.seconds / 60) + " minutes)")
-        
+
     def regist_alg(self, alg_file):
         '''注册alg信息'''
         info = {}
@@ -268,7 +303,7 @@ class ExtractTransformLoadPlatform(object):
                     c="c"
                     aid="aid"
                     mid="mid"
-                    cid="cid"                            
+                    cid="cid"
                     _d = eval(arr)
                     if _d.has_key("aid") and _d["aid"]:
                         new_row['slot_id'] = _d["aid"]
@@ -281,7 +316,7 @@ class ExtractTransformLoadPlatform(object):
                 #if self.__is_board_slot_id_match(board_id, _d["aid"]):
                 for key, value in series_data_struct.iteritems():
                     value.append(new_row[key])
-                        
+
         except Exception, exc:
             # TODO 记录出错的日志内容
             self.error("flat slot id error: %s\n%s", exc, list(row_data.values))
@@ -373,7 +408,7 @@ class ExtractTransformLoadPlatform(object):
         return None
 
 
-    def save(self, result_df, before=None, after=None):
+    def save(self, result_df, table_name, before=None, after=None):
         '''save result into DB'''
         if before:
             self.__handle_before(before)
@@ -384,7 +419,7 @@ class ExtractTransformLoadPlatform(object):
         result_df['month'] = result_df['month'].astype(int)
         result_df['day'] = result_df['day'].astype(int)
         result_df['hour'] = result_df['hour'].astype(int)
-        insert_hour(result_df)
+        insert_hour(result_df, table_name)
         end_time = time.clock()
         self.info("insert hour time is: %ss", end_time - start_time)
 
@@ -450,7 +485,7 @@ class ExtractTransformLoadPlatform(object):
                          chunksize=CFG["read_csv_chunksize"], \
                          engine='c', sep="\n")
             keys = CFG["usefull_request_body_header_x"].keys()
-            values = CFG["usefull_request_body_header_x"].values()                               
+            values = CFG["usefull_request_body_header_x"].values()
             for chunk in chunks:
                 self.info("handle %s records...", len(chunk))
                 new_chunk = pd.DataFrame()
@@ -467,13 +502,13 @@ class ExtractTransformLoadPlatform(object):
                 for name, datas in req_cols.iteritems():
                     new_chunk[name] = datas
 
-                trans_type = "display_sale"
+                trans_type = "xda"
                 self.transform(trans_type, run_cfg, new_chunk)
         else:
             self.error("failed to extract file :%s, file not exists.", input_file_path)
             return False
         return True
-    
+
     def __extract_file_yda(self, input_file_path, run_cfg, file_time):
         '''加载文件并计算'''
         self.info("extract file: %s", input_file_path)
@@ -482,7 +517,7 @@ class ExtractTransformLoadPlatform(object):
                          chunksize=CFG["read_csv_chunksize"], \
                          engine='c', sep="\n")
             keys = CFG["usefull_request_body_header_y"].keys()
-            values = CFG["usefull_request_body_header_y"].values()                         
+            values = CFG["usefull_request_body_header_y"].values()
             for chunk in chunks:
                 self.info("handle %s records...", len(chunk))
                 new_chunk = pd.DataFrame()
@@ -498,13 +533,13 @@ class ExtractTransformLoadPlatform(object):
 
                 for name, datas in req_cols.iteritems():
                     new_chunk[name] = datas
-                trans_type = "y.da"
+                trans_type = "yda"
                 self.transform(trans_type, run_cfg, new_chunk)
         else:
             self.error("failed to extract file :%s, file not exists.", input_file_path)
             return False
         return True
-    
+
     def __merge_chunks_result(self, run_cfg):
         '''merge'''
         self.info("merge chunk files...")
@@ -523,7 +558,7 @@ class ExtractTransformLoadPlatform(object):
             dataframe_list.append(dataframe)
             self.info("save %s to %s", key, result_path)
             dataframe.to_csv(result_path, index=False, \
-                             header=True, sep=self.get("csv_sep")) 
+                             header=True, sep=self.get("csv_sep"))
         result_df = pd.concat(dataframe_list, ignore_index=True)
         for key in run_cfg.keys():
             if tag_key == key:
@@ -545,10 +580,10 @@ class ExtractTransformLoadPlatform(object):
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
         seri = dict((x, "") for x in values)
-        try:                    
+        try:
             row_data_all = row_datas[0].split(CFG["original_sep_x"])
             # 检查时间有效性
-	    ftime = file_time.strftime("%Y%m%d%H")
+            ftime = file_time.strftime("%Y%m%d%H")
             seri["year"] = ftime[0:4]
             seri["month"] = ftime[4:6]
             seri["day"] = ftime[6:8]
@@ -563,12 +598,9 @@ class ExtractTransformLoadPlatform(object):
                     continue
                 if kv_row[0] == 'adinfo':
                     seri["ad_list"] = seri["ad_list"] +  'col' + kv_row[1]
-                    """
-                    key_name = "ad_list" + str(adlen_count)
-                    seri[key_name] = kv_row[1]
-                    """
                 if kv_row[0] == "ip":
                     if kv_row[1]:
+                        seri["ip"] = kv_row[1]
                         try:
                             seri["province_id"] = IP_UTIL.get_cityInfo_from_ip(kv_row[1], 1)
                             seri["city_id"] = IP_UTIL.get_cityInfo_from_ip(kv_row[1], 3)
@@ -580,7 +612,7 @@ class ExtractTransformLoadPlatform(object):
                         seri["city_id"] = -1
                 if kv_row[0] == 'pid':
                     seri["board_id"] = int(kv_row[1])
-                
+
         except Exception, exc:
             self.error("can not split request_body:%s\n%s", exc, row_data)
             # TODO 记录出错的日志内容
@@ -595,13 +627,13 @@ class ExtractTransformLoadPlatform(object):
             value.append(seri[key])
 
         return row_datas
-    
+
     def __split_request_body_yda(self, row_datas, req_cols, keys, values, tag_list, file_time):
         '''拆分reqeust body'''
         # self.set("chunk_idx", self.get("chunk_idx") + 1)
         # 打平--------------------------------------Start
         seri = dict((x, "") for x in values)
-        try:                    
+        try:
             row_data_all = row_datas[0].split(CFG["original_sep_y"])
             # 检查时间有效性
             if len(row_data_all) != 14:
@@ -614,7 +646,7 @@ class ExtractTransformLoadPlatform(object):
             seri["day"] = d_date.day
             seri["hour"] = d_date.hour
             """
-	    ftime = file_time.strftime("%Y%m%d%H")
+            ftime = file_time.strftime("%Y%m%d%H")
             seri["year"] = ftime[0:4]
             seri["month"] = ftime[4:6]
             seri["day"] = ftime[6:8]
@@ -632,9 +664,9 @@ class ExtractTransformLoadPlatform(object):
             row_data = row_data_all[3].split("&")
             for kvalues in row_data:
                 kv_row = kvalues.split("=")
-		if kv_row[0].find("app/impression") != -1 or kv_row[0].find("json/cst/ip") != -1:
+                if kv_row[0].find("app/impression") != -1 or kv_row[0].find("json/cst/ip") != -1:
                     seri["event"] = "impression"
-		elif kv_row[0].find("app/click") != -1 or kv_row[0].find("json/cst/ck") != -1:
+                elif kv_row[0].find("app/click") != -1 or kv_row[0].find("json/cst/ck") != -1:
                     seri["event"] = "click"
                 if kv_row[0] == 'b':
                     seri["board_id"] = int(kv_row[1])
@@ -659,7 +691,7 @@ class ExtractTransformLoadPlatform(object):
         for key, value in req_cols.iteritems():
             value.append(seri[key])
         return row_datas
-        
+
     def __flat_datas(self, values, items, http_x_forwarded_for, remote_addr, time_iso8601):
         '''打平IP、CityID，server_timestamp'''
         seri = dict((x, "") for x in values)

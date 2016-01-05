@@ -59,7 +59,7 @@ def get_hour_da_files(the_date, order, size):
         result_x.append(xda_files(the_date, i, 15)) # 0 ~15
         result_x.append(xda_files(the_date, i, 30)) # 0 ~30
         result_x.append(xda_files(the_date, i, 45)) # 0 ~45
-    for i in range(1,4): 
+    for i in range(1,4):
         result_y.append(yda_files(the_date, i, 00)) # 0 ~00
         result_y.append(yda_files(the_date, i, 15)) # 0 ~15
         result_y.append(yda_files(the_date, i, 30)) # 0 ~15
@@ -72,7 +72,7 @@ def get_hour_da_files(the_date, order, size):
     for i in range(0,len_y):
         if ((i % size) == (order - 1)):
             result.append(result_y[i])
-    
+
     return result
 
 def get_hour_ngx_files(the_date):
@@ -234,7 +234,7 @@ if __name__ == "__main__":
         }
         etli = ExtractTransformLoadPlatform(cfg)
         run_cfg = {
-            #"display_poss": get_display_poss_out_file(now),
+            "display_poss": get_type_result_out_file(now,"platform_display_poss",num),
             "display_sale": get_type_result_out_file(now,"platform_display_sale",num),
             "impression": get_type_result_out_file(now,"platform_impression",num),
             #"impression_end": get_impression_end_out_file(now),
@@ -270,5 +270,5 @@ if __name__ == "__main__":
         infos = merge_file_day(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
         end = time.clock()
         LOGGER.info("merge file spend: %f s" % (end - start))
-        PlatformReportor().report_day(now, infos)
+        #PlatformReportor().report_day(now, infos)
         #PlatformReportor().report_pdf(infos, now.strftime("%Y%m%d"))

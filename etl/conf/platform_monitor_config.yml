@@ -19,7 +19,8 @@ beta: #测试环境
             "impressions": "impression",
             "slot_id": "slot_id",
             "city_id": "city_id",
-            "display": "display_sale"
+            "display": "display_sale",
+            "pv": "display_poss"
         }
         result_item_alias_day: {
             "year": "year",
@@ -33,11 +34,17 @@ beta: #测试环境
             "impressions": "impression",
             "slot_id": "slot_id",
             "city_id": "city_id",
-            "display": "display_sale"
+            "display": "display_sale",
+            "pv": "display_poss"
         }
         table_name: "adlog_analysis_hour"
         day_table_name: "adlog_analysis_day"
+        table_pv_name: "adlog_analysis_pv_hour"
+        day_table_pv_name: "adlog_analysis_pv_day"
         split_char: "\t"
+        #db_host: "10.100.2.75"
+        #db_username: "data_processing"
+        #db_passwd: "123456@bigdata"
         db_host: "10.100.10.75"
         db_username: "ad_inv_data"
         db_passwd: "ad_inventory_data@@)!^"
@@ -50,7 +57,8 @@ beta: #测试环境
             'month':'int',
             'day':'int',
             'hour':'int',
-            'province_id':'int'
+            'province_id':'int',
+            'city_id':'int'
         }
 
 release: #生产环境
@@ -72,7 +80,8 @@ release: #生产环境
             "impressions": "impression",
             "slot_id": "slot_id",
             "city_id": "city_id",
-            "display": "display_sale"
+            "display": "display_sale",
+            "pv": "display_poss"
         }
         result_item_alias_day: {
             "year": "year",
@@ -86,11 +95,17 @@ release: #生产环境
             "impressions": "impression",
             "slot_id": "slot_id",
             "city_id": "city_id",
-            "display": "display_sale"
+            "display": "display_sale",
+            "pv": "display_poss"
         }
         table_name: "adlog_analysis_hour"
         day_table_name: "adlog_analysis_day"
+        table_pv_name: "adlog_analysis_pv_hour"
+        day_table_pv_name: "adlog_analysis_pv_day"
         split_char: "\t"
+        #db_host: "10.100.2.75"
+        #db_username: "data_processing"
+        #db_passwd: "123456@bigdata"
         db_host: "10.100.10.75"
         db_username: "ad_inv_data"
         db_passwd: "ad_inventory_data@@)!^"
@@ -103,5 +118,6 @@ release: #生产环境
             'month':'int',
             'day':'int',
             'hour':'int',
-            'province_id':'int'
+            'province_id':'int',
+            'city_id':'int'
         }

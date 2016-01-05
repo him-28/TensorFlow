@@ -349,13 +349,24 @@ class DataInsertPool(object):
             self.cur.close()
             self.conn.close()
 
-def insert_hour(datas):
+def insert_hour(datas, table_name):
     '''insert hour values to db'''
     LOG.info("insert hour result to db...")
     try:
         db_alias_info = SCNF["result_item_alias"]
+	"""
+        if table_name == 'table_pv_name':
+            del db_alias_info['slot_id']
+            del db_alias_info['mediabuy_id']
+            del db_alias_info['creative_id']
+            del db_alias_info['display']
+            del db_alias_info['impressions']
+            del db_alias_info['clicks']
+        else:
+            del db_alias_info['pv']
+	"""
         db_columns = db_alias_info.keys()
-        tablename = SCNF["table_name"]
+        tablename = SCNF[table_name]
         database = SCNF["db_platform"]
         user = SCNF["db_username"]
         passwd = SCNF["db_passwd"]
