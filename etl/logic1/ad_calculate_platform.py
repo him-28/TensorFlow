@@ -328,6 +328,13 @@ class DataInsertPool(object):
             vlist = []
             self.pool.update({key:vlist})
 
+    def delete(self, tablename, data_date):
+        '''删除数据'''
+        sql = "delete from %s where year = %s and month = %s and day = %s" % (tablename, data_date.year, data_date.month, data_date.day)
+	LOG.info("begin delete mysql: %s", sql)
+        self.cur.execute(sql)
+        self.conn.commit()
+
     def flush(self, key):
         '''刷新并提交'''
         if self.pool.has_key(key):
@@ -385,7 +392,7 @@ def insert_hour(datas, table_name):
     except Exception, exc:
         LOG.error("insert error: %s", exc)
 
-def insert_day(datas):
+def insert_day(datas, data_date):
     '''insert day values to db'''
     LOG.info("insert day result to db...")
     try:
@@ -400,6 +407,11 @@ def insert_day(datas):
         LOG.info("connect %s@%s:%s...", database, host, port)
         conn = DBUtils.get_connection(database, user, passwd, host, port)
         pool = DataInsertPool(conn, commit_size=30000)
+	try:
+	    if data_date.hour > 0:
+		pool.delete(tablename, data_date)
+	except Exception, exc:
+            LOG.error("delete error: %s", exc)
         pool.regist_sql(DAY_INSERT_KEY, \
                         split_insert_sql(db_columns, tablename))
         datas.apply(insert_data_frames, axis=1, db_alias_info=db_alias_info, \

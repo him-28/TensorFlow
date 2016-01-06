@@ -205,6 +205,23 @@ def _job_ready_by_day(now):
         })
     return paths
 
+def merge_day_data(now):
+        #now = datetime.now() - timedelta(hours=1)
+        #now = datetime(2015,12,23,22,1,1)
+        paths = _job_ready_by_day(now)
+        LOGGER.info("Job hour paths: \r\n \
+                logic1_src_paths: %s \r\n \
+                logic1_output_path: %s \r\n \
+                " % (paths['logic1_src_paths'],
+                    paths['logic1_output_paths']))
+
+        start = time.clock()
+        # logic1 code
+        infos = merge_file_day(paths['logic1_src_paths'], paths['logic1_output_paths'], now)
+        end = time.clock()
+        LOGGER.info("merge file spend: %f s" % (end - start))
+        #PlatformReportor().report_day(now, infos)
+        #PlatformReportor().report_pdf(infos, now.strftime("%Y%m%d"))
 
 if __name__ == "__main__":
     if sys.argv[1] == 'h':
@@ -256,7 +273,7 @@ if __name__ == "__main__":
         #os.mknod(dash_mark_path)
         #PlatformReportor().report_hour(now, infos)
     elif sys.argv[1] == 'd':
-        now = datetime.now() - timedelta(days=1)
+        now = datetime.now() - timedelta(hours=1)
         #now = datetime(2015,12,23,22,1,1)
         paths = _job_ready_by_day(now)
         LOGGER.info("Job hour paths: \r\n \

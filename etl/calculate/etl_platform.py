@@ -24,6 +24,7 @@ from etl.util.admonitor_flat_data import player_info
 
 from etl.logic1.ad_calculate_platform import insert_hour
 from etl.logic1.ad_calculate_platform import insert_day
+#from etl.new_platform_app import merge_day_data
 from datetime import date
 from __builtin__ import True
 from _collections import defaultdict
@@ -98,6 +99,10 @@ class ExtractTransformLoadPlatform(object):
             self.info("result_df is None ")
             return None
         self.save(result_df, "table_name")  # step 3
+        if not "/data/code/amble/" in sys.path:
+            sys.path.append("/amble/")
+        from etl.new_platform_app import merge_day_data
+	merge_day_data(file_time)	
         """
         new_result = result_df
         del new_result['display_poss']
