@@ -310,7 +310,7 @@ def insert_data_frames(row_data, db_alias_info, the_pf, db_pool, db_columns):
                 value = int(value)
             value_arr.append(value)
     except:
-        LOG.error("error insert value: %s", row_data)
+        LOG.error("error insert value: %s", str(row_data.values))
         return
     db_pool.put(the_pf, value_arr)
 

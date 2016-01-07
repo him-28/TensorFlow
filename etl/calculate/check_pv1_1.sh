@@ -94,6 +94,6 @@ r10="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${mont
 r11="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash30}.pv1"
 r12="/data6/inventory/${year}/${month}/${day}/inventory_${prefix4}_${year}${month}${day}${hour}${dash45}.pv1"
 
-echo "python merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory/${year}/${month}/${day}/inventory_pv1_${hour}.csv pv1"
+echo "python merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory/${year}/${month}/${day}/inventory_pv1_${hour}.csv pv1 ${year}${month}${day}${hour}"
 
-python merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory/${year}/${month}/${day}/inventory_pv1_${hour}.csv pv1
+python merge_crontab.py ${f1},${f2},${f3},${f4},${f5},${f6},${f7},${f8},${f9},${f10},${f11},${f12}  ${r1},${r2},${r3},${r4},${r5},${r6},${r7},${r8},${r9},${r10},${r11},${r12}  /data6/inventory/${year}/${month}/${day}/inventory_pv1_${hour}.csv pv1 ${year}${month}${day}${hour}
