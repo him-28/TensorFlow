@@ -87,7 +87,7 @@ database:
     db_name: adc
     user: etl
     password: 'etl@150909'
-    host: 10.100.5.80
+    host: 10.100.2.124
     port: 3306
     minconn: 5
     maxconn: 50
